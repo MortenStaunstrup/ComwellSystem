@@ -2,8 +2,8 @@
 
 public class Comment
 {
-    private int CommentId { get; set; }
-    private string CommentContent { get; set; }
-    private DateTime CommentDate { get; set; }
-    private int CommentSenderId { get; set; }
+    public int CommentId { get; set; }
+    public string CommentContent { get; set; }
+    public DateTime CommentDate { get; set; }
+    public int CommentSenderId { get; set; }
 }

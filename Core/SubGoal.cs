@@ -2,12 +2,12 @@
 
 public class SubGoal
 {
-    private int SubGoalId { get; set; }
-    private string SubGoalName { get; set; }
-    private string? SubGoalDescription { get; set; }
-    private string SubGoalCategory { get; set; }
-    private string? SubGoalPicture { get; set; }
-    private bool SubGoalStatus { get; set; }
-    private DateOnly? SubGoalStartDate { get; set; }
-    private DateOnly? SubGoalDueDate { get; set; }
+    public int SubGoalId { get; set; }
+    public string SubGoalName { get; set; }
+    public string? SubGoalDescription { get; set; }
+    public string SubGoalCategory { get; set; }
+    public string? SubGoalPicture { get; set; }
+    public bool SubGoalStatus { get; set; }
+    public DateOnly? SubGoalStartDate { get; set; }
+    public DateOnly? SubGoalDueDate { get; set; }
 }

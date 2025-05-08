@@ -2,7 +2,7 @@
 
 public class Notification
 {
-    private int NotificationId { get; set; }
-    private int NotificationUserId { get; set; }
-    private string NotificationMessage { get; set; }
+    public int NotificationId { get; set; }
+    public int NotificationUserId { get; set; }
+    public string NotificationMessage { get; set; }
 }
