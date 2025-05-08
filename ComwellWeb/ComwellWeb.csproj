@@ -23,4 +23,8 @@
       <_ContentIncludedByDefault Remove="Modal\TeamPageModal.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="wwwroot\Pictures\NoProfilePicture.png" />
+    </ItemGroup>
+
 </Project>
