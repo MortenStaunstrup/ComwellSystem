@@ -4,6 +4,10 @@ public class User
 {
     public int UserId { get; set; }
     public string UserName { get; set; }
+    public SubGoal[]? StudentPlan { get; set; }
+    public Notification[]? Notifications { get; set; }
+    public Message[]? Messages { get; set; }
+    public string? Picture { get; set; }
     public string Role { get; set;}
     public string UserPassword { get; set; }
     public string UserEmail { get; set; }

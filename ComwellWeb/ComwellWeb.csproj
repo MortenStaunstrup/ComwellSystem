@@ -15,4 +15,12 @@
       <ProjectReference Include="..\Core\Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Modal\SingleOwnSubGoalModal.razor" />
+      <_ContentIncludedByDefault Remove="Modal\StudentPageModal.razor" />
+      <_ContentIncludedByDefault Remove="Modal\SubGoalDescriptionModal.razor" />
+      <_ContentIncludedByDefault Remove="Modal\SubGoalModal.razor" />
+      <_ContentIncludedByDefault Remove="Modal\TeamPageModal.razor" />
+    </ItemGroup>
+
 </Project>
