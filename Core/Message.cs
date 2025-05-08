@@ -2,10 +2,10 @@
 
 public class Message
 {
-    private int MessageId { get; set; }
-    private string MessageContent { get; set; }
-    private DateTime MessageDate { get; set; }
-    private int MessegeSenderId { get; set; }
-    private int? MessegeReceiverId { get; set; }
+    public int MessageId { get; set; }
+    public string MessageContent { get; set; }
+    public DateTime MessageDate { get; set; }
+    public int MessegeSenderId { get; set; }
+    public int? MessegeReceiverId { get; set; }
     
 }
