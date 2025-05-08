@@ -2,12 +2,12 @@
 
 public class User
 {
-    private int UserId { get; set; }
-    private string UserName { get; set;}
-    private string Role { get; set;}
-    private string UserPassword { get; set; }
-    private string UserEmail { get; set; }
-    private string UserPhone { get; set; }
-    private DateOnly? UserSemester { get; set; }
-    private int? UserIdResponsible { get; set; }
+    public int UserId { get; set; }
+    public string UserName { get; set; }
+    public string Role { get; set;}
+    public string UserPassword { get; set; }
+    public string UserEmail { get; set; }
+    public string UserPhone { get; set; }
+    public DateOnly? UserSemester { get; set; }
+    public int? UserIdResponsible { get; set; }
 }

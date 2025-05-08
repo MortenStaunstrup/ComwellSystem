@@ -1,12 +1,25 @@
 ﻿@inherits LayoutComponentBase
+@using ComwellWeb.Komponents
+@using Core
 <div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div class="top-row px-4 NavBarPlace">
+            @if (CurrentUser.Role == "HR")
+            {
+                <HRNavBar/> 
+            }
+            else if (CurrentUser.Role == "Student")
+            {
+                <StudentNavBar/>
+            }
+            else if (CurrentUser.Role == "KitchenManager")
+            {
+                <KitchenManegerNavBar/>
+            }
+            else
+            {
+                <StdNavBar/>
+            }
         </div>
 
         <article class="content px-4">
@@ -14,3 +27,14 @@
         </article>
     </main>
 </div>
+
+@code {
+    [Parameter]
+    public User CurrentUser { get; set; }
+    
+    protected override void OnInitialized()
+    {
+            CurrentUser = new User { Role = "HR" };
+    }
+
+}
