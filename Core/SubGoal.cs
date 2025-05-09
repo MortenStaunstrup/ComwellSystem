@@ -6,7 +6,7 @@ public class SubGoal
 {
     [Required]
     public int SubGoalId { get; set; }
-    [Required]
+    [Required(ErrorMessage = "Et Delmål kræver en elev")]
     public int StudentId { get; set; }
     public Comment[]? Comments { get; set; }
     [Required(ErrorMessage = "Et Delmål skal have et navn")]
@@ -18,7 +18,6 @@ public class SubGoal
     [Required]
     public bool SubGoalStatus { get; set; }
     public double? SubGoalTime { get; set; }
-    // custom validering skal indsættes
     [Required]
     [Deadline]
     public DateOnly SubGoalDueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
