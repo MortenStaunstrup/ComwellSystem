@@ -184,12 +184,12 @@ public class SubGoalServiceClient : ISubGoalService
     };
 
 
-    public List<SubGoal> GetSubGoalsByStudentIdAsync(int studentId)
+    public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
     {
         return subGoals.FindAll(x => x.StudentId == studentId);
     }
 
-    public List<TemplateSubGoal> GetAllTemplateSubGoalsAsync()
+    public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
         return templates;
     }
