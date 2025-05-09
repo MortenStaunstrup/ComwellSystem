@@ -11,103 +11,98 @@
 }
 else
 {
-    // Et lille kort over subgoal, så kokken kan se hvordan den kommer til at se ud
-    <div class="subGoalCard">
-        <img alt="Picture related to course" src="@(string.IsNullOrWhiteSpace(_model.SubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_model.SubGoalPicture}")"/>
-        <span>@_model.SubGoalName</span>
-        <span>@_model.SubGoalDescription</span>
-        <span>@_model.SubGoalCategory</span>
-        <span>@(_model.SubGoalTime != null ? $"{_model.SubGoalTime}" + " Timer" : "")</span>
-        <span>@_model.SubGoalDueDate</span>
-        <span>@(_model.SubGoalStatus ? "Færdiggjort" : "Ikke færdigjort")</span>
-    </div>
-    
-    <h3>Opret Delmål</h3>
-    <div class="subGoalATemplates">
-        <EditForm EditContext="EditContext" FormName="Create SubGoal" class="row p-3" OnSubmit="HandleSubmit">
-            <DataAnnotationsValidator></DataAnnotationsValidator>
-            <ValidationSummary></ValidationSummary>
-            
-            <div class="col-md-6 mb-3">
-                <label for="name">Navn</label>
-                <InputText id="name" @bind-Value="_model.SubGoalName" class="form-control"/>
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 FormOverordnet">
+                <div class="card shadow p-4 mb-4">
+                    <h3 class="text-center mb-4">Opret Delmål</h3>
+                    <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="Titel.." />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputFile OnChange="HandleImageUpload" accept=".png,.jpeg,.jpg" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputDate @bind-Value="_model.SubGoalDueDate" class="form-control" placeholder="dd-mm-åååå" />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputNumber TValue="double?" @bind-Value="_model.SubGoalTime" class="form-control" placeholder="--:--" />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputSelect @bind-Value="_model.SubGoalCategory" class="form-control">
+                                <option value="">Vælg kategori</option>
+                                @foreach (var category in _categories)
+                                {
+                                    <option value="@category">@category</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3">
+                            @if (_myStudents != null)
+                            {
+                                <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <InputText class="form-control" @bind-Value="_comment" placeholder="Evt. kommentar" />
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-success">Tildel Delmål</button>
+                            <button @onclick="AddToTemplates" type="submit" class="btn btn-primary">Tildel og Tilføj Template</button>
+                        </div>
+                    </EditForm>
+                </div>
             </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="category">Kategori</label>
-                <InputSelect id="category" @bind-Value="_model.SubGoalCategory" class="form-control">
-                    <option></option>
-                    @foreach (var category in _categories)
+
+            <div class="col-md-5">
+                <div class="card shadow p-3 listTemplates-box">
+                    <h3 class="text-center">Templates</h3>
+
+                    @if (_templates == null)
                     {
-                        <option value="@category">@category</option>
+                        <p class="text-muted">Ingen templates tilgængelige</p>
                     }
-                </InputSelect>
+                    else
+                    {
+                        <div class="template-scroll">
+                            @foreach (var template in _templates)
+                            {
+                                <div class="card mb-3 templateCard">
+                                    <img class="card-img-top" alt="Template billede" src="@(string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{template.TemplateSubGoalPicture}")" />
+                                    <div class="card-body">
+                                        <h5 class="card-title">@template.TemplateSubGoalName</h5>
+                                        <p class="card-text">@template.TemplateSubGoalDescription</p>
+                                        <small class="text-muted">@template.TemplateSubGoalCategory</small>
+                                        <button class="btn btn-sm btn-outline-primary mt-2" @onclick="() => UseTemplate(template.TemplateSubGoalId)">Brug Template</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="time">Tids Estimering</label>
-                <InputNumber TValue="double?" id="time" @bind-Value="_model.SubGoalTime" class="form-control"/>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="deadline">Deadline</label>
-                <InputDate id="deadline" @bind-Value="_model.SubGoalDueDate" class="form-control"/>
-            </div>
-            
-            <div class="col-md-12 mb-3">
-                <label for="desc">Beskrivelse</label>
-                <InputTextArea id="desc" @bind-Value="_model.SubGoalDescription" class="form-control"/>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="pic">Billede</label>
-                <InputFile id="pic" OnChange="HandleImageUpload" accept=".png,.jpeg,.jpg" class="form-control"/>
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                @if (_myStudents != null)
-                {
-                    <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
-                }
-            </div>
-            
-            <div class="col-6 mb-3">
-                <button type="submit" class="btn btn-primary" style="background-color: green">Tildel Delmål</button>
-            </div>
-            
-            <div class="col-6 mb-3">
-                <button @onclick="AddToTemplates" type="submit" class="btn btn-primary">Tildel Delmål og tilføj til templates</button>
-            </div>
-            
-        </EditForm>
-            
-        <div class="listTemplates">
-            <h3>Templates</h3>
-            @if (_templates == null)
-            {
-                <p>No templates exist</p>
-            }
-            else
-            {
-                @foreach (var template in _templates)
-                {
-                    <div class="templateCard">
-                        <img alt="Picture related to course" src="@(string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{template.TemplateSubGoalPicture}")"/>
-                        <span>@template.TemplateSubGoalName</span>
-                        <span>@template.TemplateSubGoalDescription</span>
-                        <span>@template.TemplateSubGoalCategory</span>
-                        <button @onclick="() => UseTemplate(template.TemplateSubGoalId)">Use Template</button>
-                    </div>
-                }
-            }
         </div>
     </div>
 }
 
 @code {
-
+    private string _comment; //Test af Umut da der ellers kom fejl med der hvor dens tilhørende bindvalue="_comment" er
     User _currentUser;
-    // Logik til at vælge hvilken student (eller students) som man vil indsætte den hos
     List<User>? _myStudents = new List<User>()
     {
         new User()
@@ -124,7 +119,8 @@ else
             StudentPlan = null,
             UserIdResponsible = 23,
             UserSemester = new DateOnly(2022, 6, 16)
-        }, new User()
+        },
+        new User()
         {
             UserId = 2,
             UserName = "Morten Egg",
@@ -138,39 +134,37 @@ else
             StudentPlan = null,
             UserIdResponsible = 23,
             UserSemester = new DateOnly(2022, 6, 16)
-        }, new User()
+        },
+        new User()
         {
-        UserId = 3,
-        UserName = "Fleg Nielsen",
-        UserEmail = "FlN@Comwell.dk",
-        UserPassword = "sgesg",
-        UserPhone = "84329425",
-        Role = "Student",
-        Messages = null,
-        Notifications = null,
-        Picture = null,
-        StudentPlan = null,
-        UserIdResponsible = 23,
-        UserSemester = new DateOnly(2022, 6, 16)
-    }
+            UserId = 3,
+            UserName = "Fleg Nielsen",
+            UserEmail = "FlN@Comwell.dk",
+            UserPassword = "sgesg",
+            UserPhone = "84329425",
+            Role = "Student",
+            Messages = null,
+            Notifications = null,
+            Picture = null,
+            StudentPlan = null,
+            UserIdResponsible = 23,
+            UserSemester = new DateOnly(2022, 6, 16)
+        }
     };
 
     List<User> _addedStudents = new List<User>();
-    
     List<TemplateSubGoal>? _templates;
-    
     SubGoal _model;
     EditContext EditContext;
     bool _addToTemplate = false;
     byte[] pictureBytes;
-
     StudentDropdown? dropdown { get; set; }
 
     string[] _categories = new[]
     {
         "Kursus", "Køkken kompetence", "Faglig mål"
     };
-    
+
     protected override async Task OnInitializedAsync()
     {
         _currentUser = new User()
@@ -188,20 +182,17 @@ else
             UserIdResponsible = null,
             UserSemester = null
         };
-        
+
         if (_currentUser.Role != "Cook")
         {
             NavMan.NavigateTo("/");
         }
-        
-        // Todo Indsæt funktion til at hente de elver som en ansvarlig har
-        
+
         _model = new SubGoal();
         EditContext = new EditContext(_model);
         _templates = SubGoalService.GetAllTemplateSubGoalsAsync();
-
     }
-    
+
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
@@ -213,17 +204,16 @@ else
             _model.SubGoalPicture = Convert.ToBase64String(pictureBytes);
         }
     }
-    
+
     private void HandleSubmit()
     {
         _model.SubGoalId = 0;
         _model.StudentId = 0;
-        Console.WriteLine("Validating model");
+
         if (EditContext.Validate())
         {
             if (_addToTemplate)
             {
-                Console.WriteLine("Adding to Templates");
                 TemplateSubGoal temp = new TemplateSubGoal()
                 {
                     TemplateSubGoalCategory = _model.SubGoalCategory,
@@ -232,25 +222,22 @@ else
                     TemplateSubGoalName = _model.SubGoalName,
                     TemplateSubGoalPicture = _model.SubGoalPicture
                 };
-               SubGoalService.AddSubGoalToTemplates(temp);
-               _addToTemplate = false;
+                SubGoalService.AddSubGoalToTemplates(temp);
+                _addToTemplate = false;
             }
-            
-            Console.WriteLine("Creating SubGoal for students");
+
             foreach (var student in _addedStudents)
             {
                 _model.StudentId = student.UserId;
                 SubGoalService.CreateSubGoal(_model);
-                Console.WriteLine($"Creating Subgoal for user: {student.UserName}, {student.UserId}");
             }
+
             ResetModels();
         }
     }
 
-    // Funktion til at give modellen de samme attributter som template
     private void UseTemplate(int templateId)
     {
-        Console.WriteLine("Deriving subgoal model from template");
         var template = _templates.Find(x => x.TemplateSubGoalId == templateId);
         _model.SubGoalCategory = template.TemplateSubGoalCategory;
         _model.SubGoalDescription = template.TemplateSubGoalDescription;
@@ -273,5 +260,4 @@ else
         EditContext = new EditContext(_model);
         StateHasChanged();
     }
-
 }
