@@ -1,7 +1,64 @@
 @page "/MyProfile"
+@using Microsoft.AspNetCore.Components.Forms
+@using Core
 
-<h3>MinProfil</h3>
+
+<div id="baggrund">
+    <h1 id="UserName">@CurrentUser.UserName</h1>
+    <div id="altindhold">
+        <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
+        <InputFile OnChange="HandleSelected" accept="image/*"/>
+
+        <div id="infobox">
+            <div class="infobox-indhold">
+                <input class="Infobox-Input" type="text" value="@CurrentUser.UserName">
+            </div>
+            <div class="infobox-indhold">
+                <input class="Infobox-Input" type="text" value="@CurrentUser.UserEmail">
+            </div>
+            <div class="infobox-indhold">
+                <input class="Infobox-Input" type="text" value="@CurrentUser.UserPhone">
+            </div>
+        </div>
+        <button class="btn btn-primary">Gem ændringer</button>
+    </div>
+</div>
 
 @code {
-    
+    [Parameter]
+    public User CurrentUser { get; set; }
+
+    private string profilePicture;
+
+    private string defaultPicture = "/Pictures/NoProfilePicture.png";
+
+    protected override void OnInitialized()
+    {
+        CurrentUser = new User
+        {
+            UserName = "Test",
+            Picture = null,
+            UserEmail = "test@outlook.dk",
+            UserPhone = "42323602"
+        };
+
+        if (CurrentUser.Picture == null)
+        {
+            profilePicture = defaultPicture;
+        }
+        else
+        {
+            profilePicture = CurrentUser.Picture;
+        }
+    }
+
+    private async Task HandleSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10).ReadAsync(buffer);
+
+        CurrentUser.Picture = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        profilePicture = CurrentUser.Picture;
+    }
 }
