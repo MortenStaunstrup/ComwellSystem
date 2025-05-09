@@ -1,0 +1,60 @@
+@using Core
+<div class="imagedropdown-container">
+    
+    <div class="imagedropdown-header" @onclick="ToggleDropdown">
+        <span class="imagedropdown-arrow">▼ Tildel elever</span>
+    </div>
+    @if (_isOpen)
+    {
+        <div>
+            <ul>
+            @if (_students != null)
+            {
+                foreach (var student in _students)
+                {
+                    <li>
+                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(student.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{student.Picture}")"/>
+                    <span>@student.UserName</span>
+                    <button @onclick="() => AssignStudent(student)">Assign</button>
+                    </li>
+                }
+            }
+            </ul>
+        </div>
+        <div>
+            <ul>
+            @if (_addedStudents != null)
+            {
+                foreach (var addedStudent in _addedStudents)
+                {
+                    <li>
+                        <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(addedStudent.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{addedStudent.Picture}")"/>
+                        <span>@addedStudent.UserName</span>
+                        <button @onclick="() => UnassignStudent(addedStudent)">Unassign</button>
+                    </li>
+                }
+            }
+            </ul>
+        </div>
+    }
+</div>
+@code {
+    [Parameter]
+    public List<User>? _students { get; set; } = new List<User>();
+    [Parameter] 
+    public List<User>? _addedStudents { get; set; } = new List<User>();
+    private bool _isOpen = false;
+    private void ToggleDropdown() => _isOpen = !_isOpen;
+
+    public void AssignStudent(User student)
+    {
+        _students.Remove(student);
+        _addedStudents.Add(student);
+    }
+
+    public void UnassignStudent(User student)
+    {
+        _addedStudents.Remove(student);
+        _students.Add(student);
+    }
+}

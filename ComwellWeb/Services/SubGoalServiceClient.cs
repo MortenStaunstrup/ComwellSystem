@@ -198,12 +198,14 @@ public class SubGoalServiceClient : ISubGoalService
     {
         subGoal.SubGoalId = subGoals.Max(s => s.SubGoalId) + 1;
         subGoals.Add(subGoal);
+        Console.WriteLine("Adding subgoal to student in services");
     }
 
     public void AddSubGoalToTemplates(TemplateSubGoal template)
     {
         template.TemplateSubGoalId = templates.Max(t => t.TemplateSubGoalId) + 1;
         templates.Add(template);
+        Console.WriteLine("Adding subgoal to templates in services");
     }
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
@@ -211,6 +213,7 @@ public class SubGoalServiceClient : ISubGoalService
         int index = subGoals.FindIndex(x => x.SubGoalId == subGoal.SubGoalId);
         subGoals.RemoveAt(index);
         subGoals.Insert(index, subGoal);
+        Console.WriteLine("Updating subgoal in services");
     }
 
     public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
@@ -218,20 +221,24 @@ public class SubGoalServiceClient : ISubGoalService
         int index = templates.FindIndex(x => x.TemplateSubGoalId == template.TemplateSubGoalId);
         templates.RemoveAt(index);
         templates.Insert(index, template);
+        Console.WriteLine("Updating template in services");
     }
 
     public void CompleteSubGoalBySubGoalId(int subGoalId)
     {
         subGoals.Find(x => x.SubGoalId == subGoalId).SubGoalStatus = true;
+        Console.WriteLine("Completing subgoal in services");
     }
 
     public void DeleteSubGoalBySubGoalId(int subGoalId)
     {
         subGoals.RemoveAll(x => x.SubGoalId == subGoalId);
+        Console.WriteLine("Deleting subgoal in services");
     }
 
     public void DeleteTemplateByTemplateId(int templateId)
     {
         templates.RemoveAll(x => x.TemplateSubGoalId == templateId);
+        Console.WriteLine("Deleting template in services");
     }
 }

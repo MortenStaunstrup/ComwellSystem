@@ -1,20 +1,17 @@
 @page "/createnewsubgoal"
 @using ComwellWeb.Services.Interfaces
 @using Core
+@using ComwellWeb.Komponents
 @inject NavigationManager NavMan
 @inject ISubGoalService SubGoalService
 
-<p>til create edit og slet</p>
-<!-- Todo giv en placeholder til templates, hvis der ikke er noget billede -->
-<!-- Todo tilføj logik til at tildele subgoal til elever/elev -->
-<!-- Todo tilføj logik så kok kan tilføje sit subgoal til templates -->
-<!-- Potentielt lav et subGoal kort der 'in real time' viser hvordan et subgoal kommer til at se ud -->
 @if (_currentUser == null)
 {
     <p>Authenticating User....</p>
 }
 else
 {
+    // Et lille kort over subgoal, så kokken kan se hvordan den kommer til at se ud
     <div class="subGoalCard">
         <img alt="Picture related to course" src="@(string.IsNullOrWhiteSpace(_model.SubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_model.SubGoalPicture}")"/>
         <span>@_model.SubGoalName</span>
@@ -22,10 +19,10 @@ else
         <span>@_model.SubGoalCategory</span>
         <span>@(_model.SubGoalTime != null ? $"{_model.SubGoalTime}" + " Timer" : "")</span>
         <span>@_model.SubGoalDueDate</span>
-        <span>@_model.SubGoalStatus</span>
+        <span>@(_model.SubGoalStatus ? "Færdiggjort" : "Ikke færdigjort")</span>
     </div>
     
-    <h3>OpretSubGoal</h3>
+    <h3>Opret Delmål</h3>
     <div class="subGoalATemplates">
         <EditForm EditContext="EditContext" FormName="Create SubGoal" class="row p-3" OnSubmit="HandleSubmit">
             <DataAnnotationsValidator></DataAnnotationsValidator>
@@ -58,7 +55,7 @@ else
             </div>
             
             <div class="col-md-12 mb-3">
-                <label for="desc">Deskription</label>
+                <label for="desc">Beskrivelse</label>
                 <InputTextArea id="desc" @bind-Value="_model.SubGoalDescription" class="form-control"/>
             </div>
             
@@ -67,11 +64,23 @@ else
                 <InputFile id="pic" OnChange="HandleImageUpload" accept=".png,.jpeg,.jpg" class="form-control"/>
             </div>
             
-            <div class="col-12 mb-3">
-                <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="col-md-6 mb-3">
+                @if (_myStudents != null)
+                {
+                    <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
+                }
             </div>
+            
+            <div class="col-6 mb-3">
+                <button type="submit" class="btn btn-primary" style="background-color: green">Tildel Delmål</button>
+            </div>
+            
+            <div class="col-6 mb-3">
+                <button @onclick="AddToTemplates" type="submit" class="btn btn-primary">Tildel Delmål og tilføj til templates</button>
+            </div>
+            
         </EditForm>
-        
+            
         <div class="listTemplates">
             <h3>Templates</h3>
             @if (_templates == null)
@@ -92,7 +101,6 @@ else
                 }
             }
         </div>
-        
     </div>
 }
 
@@ -100,14 +108,63 @@ else
 
     User _currentUser;
     // Logik til at vælge hvilken student (eller students) som man vil indsætte den hos
-    User _student;
+    List<User>? _myStudents = new List<User>()
+    {
+        new User()
+        {
+            UserId = 1,
+            UserName = "Martin Felixen",
+            UserEmail = "MF@Comwell.dk",
+            UserPassword = "hejhej",
+            UserPhone = "238240289",
+            Role = "Student",
+            Messages = null,
+            Notifications = null,
+            Picture = null,
+            StudentPlan = null,
+            UserIdResponsible = 23,
+            UserSemester = new DateOnly(2022, 6, 16)
+        }, new User()
+        {
+            UserId = 2,
+            UserName = "Morten Egg",
+            UserEmail = "Egg@Comwell.dk",
+            UserPassword = "bilsd",
+            UserPhone = "95283984",
+            Role = "Student",
+            Messages = null,
+            Notifications = null,
+            Picture = null,
+            StudentPlan = null,
+            UserIdResponsible = 23,
+            UserSemester = new DateOnly(2022, 6, 16)
+        }, new User()
+        {
+        UserId = 3,
+        UserName = "Fleg Nielsen",
+        UserEmail = "FlN@Comwell.dk",
+        UserPassword = "sgesg",
+        UserPhone = "84329425",
+        Role = "Student",
+        Messages = null,
+        Notifications = null,
+        Picture = null,
+        StudentPlan = null,
+        UserIdResponsible = 23,
+        UserSemester = new DateOnly(2022, 6, 16)
+    }
+    };
 
-    List<TemplateSubGoal> _templates;
+    List<User> _addedStudents = new List<User>();
+    
+    List<TemplateSubGoal>? _templates;
     
     SubGoal _model;
     EditContext EditContext;
     bool _addToTemplate = false;
     byte[] pictureBytes;
+
+    StudentDropdown? dropdown { get; set; }
 
     string[] _categories = new[]
     {
@@ -131,28 +188,14 @@ else
             UserIdResponsible = null,
             UserSemester = null
         };
-
-        _student = new User()
-        {
-            UserId = 1,
-            UserName = "Martin",
-            UserEmail = "Martin@Comwell.dk",
-            UserPassword = "mm",
-            UserPhone = "15939528",
-            Role = "Student",
-            Messages = null,
-            Notifications = null,
-            Picture = null,
-            StudentPlan = null,
-            UserIdResponsible = 23,
-            UserSemester = new DateOnly(2022, 6, 16)
-        };
-
+        
         if (_currentUser.Role != "Cook")
         {
             NavMan.NavigateTo("/");
         }
-
+        
+        // Todo Indsæt funktion til at hente de elver som en ansvarlig har
+        
         _model = new SubGoal();
         EditContext = new EditContext(_model);
         _templates = SubGoalService.GetAllTemplateSubGoalsAsync();
@@ -170,26 +213,41 @@ else
             _model.SubGoalPicture = Convert.ToBase64String(pictureBytes);
         }
     }
-
-    // Logik implementeres for at indsætte i templates også, hvis kok har valgt det
+    
     private void HandleSubmit()
     {
         _model.SubGoalId = 0;
-        _model.StudentId = _student.UserId;
+        _model.StudentId = 0;
         Console.WriteLine("Validating model");
         if (EditContext.Validate())
         {
             if (_addToTemplate)
             {
                 Console.WriteLine("Adding to Templates");
-               
+                TemplateSubGoal temp = new TemplateSubGoal()
+                {
+                    TemplateSubGoalCategory = _model.SubGoalCategory,
+                    TemplateSubGoalDescription = string.IsNullOrWhiteSpace(_model.SubGoalDescription) ? "No desc..." : _model.SubGoalDescription,
+                    TemplateSubGoalId = 0,
+                    TemplateSubGoalName = _model.SubGoalName,
+                    TemplateSubGoalPicture = _model.SubGoalPicture
+                };
+               SubGoalService.AddSubGoalToTemplates(temp);
+               _addToTemplate = false;
             }
             
-            Console.WriteLine("Creating SubGoal");
-            SubGoalService.CreateSubGoal(_model);
+            Console.WriteLine("Creating SubGoal for students");
+            foreach (var student in _addedStudents)
+            {
+                _model.StudentId = student.UserId;
+                SubGoalService.CreateSubGoal(_model);
+                Console.WriteLine($"Creating Subgoal for user: {student.UserName}, {student.UserId}");
+            }
+            ResetModels();
         }
     }
 
+    // Funktion til at give modellen de samme attributter som template
     private void UseTemplate(int templateId)
     {
         Console.WriteLine("Deriving subgoal model from template");
@@ -201,6 +259,18 @@ else
         {
             _model.SubGoalPicture = template.TemplateSubGoalPicture;
         }
+        StateHasChanged();
+    }
+
+    private void AddToTemplates()
+    {
+        _addToTemplate = true;
+    }
+
+    private void ResetModels()
+    {
+        _model = new SubGoal();
+        EditContext = new EditContext(_model);
         StateHasChanged();
     }
 
