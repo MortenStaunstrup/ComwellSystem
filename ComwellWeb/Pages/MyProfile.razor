@@ -4,7 +4,7 @@
 
 
 <div id="baggrund">
-    <h1>@CurrentUser.UserName</h1>
+    <h1 id="UserName">@CurrentUser.UserName</h1>
     <div id="altindhold">
         <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
         <InputFile OnChange="HandleSelected" accept="image/*"/>
@@ -20,8 +20,8 @@
                 <input class="Infobox-Input" type="text" value="@CurrentUser.UserPhone">
             </div>
         </div>
+        <button class="btn btn-primary">Gem ændringer</button>
     </div>
-    <button class="btn btn-primary">Gem ændringer</button>
 </div>
 
 @code {
