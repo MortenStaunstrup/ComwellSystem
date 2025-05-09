@@ -23,4 +23,8 @@
       <_ContentIncludedByDefault Remove="Modal\TeamPageModal.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\sample-data\" />
+    </ItemGroup>
+
 </Project>
