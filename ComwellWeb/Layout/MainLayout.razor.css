@@ -57,7 +57,7 @@ main {
     }
 
     .top-row {
-        z-index: 10;
+        z-index: 11;
     }
 
     .top-row.auth ::deep a:first-child {
