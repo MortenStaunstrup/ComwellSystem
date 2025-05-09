@@ -1,7 +1,207 @@
-@page "/CreateNewSubGoal"
+@page "/createnewsubgoal"
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject NavigationManager NavMan
+@inject ISubGoalService SubGoalService
 
-<h3>OpretSubGoal</h3>
 <p>til create edit og slet</p>
-@code {
+<!-- Todo giv en placeholder til templates, hvis der ikke er noget billede -->
+<!-- Todo tilføj logik til at tildele subgoal til elever/elev -->
+<!-- Todo tilføj logik så kok kan tilføje sit subgoal til templates -->
+<!-- Potentielt lav et subGoal kort der 'in real time' viser hvordan et subgoal kommer til at se ud -->
+@if (_currentUser == null)
+{
+    <p>Authenticating User....</p>
+}
+else
+{
+    <div class="subGoalCard">
+        <img alt="Picture related to course" src="@(string.IsNullOrWhiteSpace(_model.SubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_model.SubGoalPicture}")"/>
+        <span>@_model.SubGoalName</span>
+        <span>@_model.SubGoalDescription</span>
+        <span>@_model.SubGoalCategory</span>
+        <span>@(_model.SubGoalTime != null ? $"{_model.SubGoalTime}" + " Timer" : "")</span>
+        <span>@_model.SubGoalDueDate</span>
+        <span>@_model.SubGoalStatus</span>
+    </div>
     
+    <h3>OpretSubGoal</h3>
+    <div class="subGoalATemplates">
+        <EditForm EditContext="EditContext" FormName="Create SubGoal" class="row p-3" OnSubmit="HandleSubmit">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <ValidationSummary></ValidationSummary>
+            
+            <div class="col-md-6 mb-3">
+                <label for="name">Navn</label>
+                <InputText id="name" @bind-Value="_model.SubGoalName" class="form-control"/>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label for="category">Kategori</label>
+                <InputSelect id="category" @bind-Value="_model.SubGoalCategory" class="form-control">
+                    <option></option>
+                    @foreach (var category in _categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </InputSelect>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label for="time">Tids Estimering</label>
+                <InputNumber TValue="double?" id="time" @bind-Value="_model.SubGoalTime" class="form-control"/>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label for="deadline">Deadline</label>
+                <InputDate id="deadline" @bind-Value="_model.SubGoalDueDate" class="form-control"/>
+            </div>
+            
+            <div class="col-md-12 mb-3">
+                <label for="desc">Deskription</label>
+                <InputTextArea id="desc" @bind-Value="_model.SubGoalDescription" class="form-control"/>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label for="pic">Billede</label>
+                <InputFile id="pic" OnChange="HandleImageUpload" accept=".png,.jpeg,.jpg" class="form-control"/>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </EditForm>
+        
+        <div class="listTemplates">
+            <h3>Templates</h3>
+            @if (_templates == null)
+            {
+                <p>No templates exist</p>
+            }
+            else
+            {
+                @foreach (var template in _templates)
+                {
+                    <div class="templateCard">
+                        <img alt="Picture related to course" src="@(string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{template.TemplateSubGoalPicture}")"/>
+                        <span>@template.TemplateSubGoalName</span>
+                        <span>@template.TemplateSubGoalDescription</span>
+                        <span>@template.TemplateSubGoalCategory</span>
+                        <button @onclick="() => UseTemplate(template.TemplateSubGoalId)">Use Template</button>
+                    </div>
+                }
+            }
+        </div>
+        
+    </div>
+}
+
+@code {
+
+    User _currentUser;
+    // Logik til at vælge hvilken student (eller students) som man vil indsætte den hos
+    User _student;
+
+    List<TemplateSubGoal> _templates;
+    
+    SubGoal _model;
+    EditContext EditContext;
+    bool _addToTemplate = false;
+    byte[] pictureBytes;
+
+    string[] _categories = new[]
+    {
+        "Kursus", "Køkken kompetence", "Faglig mål"
+    };
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = new User()
+        {
+            UserId = 23,
+            UserName = "Kenneth Hansen",
+            UserEmail = "KH@Comwell.dk",
+            UserPassword = "mitpass",
+            UserPhone = "22177992",
+            Role = "Cook",
+            Messages = null,
+            Notifications = null,
+            Picture = null,
+            StudentPlan = null,
+            UserIdResponsible = null,
+            UserSemester = null
+        };
+
+        _student = new User()
+        {
+            UserId = 1,
+            UserName = "Martin",
+            UserEmail = "Martin@Comwell.dk",
+            UserPassword = "mm",
+            UserPhone = "15939528",
+            Role = "Student",
+            Messages = null,
+            Notifications = null,
+            Picture = null,
+            StudentPlan = null,
+            UserIdResponsible = 23,
+            UserSemester = new DateOnly(2022, 6, 16)
+        };
+
+        if (_currentUser.Role != "Cook")
+        {
+            NavMan.NavigateTo("/");
+        }
+
+        _model = new SubGoal();
+        EditContext = new EditContext(_model);
+        _templates = SubGoalService.GetAllTemplateSubGoalsAsync();
+
+    }
+    
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(memoryStream);
+            pictureBytes = memoryStream.ToArray();
+            _model.SubGoalPicture = Convert.ToBase64String(pictureBytes);
+        }
+    }
+
+    // Logik implementeres for at indsætte i templates også, hvis kok har valgt det
+    private void HandleSubmit()
+    {
+        _model.SubGoalId = 0;
+        _model.StudentId = _student.UserId;
+        Console.WriteLine("Validating model");
+        if (EditContext.Validate())
+        {
+            if (_addToTemplate)
+            {
+                Console.WriteLine("Adding to Templates");
+               
+            }
+            
+            Console.WriteLine("Creating SubGoal");
+            SubGoalService.CreateSubGoal(_model);
+        }
+    }
+
+    private void UseTemplate(int templateId)
+    {
+        Console.WriteLine("Deriving subgoal model from template");
+        var template = _templates.Find(x => x.TemplateSubGoalId == templateId);
+        _model.SubGoalCategory = template.TemplateSubGoalCategory;
+        _model.SubGoalDescription = template.TemplateSubGoalDescription;
+        _model.SubGoalName = template.TemplateSubGoalName;
+        if (!string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture))
+        {
+            _model.SubGoalPicture = template.TemplateSubGoalPicture;
+        }
+        StateHasChanged();
+    }
+
 }
