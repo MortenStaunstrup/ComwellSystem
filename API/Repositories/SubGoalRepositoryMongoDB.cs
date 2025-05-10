@@ -18,12 +18,12 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     
     public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
     {
-
+        return await Task.FromResult(new List<SubGoal>());
     }
 
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
-
+        return await Task.FromResult(new List<TemplateSubGoal>());
     }
 
     public void CreateSubgoal()

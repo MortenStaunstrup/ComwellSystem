@@ -1,7 +1,36 @@
 @page "/Messenger"
+@using Core
 
-<h3>Messages</h3>
+<PageTitle>Beskeder</PageTitle>
+<h3>Beskeder</h3>
+<div class="chat-card">
+    <div class="chat-header">
+        <div class="h2">ChatGPT</div>
+    </div>
+    <div class="chat-body">
+        <div class="message incoming"> 
+            <p>Hello, how can I assist you today?</p>
+        </div>
+        <div class="message outgoing">
+            <p>I have a question about your services.</p>
+        </div>
+        <div class="message incoming">
+            <p>Sure, I'm here to help. What would you like to know?</p>
+        </div>
+    
+    </div>
+    <div class="chat-footer">
+        <input placeholder="Type your message" type="text">
+        <button>Send</button>
+    </div>
+</div>
 
 @code {
-    
+    [Parameter] //Tanken er foreach var message in newmessage smth {
+    //if (currentuser)
+  //<div class="egen besked"> derefter bliver "egen" stylet som blå og "besked" bliver stylet som hvordan begges beskeder skal se ud
+    // if (!currentuser)
+    //<div class="andens besked"> "besked" er stadig hvordan beskeden skal se ud, hvor "andens" bare er grå, så man kan se forskel på beskederne
+//}
+    public User CurrentUser { get; set; }
 }
