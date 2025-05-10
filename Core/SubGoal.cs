@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core;
 
 public class SubGoal
 {
     [Required]
+    [BsonElement("_id")]
     public int SubGoalId { get; set; }
     [Required(ErrorMessage = "Et Delmål kræver en elev")]
     public int StudentId { get; set; }

@@ -1,7 +1,10 @@
-﻿namespace Core;
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace Core;
 
 public class User
 {
+    [BsonElement("_id")]
     public int UserId { get; set; }
     public string UserName { get; set; }
     public SubGoal[]? StudentPlan { get; set; }
