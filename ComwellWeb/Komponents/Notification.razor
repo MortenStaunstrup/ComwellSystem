@@ -1,6 +1,15 @@
-
+@using Core;
+@using ComwellWeb.Komponents;
+@inject List<Notification> notifications;
+<div id="AltIndhold">
+    @foreach (var Notification in notifications)
+    {
+        <div class="notifikation"></div>
+    }
+</div>
 <h3>Notifikationer</h3>
 
 @code {
-    
+    [Parameter]
+    public User CurrentUser { get; set; } //Jeg skal lige finde ud af hvordan man får loggik at det er currentusers noti den skal vise
 }
