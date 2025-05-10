@@ -1,4 +1,23 @@
+using API.Repositories;
+using API.Repositories.Interface;
+using DotNetEnv;
+
 var builder = WebApplication.CreateBuilder(args);
+
+Env.Load();
+
+builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyHeader();
+            policy.AllowAnyMethod();
+        });
+});
 
 // Add services to the container.
 
@@ -17,6 +36,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseCors("policy");
 
 app.MapControllers();
 

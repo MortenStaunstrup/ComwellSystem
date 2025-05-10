@@ -190,7 +190,7 @@ else
 
         _model = new SubGoal();
         EditContext = new EditContext(_model);
-        _templates = SubGoalService.GetAllTemplateSubGoalsAsync();
+        _templates = await SubGoalService.GetAllTemplateSubGoalsAsync();
     }
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
