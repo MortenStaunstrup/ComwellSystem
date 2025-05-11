@@ -17,22 +17,40 @@ public class SubGoalServiceServer : ISubGoalService
     
     public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
     {
-        return await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/subgoals/get/{studentId}");
+        Console.WriteLine($"Getting student {studentId} subgoals from service");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/subgoals/get/{studentId}");
+        if (result == null || result.Count == 0)
+        {
+            Console.WriteLine("Subgoals either null or empty list, returning null: service");
+            return null;
+        }
+
+        return result;
     }
 
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
-        return await _client.GetFromJsonAsync<List<TemplateSubGoal>?>($"{BaseURL}/gettemplates");
+        Console.WriteLine("Getting templates: service");
+        var result = await _client.GetFromJsonAsync<List<TemplateSubGoal>?>($"{BaseURL}/gettemplates");
+        if (result == null || result.Count == 0)
+        {
+            Console.WriteLine("Templates either null or empty list, returning null: service");
+            return null;
+        }
+        Console.WriteLine("Returning templates: service");
+        return result;
     }
 
     public void CreateSubGoal(SubGoal subGoal)
     {
-        
+        Console.WriteLine("Creating subgoal: service");
+        _client.PostAsJsonAsync($"{BaseURL}/create", subGoal);
     }
 
     public void AddSubGoalToTemplates(TemplateSubGoal template)
     {
-        
+        Console.WriteLine("Creating template: service");
+        _client.PostAsJsonAsync($"{BaseURL}/addtotemplates", template);
     }
 
     public void UpdateSubGoalDetails(SubGoal subGoal)

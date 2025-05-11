@@ -55,6 +55,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
                     subgoal.SubGoalPicture = Convert.ToBase64String(await bucket.DownloadAsBytesAsync(subgoal.PictureId));
             }
         }
+        Console.WriteLine($"Returing subgoals for student {studentId}");
         return subgoals;
         
     }
@@ -62,17 +63,51 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
         var filter = Builders<TemplateSubGoal>.Filter.Empty;
+        Console.WriteLine("Returning all templates");
         return await tempCollection.Find(filter).ToListAsync();
     }
 
-    public void CreateSubgoal()
+    public async Task<int> MaxSubGoalId()
     {
-
+        var sort = Builders<SubGoal>.Sort.Descending(x => x.SubGoalId);
+        var maxSubGoalId = await subCollection
+            .Find(Builders<SubGoal>.Filter.Empty)
+            .Sort(sort)
+            .Limit(1)
+            .FirstOrDefaultAsync();
+        return maxSubGoalId?.SubGoalId ?? 0;
     }
 
-    public void AddSubGoalToTemplates()
+    public async void CreateSubgoal(SubGoal subgoal)
     {
+        // Indsætter subgoal i SubGoal collection
+        subgoal.SubGoalId = await MaxSubGoalId() + 1;
+        await subCollection.InsertOneAsync(subgoal);
+        Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
+        
+        // Indsætter subgoal i User under studentplan
+        var filter = Builders<User>.Filter.Eq(x => x.UserId, subgoal.StudentId);
+        var update = Builders<User>.Update.Push("StudentPlan", subgoal);
+        await userCollection.FindOneAndUpdateAsync(filter, update);
+        Console.WriteLine($"Inserting into user {subgoal.StudentId}");
+    }
 
+    public async Task<int> MaxTemplateId()
+    {
+        var sort = Builders<TemplateSubGoal>.Sort.Descending(x => x.TemplateSubGoalId);
+        var maxSubGoalId = await tempCollection
+            .Find(Builders<TemplateSubGoal>.Filter.Empty)
+            .Sort(sort)
+            .Limit(1)
+            .FirstOrDefaultAsync();
+        return maxSubGoalId?.TemplateSubGoalId ?? 0;
+    }
+    
+    public async void AddSubGoalToTemplates(TemplateSubGoal template)
+    {
+        template.TemplateSubGoalId = await MaxTemplateId() + 1;
+        Console.WriteLine($"Inserting template {template.TemplateSubGoalId} into templates");
+        await tempCollection.InsertOneAsync(template);
     }
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
