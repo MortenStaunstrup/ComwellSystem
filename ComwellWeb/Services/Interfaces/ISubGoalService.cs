@@ -12,8 +12,8 @@ public interface ISubGoalService
     
     void UpdateSubGoalDetails(SubGoal subGoal);   // Updater detaljer om subgoal for elev
     void UpdateSubGoalDetailsTemplates(TemplateSubGoal template); // Updater detaljer om subgoal i templates
-    void CompleteSubGoalBySubGoalId(int subGoalId); // Kryds subgoal af som værende done
+    void CompleteSubGoalBySubGoalId(int studentId, int subGoalId); // Kryds subgoal af som værende done
     
-    void DeleteSubGoalBySubGoalId(int subGoalId); // Slet subgoal for elev
+    void DeleteSubGoalBySubGoalId(int studentId, int subGoalId); // Slet subgoal for elev
     void DeleteTemplateByTemplateId(int templateId); // Slet subgoal i templates
 }

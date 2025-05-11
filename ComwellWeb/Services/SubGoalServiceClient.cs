@@ -224,13 +224,13 @@ public class SubGoalServiceClient : ISubGoalService
         Console.WriteLine("Updating template in services");
     }
 
-    public void CompleteSubGoalBySubGoalId(int subGoalId)
+    public void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
         subGoals.Find(x => x.SubGoalId == subGoalId).SubGoalStatus = true;
         Console.WriteLine("Completing subgoal in services");
     }
 
-    public void DeleteSubGoalBySubGoalId(int subGoalId)
+    public void DeleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
         subGoals.RemoveAll(x => x.SubGoalId == subGoalId);
         Console.WriteLine("Deleting subgoal in services");

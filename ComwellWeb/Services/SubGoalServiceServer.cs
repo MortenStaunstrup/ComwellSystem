@@ -63,12 +63,13 @@ public class SubGoalServiceServer : ISubGoalService
         
     }
 
-    public void CompleteSubGoalBySubGoalId(int subGoalId)
+    public async void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
-        
+        Console.WriteLine($"Completing subgoal {subGoalId} for student {studentId}");
+        await _client.PostAsJsonAsync($"{BaseURL}/complete/{studentId}/{subGoalId}", true);
     }
 
-    public void DeleteSubGoalBySubGoalId(int subGoalId)
+    public void DeleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
         
     }

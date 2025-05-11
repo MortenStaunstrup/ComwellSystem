@@ -75,9 +75,10 @@ public class SubGoalController : ControllerBase
     }
 
     [HttpPut]
-    [Route("complte/{subGoalId:int}")]
-    public void CompleteSubGoalBySubGoalId(int subGoalId)
+    [Route("complete/{studentId:int}/{subGoalId:int}")]
+    public void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
+        repository.CompleteSubGoalBySubGoalId(subGoalId, studentId);
         Console.WriteLine("Completing Subgoal: controller");
     }
 

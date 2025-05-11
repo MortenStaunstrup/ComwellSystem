@@ -63,8 +63,18 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
         var filter = Builders<TemplateSubGoal>.Filter.Empty;
+        var result = await tempCollection.Find(filter).ToListAsync();
+
+        if (result.Any())
+        {
+            foreach (var template in result)
+            {
+                if (template.PictureId != null)
+                    template.TemplateSubGoalPicture = Convert.ToBase64String(await bucket.DownloadAsBytesAsync(template.PictureId));
+            }
+        }
         Console.WriteLine("Returning all templates");
-        return await tempCollection.Find(filter).ToListAsync();
+        return result;
     }
 
     public async Task<int> MaxSubGoalId()
@@ -82,6 +92,12 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         // Indsætter subgoal i SubGoal collection
         subgoal.SubGoalId = await MaxSubGoalId() + 1;
+        if (subgoal.SubGoalPicture != null)
+        {
+            var picId = await bucket.UploadFromBytesAsync(subgoal.SubGoalName,Convert.FromBase64String(subgoal.SubGoalPicture));
+            subgoal.PictureId = picId;
+            subgoal.SubGoalPicture = null;
+        }
         await subCollection.InsertOneAsync(subgoal);
         Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
         
@@ -106,13 +122,19 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async void AddSubGoalToTemplates(TemplateSubGoal template)
     {
         template.TemplateSubGoalId = await MaxTemplateId() + 1;
+        if (template.TemplateSubGoalPicture != null)
+        {
+            var picId = await bucket.UploadFromBytesAsync(template.TemplateSubGoalName,Convert.FromBase64String(template.TemplateSubGoalPicture));
+            template.PictureId = picId;
+            template.TemplateSubGoalPicture = null;
+        }
         Console.WriteLine($"Inserting template {template.TemplateSubGoalId} into templates");
         await tempCollection.InsertOneAsync(template);
     }
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
     {
-
+        
     }
 
     public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
@@ -120,12 +142,23 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         
     }
 
-    public void CompleteSubGoalBySubGoalId(int subGoalId)
+    public async void CompleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
+        // updater i SubGoal collection
+        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoalId);
+        var update = Builders<SubGoal>.Update.Set(x => x.SubGoalStatus, true);
+        await subCollection.UpdateOneAsync(filter, update);
         
+        // updater i User
+        var userFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+        var subgoalsFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, g => g.SubGoalId == subGoalId);
+        var combinedFilter = Builders<User>.Filter.And(userFilter, subgoalsFilter);
+        var userUpdate = Builders<User>.Update.Set("StudentPlan.$.Status", true);
+        await userCollection.UpdateOneAsync(combinedFilter, userUpdate);
+
     }
 
-    public void DeleteSubGoalBySubGoalId(int subGoalId)
+    public void DeleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
         
     }
