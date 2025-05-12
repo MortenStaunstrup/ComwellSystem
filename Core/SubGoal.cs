@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core;
 
 public class SubGoal
 {
     [Required]
+    [BsonElement("_id")]
     public int SubGoalId { get; set; }
     [Required(ErrorMessage = "Et Delmål kræver en elev")]
     public int StudentId { get; set; }
@@ -14,6 +17,7 @@ public class SubGoal
     public string? SubGoalDescription { get; set; }
     [Required(ErrorMessage = "Et Delmål skal have en kategori")]
     public string SubGoalCategory { get; set; }
+    public ObjectId? PictureId { get; set; }
     public string? SubGoalPicture { get; set; }
     [Required]
     public bool SubGoalStatus { get; set; }

@@ -21,13 +21,13 @@ public class SubGoalController : ControllerBase
     public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
     {
         var result = await repository.GetSubGoalsByStudentIdAsync(studentId);
-        if (result != null)
+        if (result.Count != 0)
         {
-            Console.WriteLine("Returning subgoals from controller");
+            Console.WriteLine("Returning subgoals: controller");
             return result;
         }
-        Console.WriteLine("No subgoals for student exist");
-        return null;
+        Console.WriteLine("No subgoals for student exist, returning empty list: controller");
+        return result;
     }
     
     [HttpGet]
@@ -35,62 +35,65 @@ public class SubGoalController : ControllerBase
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
     {
         var result = await repository.GetAllTemplateSubGoalsAsync();
-        if (result != null)
+        if (result.Count != 0)
         {
-            Console.WriteLine("Returning templates");
+            Console.WriteLine("Returning templates: controller");
             return result;
         }
-        Console.WriteLine("No templates exist");
-        return null;
+        Console.WriteLine("No templates exist, returning empty list: controller");
+        return result;
     }
     
     [HttpPost]
     [Route("create")]
-    public void CreateSubgoal()
+    public void CreateSubgoal(SubGoal subgoal)
     {
-        Console.WriteLine("Creating subgoal in controller");
+        repository.CreateSubgoal(subgoal);
+        Console.WriteLine("Creating subgoal: controller");
     }
 
     [HttpPost]
     [Route("addtotemplates")]
-    public void AddSubGoalToTemplates()
+    public void AddSubGoalToTemplates(TemplateSubGoal template)
     {
-        Console.WriteLine("Adding to template in controller");
+        repository.AddSubGoalToTemplates(template);
+        Console.WriteLine("Adding template: controller");
     }
 
     [HttpPut]
     [Route("update")]
     public void UpdateSubGoalDetails(SubGoal subGoal)
     {
-        Console.WriteLine("Updating subgoal in controller");
+        Console.WriteLine("Updating subgoal: controller");
     }
 
     [HttpPut]
     [Route("updatetemplate")]
     public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
     {
-        Console.WriteLine("Updating template in controller");
+        Console.WriteLine("Updating template: controller");
     }
 
     [HttpPut]
-    [Route("complte/{subGoalId:int}")]
-    public void CompleteSubGoalBySubGoalId(int subGoalId)
+    [Route("complete/{studentId:int}/{subGoalId:int}")]
+    public void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
-        Console.WriteLine("Completing Subgoal in controller");
+        repository.CompleteSubGoalBySubGoalId(subGoalId, studentId);
+        Console.WriteLine("Completing Subgoal: controller");
     }
 
     [HttpDelete]
     [Route("delete/{subGoalId:int}")]
     public void DeleteSubGoalBySubGoalId(int subGoalId)
     {
-        Console.WriteLine("Deleting subgoal in controller");
+        Console.WriteLine("Deleting subgoal: controller");
     }
 
     [HttpDelete]
     [Route("deletetemplate/{templateId:int}")]
     public void DeleteTemplateByTemplateId(int templateId)
     {
-        Console.WriteLine("Deleting template in controller");
+        Console.WriteLine("Deleting template: controller");
     }
     
 }
