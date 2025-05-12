@@ -1,7 +1,36 @@
 @page "/MyTeams"
 
-<h3>MineHold</h3>
+<h3>Mine hold</h3>
+
+<div class="team-container">
+    @foreach (var team in Teams)
+    {
+        <div class="team-card">
+            <div class="team-content">
+                <div class="team-details">
+                    <div class="team-name"><strong>Holdnavn:</strong> @team.Name</div>
+                    <div class="team-count"><strong>Antal elever:</strong> @team.StudentCount</div>
+                </div>
+                <div class="team-actions">
+                    <button>Gå til hold</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-    
+    private List<Team> Teams = new List<Team>
+    {
+        new Team { Id = 1, Name = "1A", StudentCount = 12 },
+        new Team { Id = 2, Name = "2A", StudentCount = 7 },
+        new Team { Id = 3, Name = "4A", StudentCount = 9 }
+    };
+
+    private class Team
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int StudentCount { get; set; }
+    }
 }
