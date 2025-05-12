@@ -105,7 +105,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         var filter = Builders<User>.Filter.Eq(x => x.UserId, subgoal.StudentId);
         var update = Builders<User>.Update.Push("StudentPlan", subgoal);
         await userCollection.FindOneAndUpdateAsync(filter, update);
-        Console.WriteLine($"Inserting into user {subgoal.StudentId}");
+        Console.WriteLine($"Inserting subgoal into user {subgoal.StudentId}");
     }
 
     public async Task<int> MaxTemplateId()
