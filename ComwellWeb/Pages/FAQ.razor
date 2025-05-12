@@ -1,0 +1,40 @@
+﻿@page "/FAQ"
+
+<div class="faq-container">
+    <h2>Ofte stillede spørgsmål</h2>
+
+    @foreach (var faq in FAQs)
+    {
+        <div class="faq-item">
+            <h3>@faq.Question</h3>
+            <p>@faq.Answer</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<FAQItem> FAQs = new()
+    {
+        new FAQItem
+        {
+            Question = "Hvordan opretter jeg en konto?",
+            Answer = "Klik på 'Tilmeld' øverst på siden og udfyld formularen."
+        },
+        new FAQItem
+        {
+            Question = "Hvordan nulstiller jeg mit kodeord?",
+            Answer = "Klik på 'Glemt kodeord' på login-siden og følg instruktionerne."
+        },
+        new FAQItem
+        {
+            Question = "Hvordan kontakter jeg support?",
+            Answer = "Du kan sende os en mail via kontaktformularen nederst på siden."
+        }
+    };
+
+    private class FAQItem
+    {
+        public string Question { get; set; }
+        public string Answer { get; set; }
+    }
+}
