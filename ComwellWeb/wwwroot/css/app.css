@@ -1,6 +1,11 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    overflow: hidden;
+    background-image: url("../Pictures/comwell.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100%;
+    overflow-y: hidden;
 }
 
 h1:focus {
