@@ -142,4 +142,10 @@ code {
     font-family: sans-serif;
     font-size: 14px;
     cursor: pointer;
+
+    .notification-icon {
+        position: relative;
+        font-size: 22px;
+        display: inline-block;
+    }
 }
