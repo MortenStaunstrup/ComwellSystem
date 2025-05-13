@@ -1,3 +1,5 @@
+@using ComwellWeb.Komponents.Modal;
+@using ComwellWeb.Pages
 @using Core;
 @if (Visible && Goal != null)
 {
@@ -16,12 +18,22 @@
             <p>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
             <p><strong>Slutdato:</strong> @Goal.SubGoalDueDate.ToString("dd-MM-yyyy")</p>
-            <button class="btn btn-primary">Ansøg</button>
+            @if (VejenDerTil == true)
+            {
+                <button class="btn btn-primary">Ansøg</button>
+            }
+            else
+            {
+              
+                    <input class="input" type="text" placeholder="Skriv din kommentar her.." />
+         
+            }
         </div>
     </div>
 }
 
 @code {
+    [Parameter] public bool VejenDerTil { get; set; }
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }

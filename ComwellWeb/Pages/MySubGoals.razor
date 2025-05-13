@@ -26,7 +26,7 @@
     }
 </div>
 
-<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" />
+<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
 @code {
  private List<SubGoal> MySubGoalsList = new()
 {
@@ -124,11 +124,13 @@
 
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
+public bool VejenDerTil = false;
 
 private void OpenModal(SubGoal goal)
 {
     SelectedSubGoal = goal;
     ShowModal = true;
+    VejenDerTil = false;
 }
 
 private void CloseModal()

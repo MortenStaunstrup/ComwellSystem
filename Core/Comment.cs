@@ -7,7 +7,6 @@ public class Comment
 {
     [BsonElement("_id")]
     public int CommentId { get; set; }
-    public ObjectId? FileId { get; set; }
     public string CommentContent { get; set; }
     public DateTime CommentDate { get; set; }
     public int CommentSubGoalId { get; set; }
