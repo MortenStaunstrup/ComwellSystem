@@ -1,4 +1,7 @@
+@using ComwellWeb.Komponents.Modal
+@using Core;
 @page "/MyTeams"
+
 
 <h3>Mine hold</h3>
 
@@ -12,14 +15,30 @@
                     <div class="team-count"><strong>Antal elever:</strong> @team.StudentCount</div>
                 </div>
                 <div class="team-actions">
-                    <button>Gå til hold</button>
+                    <button @onclick="@(() => OpenTeamModal(team))">Gå til hold</button>
                 </div>
             </div>
         </div>
     }
 </div>
 
+<TeamPageModal Visible="ShowTeamModal" team="SelectedTeam" OnCloseRequested="CloseTeamModal" />
+
 @code {
+    private bool ShowTeamModal = false;
+    private Team? SelectedTeam;
+
+    private void OpenTeamModal(Team team)
+    {
+        SelectedTeam = team;
+        ShowTeamModal = true;
+    }
+
+    private void CloseTeamModal()
+    {
+        ShowTeamModal = false;
+        SelectedTeam = null;
+    }
     private List<Team> Teams = new List<Team>
     {
         new Team { Id = 1, Name = "1A", StudentCount = 12 },
@@ -31,7 +50,6 @@
         new Team { Id = 7, Name = "1B", StudentCount = 10 },
         new Team { Id = 8, Name = "2C", StudentCount = 6 }
     };
-
 
     private class Team
     {
