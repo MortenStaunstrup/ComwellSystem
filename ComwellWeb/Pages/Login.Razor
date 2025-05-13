@@ -1,9 +1,15 @@
-﻿@page "/Login"
+﻿@page "/login"
 
-<h1>login page</h1>
-
-@code {
-
-    
-
-}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-logo">
+            <img src="https://img.icons8.com/ios-filled/100/lock.png" alt="Login Icon" />
+        </div>
+        <h2>Login</h2>
+        <form>
+            <input type="email" placeholder="Indtast e-mail" required />
+            <input type="password" placeholder="Indtast kode" required />
+            <button type="submit">Log ind</button>
+        </form>
+    </div>
+</div>
