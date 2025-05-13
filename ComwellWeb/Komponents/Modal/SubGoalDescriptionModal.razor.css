@@ -3,7 +3,7 @@
     top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -11,11 +11,15 @@
 }
 
 .modal-content {
-    background: white;
+    background: #fff;
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: 16px;
     max-width: 600px;
     width: 90%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    text-align: center;
+    font-family: sans-serif;
 }
 
 .close-button {
@@ -26,9 +30,31 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
+    color: #333;
+    transition: transform 0.2s ease;
 }
-.btn {
-    position: relative;
-    top: 92px;
-    right: 72px;
+
+.close-button:hover {
+    transform: scale(1.2);
+    color: #000;
+}
+
+.DelmålBillede {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.modal-content h3 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: #222;
+}
+
+.modal-content p {
+    font-size: 1rem;
+    color: #555;
+    margin: 0.3rem 0;
 }
