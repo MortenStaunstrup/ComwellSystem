@@ -1,0 +1,23 @@
+@using Core;
+@if (Visible && Goal != null)
+{
+    <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
+        <div class="modal-content" @onclick:stopPropagation>
+            <button class="close-button" @onclick="Close">X</button>
+            <h3>@Goal.SubGoalName</h3>
+            <p>@Goal.SubGoalDescription</p>
+            <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
+            <p><strong>Slutdato:</strong> @Goal.SubGoalDueDate.ToString("dd-MM-yyyy")</p>
+            <button class="btn btn-primary">Ansøg</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public SubGoal? Goal { get; set; }
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback OnCloseRequested { get; set; }
+
+    private Task Close() => OnCloseRequested.InvokeAsync();
+    private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
+}

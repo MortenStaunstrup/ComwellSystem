@@ -1,9 +1,10 @@
+@using ComwellWeb.Komponents.Modal
 @using Core;
 @page "/MyGoals"
 <div class="kort-container">
     @foreach (var subgoal in MySubGoalsList)
     {
-        <div class="delmål-kort">
+        <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
             @if (!string.IsNullOrEmpty(subgoal.SubGoalPicture))
             {
                 <img src="@subgoal.SubGoalPicture" alt="Delmål billede" class="DelmålBillede" />
@@ -25,6 +26,7 @@
     }
 </div>
 
+<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" />
 @code {
  private List<SubGoal> MySubGoalsList = new()
 {
@@ -119,4 +121,18 @@
         SubGoalStatus = false
     }
 };
+
+private SubGoal? SelectedSubGoal;
+private bool ShowModal = false;
+
+private void OpenModal(SubGoal goal)
+{
+    SelectedSubGoal = goal;
+    ShowModal = true;
+}
+
+private void CloseModal()
+{
+    ShowModal = false;
+}
 }
