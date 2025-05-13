@@ -1,7 +1,41 @@
-@page "/StudentList"
+@page "/studentlist"
 
-<h3>ElevListe</h3>
+<h3>Studenterfremskridt</h3>
 
-@code {
-    
-}
+<div class="filter-container">
+    <select id="semesterFilter">
+        <option value="">Alle semestre</option>
+        <option value="1">1. semester</option>
+        <option value="2">2. semester</option>
+        <option value="3">3. semester</option>
+        <option value="4">4. semester</option>
+        <option value="5">5. semester</option>
+        <option value="6">6. semester</option>
+        <option value="7">7. semester</option>
+    </select>
+
+    <select id="subgoalFilter">
+        <option value="">Alle subgoals</option>
+        <option value="safety">Lære om fødevaresikkerhed</option>
+        <option value="praktik">Bestå kokkepraktik</option>
+        <option value="menu">Udvikle egen menu</option>
+    </select>
+
+    <select id="tripFilter">
+        <option value="">Alle ture</option>
+        <option value="italy">Studietur til Italien</option>
+        <option value="michelin">Besøg på Michelin-restaurant</option>
+        <option value="madfestival">Madfestival i Aarhus</option>
+    </select>
+</div>
+
+<!-- Eksempeldata – kan senere erstattes med loop over rigtig data -->
+<div class="student-card">
+    <div class="student-info">
+        <span>Navn på elev</span>
+        <span>X. semester - XX%</span>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" style="width: XX%;"></div>
+    </div>
+</div>
