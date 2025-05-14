@@ -24,7 +24,6 @@ else
                             <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="Titel.." />
                         </div>
                         
-
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
                         </div>
@@ -42,6 +41,23 @@ else
                                 }
                             </InputSelect>
                         </div>
+                        
+                        <div class="mb-3">
+                            <InputSelect @bind-Value="_model.SubGoalType" class="form-control">
+                                <option value="">Vælg type</option>
+                                @foreach (var type in _types)
+                                {
+                                    if (type == "Standard")
+                                    {
+                                        <option value="@type">@type opgave (BLIVER UDGIVET TIL ALLE ELEVER)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@type">@type opgave</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
 
                         <div class="mb-3">
                             @if (_myStudents != null)
@@ -50,13 +66,8 @@ else
                             }
                         </div>
 
-                        <div class="mb-3">
-                            <InputText class="form-control" @bind-Value="_comment" placeholder="Evt. kommentar" />
-                        </div>
-
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-success">Tildel Delmål</button>
-                            <button @onclick="AddToTemplates" type="submit" class="btn btn-primary">Tildel og Tilføj Template</button>
                         </div>
                     </EditForm>
                 </div>
@@ -93,14 +104,13 @@ else
 }
 
 @code {
-    private string _comment; //Test af Umut da der ellers kom fejl med der hvor dens tilhørende bindvalue="_comment" er
     User _currentUser;
     List<User>? _myStudents = new List<User>()
     {
         new User()
         {
             UserId = 1,
-            UserName = "Martin Felixen",
+            UserName = "tis",
             UserEmail = "MF@Comwell.dk",
             UserPassword = "hejhej",
             UserPhone = "238240289",
@@ -115,25 +125,10 @@ else
         new User()
         {
             UserId = 2,
-            UserName = "Morten Egg",
+            UserName = "lars",
             UserEmail = "Egg@Comwell.dk",
             UserPassword = "bilsd",
             UserPhone = "95283984",
-            Role = "Student",
-            Messages = null,
-            Notifications = null,
-            Picture = null,
-            StudentPlan = null,
-            UserIdResponsible = 23,
-            StartDate = new DateOnly(2022, 6, 16)
-        },
-        new User()
-        {
-            UserId = 3,
-            UserName = "Fleg Nielsen",
-            UserEmail = "FlN@Comwell.dk",
-            UserPassword = "sgesg",
-            UserPhone = "84329425",
             Role = "Student",
             Messages = null,
             Notifications = null,
@@ -148,13 +143,18 @@ else
     List<TemplateSubGoal>? _templates;
     SubGoal _model;
     EditContext EditContext;
-    bool _addToTemplate = false;
-    byte[] pictureBytes;
     StudentDropdown? dropdown { get; set; }
+
+    int currentMaxId;
 
     string[] _categories = new[]
     {
         "Kursus", "Køkken kompetence", "Faglig mål"
+    };
+    
+    string[] _types = new[]
+    {
+        "Standard", "Extra"
     };
 
     protected override async Task OnInitializedAsync()
@@ -166,7 +166,7 @@ else
             UserEmail = "KH@Comwell.dk",
             UserPassword = "mitpass",
             UserPhone = "22177992",
-            Role = "Cook",
+            Role = "KitchenManager",
             Messages = null,
             Notifications = null,
             Picture = null,
@@ -175,37 +175,39 @@ else
             StartDate = null
         };
 
-        if (_currentUser.Role != "Cook")
+        if (_currentUser.Role != "KitchenManager")
         {
             NavMan.NavigateTo("/");
         }
 
         _model = new SubGoal();
         EditContext = new EditContext(_model);
-        _templates = await SubGoalService.GetAllTemplateSubGoalsAsync();
+        currentMaxId = await SubGoalService.MaxSubGoalId();
     }
 
-    private void HandleSubmit()
+    private async void HandleSubmit()
     {
-        _model.SubGoalId = 0;
-
+        _model.SubGoalId = currentMaxId + 1;
+        _model.StudentId = 0;
         if (EditContext.Validate())
         {
-            if (_addToTemplate)
+            if (_model.SubGoalType == "Standard")
             {
-                // Omdanner subgoal til template
-                TemplateSubGoal temp = new TemplateSubGoal()
-                {
-                    TemplateSubGoalCategory = _model.SubGoalCategory,
-                    TemplateSubGoalDescription = string.IsNullOrWhiteSpace(_model.SubGoalDescription) ? "No desc..." : _model.SubGoalDescription,
-                    TemplateSubGoalId = 0,
-                    TemplateSubGoalName = _model.SubGoalName
-                };
-                SubGoalService.AddSubGoalToTemplates(temp);
-                _addToTemplate = false;
+                SubGoalService.CreateSubGoal(_model, new List<int>());
+                SubGoalService.InsertSubgoalAll(_model);
             }
-
-            ResetModels();
+            else
+            {
+                var studentIds = new List<int>();
+                foreach (var student in _addedStudents)
+                {
+                    studentIds.Add(student.UserId);
+                }
+                SubGoalService.CreateSubGoal(_model, studentIds);
+                SubGoalService.InsertSubgoalSpecific(_model, studentIds);
+            }
+            StateHasChanged();
+            NavMan.NavigateTo("/createnewsubgoal", true);
         }
     }
 
@@ -217,11 +219,7 @@ else
         _model.SubGoalName = template.TemplateSubGoalName;
         StateHasChanged();
     }
-
-    private void AddToTemplates()
-    {
-        _addToTemplate = true;
-    }
+    
 
     private void ResetModels()
     {

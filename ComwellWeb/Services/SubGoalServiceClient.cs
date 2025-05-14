@@ -164,7 +164,7 @@ public class SubGoalServiceClient : ISubGoalService
         return templates;
     }
 
-    public void CreateSubGoal(SubGoal subGoal)
+    public void CreateSubGoal(SubGoal subGoal, List<int> studentId)
     {
         subGoal.SubGoalId = subGoals.Max(s => s.SubGoalId) + 1;
         subGoals.Add(subGoal);
@@ -210,5 +210,20 @@ public class SubGoalServiceClient : ISubGoalService
     {
         templates.RemoveAll(x => x.TemplateSubGoalId == templateId);
         Console.WriteLine("Deleting template in services");
+    }
+    
+    public void InsertSubgoalAll(SubGoal subgoal)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> MaxSubGoalId()
+    {
+        throw new NotImplementedException();
     }
 }

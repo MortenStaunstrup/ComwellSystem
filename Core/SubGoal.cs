@@ -9,6 +9,7 @@ public class SubGoal
     [Required]
     [BsonElement("_id")]
     public int SubGoalId { get; set; }
+    public int StudentId { get; set; }
     public Comment[]? Comments { get; set; }
     [Required(ErrorMessage = "En opgave skal have et navn")]
     public string SubGoalName { get; set; }

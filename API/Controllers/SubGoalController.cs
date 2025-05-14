@@ -60,10 +60,34 @@ public class SubGoalController : ControllerBase
     
     [HttpPost]
     [Route("create")]
-    public void CreateSubgoal(SubGoal subgoal)
+    public void CreateSubgoal(SubGoalRequest subgoal)
     {
-        repository.CreateSubgoal(subgoal);
         Console.WriteLine("Creating subgoal: controller");
+        repository.CreateSubgoal(subgoal.SubGoal, subgoal.StudentIds);
+    }
+
+    [HttpPost]
+    [Route("insertall")]
+    public void InsertSubgoalAll(SubGoal subgoal)
+    {
+        Console.WriteLine("Inserting subgoal ALL: controller");
+        repository.InsertSubgoalAll(subgoal);
+    }
+
+    [HttpPost]
+    [Route("insertspecific")]
+    public void InsertSubgoalSpecific(SubGoalRequest subgoalContainer)
+    {
+        Console.WriteLine("Inserting subgoal SPECIFIC: controller");
+        repository.InsertSubgoalSpecific(subgoalContainer.SubGoal, subgoalContainer.StudentIds);
+    }
+
+    [HttpGet]
+    [Route("getmaxid")]
+    public async Task<int> GetMaxId()
+    {
+        Console.WriteLine("Getting max id: controller");
+        return await repository.MaxSubGoalId();
     }
 
     [HttpPost]
@@ -110,4 +134,10 @@ public class SubGoalController : ControllerBase
         Console.WriteLine("Deleting template: controller");
     }
     
+}
+
+public class SubGoalRequest
+{
+    public SubGoal SubGoal { get; set; }
+    public List<int> StudentIds { get; set; }
 }
