@@ -23,10 +23,7 @@ else
                         <div class="mb-3">
                             <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="Titel.." />
                         </div>
-
-                        <div class="mb-3">
-                            <InputFile OnChange="HandleImageUpload" accept=".png,.jpeg,.jpg,.webp" class="form-control" />
-                        </div>
+                        
 
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
@@ -34,10 +31,6 @@ else
 
                         <div class="mb-3">
                             <InputDate @bind-Value="_model.SubGoalDueDate" class="form-control" placeholder="dd-mm-åååå" />
-                        </div>
-
-                        <div class="mb-3">
-                            <InputNumber TValue="double?" @bind-Value="_model.SubGoalTime" class="form-control" placeholder="--:--" />
                         </div>
 
                         <div class="mb-3">
@@ -193,22 +186,9 @@ else
         _templates = await SubGoalService.GetAllTemplateSubGoalsAsync();
     }
 
-    private async Task HandleImageUpload(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-        if (file != null)
-        {
-            using var memoryStream = new MemoryStream();
-            await file.OpenReadStream().CopyToAsync(memoryStream);
-            pictureBytes = memoryStream.ToArray();
-            _model.SubGoalPicture = Convert.ToBase64String(pictureBytes);
-        }
-    }
-
     private void HandleSubmit()
     {
         _model.SubGoalId = 0;
-        _model.StudentId = 0;
 
         if (EditContext.Validate())
         {
@@ -220,17 +200,10 @@ else
                     TemplateSubGoalCategory = _model.SubGoalCategory,
                     TemplateSubGoalDescription = string.IsNullOrWhiteSpace(_model.SubGoalDescription) ? "No desc..." : _model.SubGoalDescription,
                     TemplateSubGoalId = 0,
-                    TemplateSubGoalName = _model.SubGoalName,
-                    TemplateSubGoalPicture = _model.SubGoalPicture
+                    TemplateSubGoalName = _model.SubGoalName
                 };
                 SubGoalService.AddSubGoalToTemplates(temp);
                 _addToTemplate = false;
-            }
-
-            foreach (var student in _addedStudents)
-            {
-                _model.StudentId = student.UserId;
-                SubGoalService.CreateSubGoal(_model);
             }
 
             ResetModels();
@@ -243,10 +216,6 @@ else
         _model.SubGoalCategory = template.TemplateSubGoalCategory;
         _model.SubGoalDescription = template.TemplateSubGoalDescription;
         _model.SubGoalName = template.TemplateSubGoalName;
-        if (!string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture))
-        {
-            _model.SubGoalPicture = template.TemplateSubGoalPicture;
-        }
         StateHasChanged();
     }
 

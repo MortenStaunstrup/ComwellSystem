@@ -3,7 +3,8 @@ namespace API.Repositories.Interface;
 
 public interface ISubGoalRepository
 {
-    Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId);
+    Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId);
+    Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync();
     void CreateSubgoal(SubGoal subgoal);
     void AddSubGoalToTemplates(TemplateSubGoal template);

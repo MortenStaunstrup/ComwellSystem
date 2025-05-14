@@ -5,21 +5,15 @@
     @foreach (var subgoal in MySubGoalsList)
     {
         <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
-            @if (!string.IsNullOrEmpty(subgoal.SubGoalPicture))
-            {
-                <img src="@subgoal.SubGoalPicture" alt="Delmål billede" class="DelmålBillede" />
-            }
-            else
-            {
-               <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
-            }
+            
+            <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
 
             <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
             <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
             <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
 
             <p class="delmål-dato">
-                Seneste start Dato: @subgoal.SubGoalDueDate.AddDays(-10).ToString("dd-MM-yyyy")<br />
+                Seneste start Dato: @subgoal.SubGoalDueDate.AddDays(-10).ToString("dd-MM-yyyy")<br/>
                 Slut Dato: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy")
             </p>
         </div>
@@ -33,7 +27,7 @@
     new SubGoal
     { //en masse test data 
         SubGoalId = 1,
-        StudentId = 100,
+        
         SubGoalName = "Udskæring af Gris",
         SubGoalDescription = "Hej Markus, du skal i fremtiden i køkkenet lære at udskære et eller andet i en gris. Her er et link til en video der viser det: link",
         SubGoalCategory = "Køkkenkompetance",
@@ -43,7 +37,7 @@
     new SubGoal
     {
         SubGoalId = 2,
-        StudentId = 100,
+        
         SubGoalName = "Kursus: Slibning af kniv",
         SubGoalDescription = "Alle Elever bedes se denne video før kurset begynder: link",
         SubGoalCategory = "Kursus",
@@ -53,7 +47,7 @@
     new SubGoal
     {
         SubGoalId = 3,
-        StudentId = 100,
+        
         SubGoalName = "Sikkerhed i køkkenet",
         SubGoalDescription = "Læs sikkerhedsguiden og gennemfør quizzen bagefter.",
         SubGoalCategory = "Sikkerhed",
@@ -63,7 +57,7 @@
     new SubGoal
     {
         SubGoalId = 4,
-        StudentId = 100,
+        
         SubGoalName = "Hygiejne-test",
         SubGoalDescription = "Aflever et hygiejnecertifikat efter færdiggørelse af online kurset.",
         SubGoalCategory = "Hygiejne",
@@ -73,7 +67,7 @@
     new SubGoal
     {
         SubGoalId = 5,
-        StudentId = 100,
+        
         SubGoalName = "Lav en forret",
         SubGoalDescription = "Design og tilbered en simpel forret med tilhørende servering.",
         SubGoalCategory = "Madlavning",
@@ -83,7 +77,7 @@
     new SubGoal
     {
         SubGoalId = 6,
-        StudentId = 100,
+        
         SubGoalName = "Lær råvarekendskab",
         SubGoalDescription = "Identificer og beskriv 10 råvarer, deres anvendelse og opbevaring.",
         SubGoalCategory = "Teori",
@@ -93,7 +87,7 @@
     new SubGoal
     {
         SubGoalId = 7,
-        StudentId = 100,
+        
         SubGoalName = "Fælles madlavning",
         SubGoalDescription = "Planlæg og gennemfør en fælles madlavning med andre elever.",
         SubGoalCategory = "Gruppearbejde",
@@ -103,7 +97,7 @@
     new SubGoal
     {
         SubGoalId = 8,
-        StudentId = 100,
+        
         SubGoalName = "Bag en kage",
         SubGoalDescription = "Vælg en opskrift, bag en kage og dokumenter processen med billeder.",
         SubGoalCategory = "Bageprojekt",
@@ -113,7 +107,7 @@
     new SubGoal
     {
         SubGoalId = 9,
-        StudentId = 100,
+        
         SubGoalName = "Afslutningsevaluering",
         SubGoalDescription = "Skriv en kort evaluering af dit forløb og hvad du har lært.",
         SubGoalCategory = "Evaluering",
