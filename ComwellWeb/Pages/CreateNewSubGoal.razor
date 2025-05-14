@@ -76,7 +76,6 @@ else
                             @foreach (var template in _templates)
                             {
                                 <div class="card mb-3 templateCard">
-                                    <img class="card-img-top" alt="Template billede" src="@(string.IsNullOrWhiteSpace(template.TemplateSubGoalPicture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{template.TemplateSubGoalPicture}")" />
                                     <div class="card-body">
                                         <h5 class="card-title">@template.TemplateSubGoalName</h5>
                                         <p class="card-text">@template.TemplateSubGoalDescription</p>
@@ -111,7 +110,7 @@ else
             Picture = null,
             StudentPlan = null,
             UserIdResponsible = 23,
-            UserSemester = new DateOnly(2022, 6, 16)
+            StartDate = new DateOnly(2022, 6, 16)
         },
         new User()
         {
@@ -126,7 +125,7 @@ else
             Picture = null,
             StudentPlan = null,
             UserIdResponsible = 23,
-            UserSemester = new DateOnly(2022, 6, 16)
+            StartDate = new DateOnly(2022, 6, 16)
         },
         new User()
         {
@@ -141,7 +140,7 @@ else
             Picture = null,
             StudentPlan = null,
             UserIdResponsible = 23,
-            UserSemester = new DateOnly(2022, 6, 16)
+            StartDate = new DateOnly(2022, 6, 16)
         }
     };
 
@@ -173,7 +172,7 @@ else
             Picture = null,
             StudentPlan = null,
             UserIdResponsible = null,
-            UserSemester = null
+            StartDate = null
         };
 
         if (_currentUser.Role != "Cook")

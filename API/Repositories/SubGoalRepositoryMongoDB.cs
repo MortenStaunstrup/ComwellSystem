@@ -78,15 +78,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         var filter = Builders<TemplateSubGoal>.Filter.Empty;
         var result = await tempCollection.Find(filter).ToListAsync();
-
-        if (result.Any())
-        {
-            foreach (var template in result)
-            {
-                if (template.PictureId != null)
-                    template.TemplateSubGoalPicture = Convert.ToBase64String(await bucket.DownloadAsBytesAsync(template.PictureId));
-            }
-        }
+        
         Console.WriteLine("Returning all templates");
         return result;
     }
@@ -127,12 +119,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async void AddSubGoalToTemplates(TemplateSubGoal template)
     {
         template.TemplateSubGoalId = await MaxTemplateId() + 1;
-        if (template.TemplateSubGoalPicture != null)
-        {
-            var picId = await bucket.UploadFromBytesAsync(template.TemplateSubGoalName,Convert.FromBase64String(template.TemplateSubGoalPicture));
-            template.PictureId = picId;
-            template.TemplateSubGoalPicture = null;
-        }
         Console.WriteLine($"Inserting template {template.TemplateSubGoalId} into templates");
         await tempCollection.InsertOneAsync(template);
     }
