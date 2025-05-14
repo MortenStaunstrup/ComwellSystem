@@ -1,29 +1,38 @@
 @using ComwellWeb.Komponents.Modal
+@using ComwellWeb.Services.Interfaces
 @using Core;
 @page "/RegisterSubGoal"
+@inject ISubGoalService SubGoalService
 
 
 <div class="kort-container">
-    @foreach (var subgoal in MySubGoalsList)
+    @if (_offeredSubGoals == null)
     {
-        <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
-               <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
+        <p>Fetching subgoals</p>
+    }
+    else
+    {
+        @foreach (var subgoal in _offeredSubGoals)
+        {
+            <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
+                <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
 
-            <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
-            <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
-            <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
+                <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
+                <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
+                <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
 
-            <p class="delmål-dato">
-                Seneste start Dato: @subgoal.SubGoalDueDate.AddDays(-10).ToString("dd-MM-yyyy")<br />
-                Slut Dato: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy")
-            </p>
-        </div>
+                <p class="delmål-dato">
+                    Deadline: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy")
+                </p>
+            </div>
+        }
     }
 </div>
 
 <SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
 @code {
- private List<SubGoal> MySubGoalsList = new()
+    private List<SubGoal> _offeredSubGoals; 
+    /*new()
 {
     new SubGoal
     { //en masse test data 
@@ -115,11 +124,17 @@
         SubGoalDueDate = new DateOnly(2025, 5, 15),
         SubGoalStatus = false
     }
-};
+};*/
 
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
 public bool VejenDerTil = true;
+
+
+protected override async Task OnInitializedAsync()
+{
+    _offeredSubGoals = await SubGoalService.GetOfferedSubGoalsAsync();
+}
 
 private void OpenModal(SubGoal goal)
 {

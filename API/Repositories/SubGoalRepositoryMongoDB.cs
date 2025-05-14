@@ -14,7 +14,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     private IMongoClient client;
     private IMongoDatabase database;
     private IMongoCollection<SubGoal> subCollection;
-    private IMongoCollection<TemplateSubGoal> tempCollection;
     private IMongoCollection<User> userCollection;
     private GridFSBucket bucket;
 
@@ -28,7 +27,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         client = new MongoClient(_connectionString);
         database = client.GetDatabase("Comwell");
         subCollection = database.GetCollection<SubGoal>("SubGoals");
-        tempCollection = database.GetCollection<TemplateSubGoal>("Templates");
         userCollection = database.GetCollection<User>("Users");
         bucket = new GridFSBucket(database, new GridFSBucketOptions{ BucketName = "Comwell files" });
     }
@@ -75,12 +73,10 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return subgoals;
     }
 
-    public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
+    public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
-        var filter = Builders<TemplateSubGoal>.Filter.Empty;
-        var result = await tempCollection.Find(filter).ToListAsync();
-        
-        Console.WriteLine("Returning all templates");
+        var filter = Builders<SubGoal>.Filter.Eq("SubGoalType", "Extra");
+        var result = await subCollection.Find(filter).ToListAsync();
         return result;
     }
 
@@ -144,31 +140,9 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             await userCollection.UpdateManyAsync(filter, update);
         }
     }
-
-    public async Task<int> MaxTemplateId()
-    {
-        var sort = Builders<TemplateSubGoal>.Sort.Descending(x => x.TemplateSubGoalId);
-        var maxSubGoalId = await tempCollection
-            .Find(Builders<TemplateSubGoal>.Filter.Empty)
-            .Sort(sort)
-            .Limit(1)
-            .FirstOrDefaultAsync();
-        return maxSubGoalId?.TemplateSubGoalId ?? 0;
-    }
     
-    public async void AddSubGoalToTemplates(TemplateSubGoal template)
-    {
-        template.TemplateSubGoalId = await MaxTemplateId() + 1;
-        Console.WriteLine($"Inserting template {template.TemplateSubGoalId} into templates");
-        await tempCollection.InsertOneAsync(template);
-    }
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
-    {
-        
-    }
-
-    public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
     {
         
     }
@@ -195,9 +169,5 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         
     }
-
-    public void DeleteTemplateByTemplateId(int templateId)
-    {
-        
-    }
+    
 }

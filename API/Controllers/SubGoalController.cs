@@ -44,17 +44,18 @@ public class SubGoalController : ControllerBase
         return result;
     }
     
+    
     [HttpGet]
-    [Route("gettemplates")]
-    public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
+    [Route("getofferedsubgoals")]
+    public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
-        var result = await repository.GetAllTemplateSubGoalsAsync();
+        var result = await repository.GetOfferedSubGoalsAsync();
         if (result.Count != 0)
         {
-            Console.WriteLine("Returning templates: controller");
+            Console.WriteLine("Returning completed subgoals: controller");
             return result;
         }
-        Console.WriteLine("No templates exist, returning empty list: controller");
+        Console.WriteLine("No offered subgoals returning empty list: controller");
         return result;
     }
     
@@ -89,14 +90,7 @@ public class SubGoalController : ControllerBase
         Console.WriteLine("Getting max id: controller");
         return await repository.MaxSubGoalId();
     }
-
-    [HttpPost]
-    [Route("addtotemplates")]
-    public void AddSubGoalToTemplates(TemplateSubGoal template)
-    {
-        repository.AddSubGoalToTemplates(template);
-        Console.WriteLine("Adding template: controller");
-    }
+    
 
     [HttpPut]
     [Route("update")]
@@ -104,13 +98,7 @@ public class SubGoalController : ControllerBase
     {
         Console.WriteLine("Updating subgoal: controller");
     }
-
-    [HttpPut]
-    [Route("updatetemplate")]
-    public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
-    {
-        Console.WriteLine("Updating template: controller");
-    }
+    
 
     [HttpPut]
     [Route("complete/{studentId:int}/{subGoalId:int}")]
