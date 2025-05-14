@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using API.Repositories.Interface;
 using Core;
 using MongoDB.Bson;
@@ -83,6 +84,13 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return result;
     }
 
+    public async Task<SubGoal?> GetSubGoalByIdAsync(int id)
+    {
+        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, id);
+        var subGoal = await subCollection.Find(filter).FirstOrDefaultAsync();
+        return subGoal;
+    }
+
     public async Task<int> MaxSubGoalId()
     {
         var sort = Builders<SubGoal>.Sort.Descending(x => x.SubGoalId);
@@ -94,15 +102,47 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return maxSubGoalId?.SubGoalId ?? 0;
     }
 
-    public async void CreateSubgoal(SubGoal subgoal)
+    public async void CreateSubgoal(SubGoal subgoal, List<int> studentIds)
     {
-        // Indsætter subgoal i SubGoal collection
-        subgoal.SubGoalId = await MaxSubGoalId() + 1;
-        await subCollection.InsertOneAsync(subgoal);
-        Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
-        
-        // Todo Skal indsætte subgoal ind i alle elever??
-        
+        if (studentIds == null || studentIds.Count == 0 || subgoal.SubGoalType == "Standard")
+        {
+            // Indsætter subgoal i SubGoal collection, når den er standdart
+            await subCollection.InsertOneAsync(subgoal);
+            Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
+        }
+        else
+        {
+            foreach (var id in studentIds)
+            {
+                // Indsætter subgoal for hver studerende
+                subgoal.StudentId = id;
+                await subCollection.InsertOneAsync(subgoal);
+                Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection for student {id}");
+            }
+        }
+    }
+
+
+    // Indsætter subgoal i alle elever (type = "Standard")
+    public async void InsertSubgoalAll(SubGoal subgoal)
+    {
+        var filter = Builders<User>.Filter.Eq("Role", "Student");
+        var update = Builders<User>.Update.Push("StudentPlan", subgoal);
+        Console.WriteLine("Inserting subgoal into ALL students");
+        await userCollection.UpdateManyAsync(filter, update);
+    }
+
+    // Indsætter subgoal i specifikke elever
+    public async void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds)
+    {
+        foreach (var studentId in studentIds)
+        {
+            subgoal.StudentId = studentId;
+            var filter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+            var update = Builders<User>.Update.Push("StudentPlan", subgoal);
+            Console.WriteLine($"Inserting subgoal into student {studentId}");
+            await userCollection.UpdateManyAsync(filter, update);
+        }
     }
 
     public async Task<int> MaxTemplateId()
@@ -137,8 +177,10 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         // updater i SubGoal collection
         var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoalId);
+        var subcollUserFilter = Builders<SubGoal>.Filter.Eq(x => x.StudentId, studentId);
+        var userCollCombinedFilter = Builders<SubGoal>.Filter.And(filter, subcollUserFilter);
         var update = Builders<SubGoal>.Update.Set(x => x.SubGoalStatus, true);
-        await subCollection.UpdateOneAsync(filter, update);
+        await subCollection.UpdateOneAsync(userCollCombinedFilter, update);
         
         // updater i User
         var userFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);

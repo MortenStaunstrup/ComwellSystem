@@ -8,7 +8,10 @@ public interface ISubGoalService
     Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync();  // Liste af alle Template subGoals
     
-    void CreateSubGoal(SubGoal subGoal); // Lav subgoal og tildel til elev
+    void CreateSubGoal(SubGoal subGoal, List<int> studentId); // Lav subgoal
+    Task<int> MaxSubGoalId(); // Find max id i subgoals
+    void InsertSubgoalAll(SubGoal subgoal); // Indsæt subgoal til alle elever
+    void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds); // Indsæt subgoal til specifikke elever
     void AddSubGoalToTemplates(TemplateSubGoal template); // Lav subgoal og tildel til elev OG tilføj til templates
     
     void UpdateSubGoalDetails(SubGoal subGoal);   // Updater detaljer om subgoal for elev

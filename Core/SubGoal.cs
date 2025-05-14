@@ -9,6 +9,7 @@ public class SubGoal
     [Required]
     [BsonElement("_id")]
     public int SubGoalId { get; set; }
+    public int StudentId { get; set; }
     public Comment[]? Comments { get; set; }
     [Required(ErrorMessage = "En opgave skal have et navn")]
     public string SubGoalName { get; set; }
@@ -24,6 +25,7 @@ public class SubGoal
     public DateOnly SubGoalDueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     
 }
+
 
 // Egen validering, for at sikre at duedate ikke bliver sat før dags dato
 public class Deadline : ValidationAttribute
