@@ -72,33 +72,7 @@ else
                     </EditForm>
                 </div>
             </div>
-
-            <div class="col-md-5">
-                <div class="card shadow p-3 listTemplates-box">
-                    <h3 class="text-center">Templates</h3>
-
-                    @if (_templates == null)
-                    {
-                        <p class="text-muted">Ingen templates tilgængelige</p>
-                    }
-                    else
-                    {
-                        <div class="template-scroll">
-                            @foreach (var template in _templates)
-                            {
-                                <div class="card mb-3 templateCard">
-                                    <div class="card-body">
-                                        <h5 class="card-title">@template.TemplateSubGoalName</h5>
-                                        <p class="card-text">@template.TemplateSubGoalDescription</p>
-                                        <small class="text-muted">@template.TemplateSubGoalCategory</small>
-                                        <button class="btn btn-sm btn-outline-primary mt-2" @onclick="() => UseTemplate(template.TemplateSubGoalId)">Brug Template</button>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
+            
         </div>
     </div>
 }
@@ -140,7 +114,6 @@ else
     };
 
     List<User> _addedStudents = new List<User>();
-    List<TemplateSubGoal>? _templates;
     SubGoal _model;
     EditContext EditContext;
     StudentDropdown? dropdown { get; set; }
@@ -210,16 +183,6 @@ else
             NavMan.NavigateTo("/createnewsubgoal", true);
         }
     }
-
-    private void UseTemplate(int templateId)
-    {
-        var template = _templates.Find(x => x.TemplateSubGoalId == templateId);
-        _model.SubGoalCategory = template.TemplateSubGoalCategory;
-        _model.SubGoalDescription = template.TemplateSubGoalDescription;
-        _model.SubGoalName = template.TemplateSubGoalName;
-        StateHasChanged();
-    }
-    
 
     private void ResetModels()
     {

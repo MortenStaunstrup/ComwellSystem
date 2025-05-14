@@ -108,45 +108,7 @@ public class SubGoalServiceClient : ISubGoalService
             SubGoalStatus = false,
         }
     };
-
-    private List<TemplateSubGoal> templates = new List<TemplateSubGoal>()
-    {
-        new TemplateSubGoal()
-        {
-            TemplateSubGoalId = 1,
-            TemplateSubGoalName = "Sushi Rolling",
-            TemplateSubGoalCategory = "Kursus",
-            TemplateSubGoalDescription = "Exciting new ways to roll sushi for the best taste"
-        },
-        new TemplateSubGoal()
-        {
-            TemplateSubGoalId = 2,
-            TemplateSubGoalName = "Bread Baking Basics",
-            TemplateSubGoalCategory = "Faglig mål",
-            TemplateSubGoalDescription = "Learn the foundations of bread baking"
-        },
-        new TemplateSubGoal()
-        {
-            TemplateSubGoalId = 3,
-            TemplateSubGoalName = "Vegetarian Cooking",
-            TemplateSubGoalCategory = "Køkken kompetence",
-            TemplateSubGoalDescription = "Explore creative vegetarian recipes"
-        },
-        new TemplateSubGoal()
-        {
-            TemplateSubGoalId = 4,
-            TemplateSubGoalName = "Advanced Pastry Techniques",
-            TemplateSubGoalCategory = "Kursus",
-            TemplateSubGoalDescription = "Master the art of pastry with advanced techniques"
-        },
-        new TemplateSubGoal()
-        {
-            TemplateSubGoalId = 5,
-            TemplateSubGoalName = "Gourmet Sauces",
-            TemplateSubGoalCategory = "Faglig mål",
-            TemplateSubGoalDescription = "Create gourmet sauces from scratch"
-        }
-    };
+    
 
 
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
@@ -158,25 +120,20 @@ public class SubGoalServiceClient : ISubGoalService
     {
         return null;
     }
+    
 
-    public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
+    public Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
-        return templates;
+        return null;
     }
-
+    
     public void CreateSubGoal(SubGoal subGoal, List<int> studentId)
     {
         subGoal.SubGoalId = subGoals.Max(s => s.SubGoalId) + 1;
         subGoals.Add(subGoal);
         Console.WriteLine("Adding subgoal to student in services");
     }
-
-    public void AddSubGoalToTemplates(TemplateSubGoal template)
-    {
-        template.TemplateSubGoalId = templates.Max(t => t.TemplateSubGoalId) + 1;
-        templates.Add(template);
-        Console.WriteLine("Adding subgoal to templates in services");
-    }
+    
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
     {
@@ -185,14 +142,7 @@ public class SubGoalServiceClient : ISubGoalService
         subGoals.Insert(index, subGoal);
         Console.WriteLine("Updating subgoal in services");
     }
-
-    public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
-    {
-        int index = templates.FindIndex(x => x.TemplateSubGoalId == template.TemplateSubGoalId);
-        templates.RemoveAt(index);
-        templates.Insert(index, template);
-        Console.WriteLine("Updating template in services");
-    }
+    
 
     public void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
@@ -205,12 +155,7 @@ public class SubGoalServiceClient : ISubGoalService
         subGoals.RemoveAll(x => x.SubGoalId == subGoalId);
         Console.WriteLine("Deleting subgoal in services");
     }
-
-    public void DeleteTemplateByTemplateId(int templateId)
-    {
-        templates.RemoveAll(x => x.TemplateSubGoalId == templateId);
-        Console.WriteLine("Deleting template in services");
-    }
+    
     
     public void InsertSubgoalAll(SubGoal subgoal)
     {

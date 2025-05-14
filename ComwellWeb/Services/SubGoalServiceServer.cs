@@ -40,19 +40,21 @@ public class SubGoalServiceServer : ISubGoalService
 
         return result;
     }
+    
 
-    public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
+    public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
-        Console.WriteLine("Getting templates: service");
-        var result = await _client.GetFromJsonAsync<List<TemplateSubGoal>?>($"{BaseURL}/gettemplates");
+        Console.WriteLine("Getting offered subgoals: service");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/getofferedsubgoals");
         if (result == null || result.Count == 0)
         {
-            Console.WriteLine("Templates either null or empty list, returning null: service");
+            Console.WriteLine("Offered subgoals either null or empty list, returning null: service");
             return null;
         }
-        Console.WriteLine("Returning templates: service");
+        Console.WriteLine("Returning Offered subgoals: service");
         return result;
     }
+    
     public async void CreateSubGoal(SubGoal subGoal, List<int> studentId)
     {
         Console.WriteLine("Creating subgoal: service");
@@ -86,19 +88,9 @@ public class SubGoalServiceServer : ISubGoalService
         Console.WriteLine("Inserting subgoal SPECIFIC: service");
         await _client.PostAsJsonAsync($"{BaseURL}/insertspecific", request);
     }
-
-    public void AddSubGoalToTemplates(TemplateSubGoal template)
-    {
-        Console.WriteLine("Creating template: service");
-        _client.PostAsJsonAsync($"{BaseURL}/addtotemplates", template);
-    }
+    
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
-    {
-        
-    }
-
-    public void UpdateSubGoalDetailsTemplates(TemplateSubGoal template)
     {
         
     }
