@@ -26,6 +26,7 @@ public class SubGoal
     
 }
 
+
 // Egen validering, for at sikre at duedate ikke bliver sat før dags dato
 public class Deadline : ValidationAttribute
 {
