@@ -1,0 +1,148 @@
+@using ComwellWeb.Komponents.Modal
+@using Core;
+@page "/MyStudents"
+<div id="AltIndhold">
+    <div class="student-scroll-container">
+        @foreach (var Student in MyStudentsList)
+        {
+            <div class="student-card">
+                @if (Student.Picture == null)
+                {
+                    <img class="profile-picture" alt="Intet Profil billede" src="Pictures/NoProfilePicture.png" />
+                }
+                else
+                {
+                    <img class="profile-picture" alt="Profil billede" src="@Student.Picture" />
+                }
+
+                <h3>@Student.UserName</h3>
+
+                <div class="emojidiv">
+                    <img class="EmojiPic" alt="Progress emoji" src="Pictures/NoProfilePicture.png" />
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+@code {
+
+    public List<User> MyStudentsList = new()
+    {
+        new User
+        {
+            UserId = 1,
+            UserName = "Karl Hansen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "karl.hansen@email.com",
+            UserPhone = "12345678",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1001
+        },
+        new User
+        {
+            UserId = 2,
+            UserName = "Emma Sørensen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "emma.sorensen@email.com",
+            UserPhone = "87654321",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1001
+        },
+        new User
+        {
+            UserId = 3,
+            UserName = "Mikkel Thomsen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "mikkel.thomsen@email.com",
+            UserPhone = "22334455",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1001
+        },
+        new User
+        {
+            UserId = 4,
+            UserName = "Sofie Nielsen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "sofie.nielsen@email.com",
+            UserPhone = "99887766",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1002
+        },
+        new User
+        {
+            UserId = 5,
+            UserName = "Jonas Pedersen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "jonas.pedersen@email.com",
+            UserPhone = "55667788",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1002
+        },
+        new User
+        {
+            UserId = 6,
+            UserName = "Laura Jensen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "laura.jensen@email.com",
+            UserPhone = "11223344",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1003
+        },
+        new User
+        {
+            UserId = 7,
+            UserName = "Oliver Madsen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "oliver.madsen@email.com",
+            UserPhone = "44332211",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1003
+        },
+        new User
+        {
+            UserId = 8,
+            UserName = "Freja Kristensen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "freja.kristensen@email.com",
+            UserPhone = "33445566",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1001
+        },
+        new User
+        {
+            UserId = 9,
+            UserName = "Lukas Mortensen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "lukas.mortensen@email.com",
+            UserPhone = "66778899",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1002
+        },
+        new User
+        {
+            UserId = 10,
+            UserName = "Ida Lauritsen",
+            Role = "Student",
+            UserPassword = "Test123!",
+            UserEmail = "ida.lauritsen@email.com",
+            UserPhone = "77889900",
+            StartDate = DateOnly.Parse("2024-08-15"),
+            UserIdResponsible = 1003
+        }
+    };
+    
+    
+}
