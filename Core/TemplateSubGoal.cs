@@ -10,6 +10,4 @@ public class TemplateSubGoal
     public string TemplateSubGoalName { get; set; }
     public string TemplateSubGoalDescription { get; set; }
     public string TemplateSubGoalCategory { get; set; }
-    public ObjectId? PictureId { get; set; }
-    public string? TemplateSubGoalPicture { get; set; }
 }

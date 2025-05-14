@@ -17,6 +17,6 @@ public class User
     public string UserPassword { get; set; }
     public string UserEmail { get; set; }
     public string UserPhone { get; set; }
-    public DateOnly? UserSemester { get; set; }
+    public DateOnly? StartDate { get; set; }
     public int? UserIdResponsible { get; set; }
 }

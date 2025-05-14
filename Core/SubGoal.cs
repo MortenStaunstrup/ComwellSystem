@@ -10,11 +10,13 @@ public class SubGoal
     [BsonElement("_id")]
     public int SubGoalId { get; set; }
     public Comment[]? Comments { get; set; }
-    [Required(ErrorMessage = "Et Delmål skal have et navn")]
+    [Required(ErrorMessage = "En opgave skal have et navn")]
     public string SubGoalName { get; set; }
     public string? SubGoalDescription { get; set; }
-    [Required(ErrorMessage = "Et Delmål skal have en kategori")]
+    [Required(ErrorMessage = "En opgave skal have en kategori")]
     public string SubGoalCategory { get; set; }
+    [Required(ErrorMessage = "En opgave skal have en type")]
+    public string SubGoalType { get; set; }
     [Required]
     public bool SubGoalStatus { get; set; }
     [Required]
