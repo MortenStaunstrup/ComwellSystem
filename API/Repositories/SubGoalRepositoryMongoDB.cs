@@ -32,13 +32,15 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         bucket = new GridFSBucket(database, new GridFSBucketOptions{ BucketName = "Comwell files" });
     }
     
-    public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
+    public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
-        var filter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+        var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+        var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalStatus == false);
+        var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
         var projection = Builders<User>.Projection.Exclude("_id").Include("StudentPlan");
         
         var result = await userCollection
-            .Find(filter)
+            .Find(combinedFilter)
             .Project(projection)
             .FirstOrDefaultAsync();
 
@@ -47,17 +49,29 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             .Select(subgoal => BsonSerializer.Deserialize<SubGoal>(subgoal.ToBsonDocument()))
             .ToList();
         
-        if (result.Any())
-        {
-            foreach (var subgoal in subgoals)
-            {
-                if(subgoal.PictureId != null)
-                    subgoal.SubGoalPicture = Convert.ToBase64String(await bucket.DownloadAsBytesAsync(subgoal.PictureId));
-            }
-        }
-        Console.WriteLine($"Returing subgoals for student {studentId}");
+        Console.WriteLine($"Returing unfinished subgoals for student {studentId}");
         return subgoals;
+    }
+
+    public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+        var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalStatus == true);
+        var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
+        var projection = Builders<User>.Projection.Exclude("_id").Include("StudentPlan");
         
+        var result = await userCollection
+            .Find(combinedFilter)
+            .Project(projection)
+            .FirstOrDefaultAsync();
+
+        var subgoals = result["StudentPlan"]
+            .AsBsonArray
+            .Select(subgoal => BsonSerializer.Deserialize<SubGoal>(subgoal.ToBsonDocument()))
+            .ToList();
+        
+        Console.WriteLine($"Returing finished subgoals for student {studentId}");
+        return subgoals;
     }
 
     public async Task<List<TemplateSubGoal>?> GetAllTemplateSubGoalsAsync()
@@ -92,20 +106,11 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         // Indsætter subgoal i SubGoal collection
         subgoal.SubGoalId = await MaxSubGoalId() + 1;
-        if (subgoal.SubGoalPicture != null)
-        {
-            var picId = await bucket.UploadFromBytesAsync(subgoal.SubGoalName,Convert.FromBase64String(subgoal.SubGoalPicture));
-            subgoal.PictureId = picId;
-            subgoal.SubGoalPicture = null;
-        }
         await subCollection.InsertOneAsync(subgoal);
         Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
         
-        // Indsætter subgoal i User under studentplan
-        var filter = Builders<User>.Filter.Eq(x => x.UserId, subgoal.StudentId);
-        var update = Builders<User>.Update.Push("StudentPlan", subgoal);
-        await userCollection.FindOneAndUpdateAsync(filter, update);
-        Console.WriteLine($"Inserting subgoal into user {subgoal.StudentId}");
+        // Todo Skal indsætte subgoal ind i alle elever??
+        
     }
 
     public async Task<int> MaxTemplateId()

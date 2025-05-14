@@ -6,14 +6,7 @@
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
-            @if (!string.IsNullOrEmpty(Goal.SubGoalPicture))
-            {
-                <img src="@Goal.SubGoalPicture" alt="Delmål billede" class="DelmålBillede" />
-            }
-            else
-            {
-                <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
-            }
+            <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
             <h3>@Goal.SubGoalName</h3>
             <p>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>

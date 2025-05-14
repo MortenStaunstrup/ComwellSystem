@@ -18,15 +18,29 @@ public class SubGoalController : ControllerBase
 
     [HttpGet]
     [Route("get/{studentId:int}")]
-    public async Task<List<SubGoal>?> GetSubGoalsByStudentIdAsync(int studentId)
+    public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
-        var result = await repository.GetSubGoalsByStudentIdAsync(studentId);
+        var result = await repository.GetNotCompletedSubGoalsByStudentIdAsync(studentId);
         if (result.Count != 0)
         {
-            Console.WriteLine("Returning subgoals: controller");
+            Console.WriteLine("Returning unfinished subgoals: controller");
             return result;
         }
-        Console.WriteLine("No subgoals for student exist, returning empty list: controller");
+        Console.WriteLine("No unfinished subgoals for student exist, returning empty list: controller");
+        return result;
+    }
+    
+    [HttpGet]
+    [Route("getcompleted/{studentId:int}")]
+    public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var result = await repository.GetCompletedSubGoalsByStudentIdAsync(studentId);
+        if (result.Count != 0)
+        {
+            Console.WriteLine("Returning completed subgoals: controller");
+            return result;
+        }
+        Console.WriteLine("No completed subgoals for student exist, returning empty list: controller");
         return result;
     }
     
