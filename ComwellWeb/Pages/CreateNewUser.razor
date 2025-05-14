@@ -51,7 +51,7 @@
     {
         if (userSemesterDate.HasValue)
         {
-            newUser.UserSemester = DateOnly.FromDateTime(userSemesterDate.Value);
+            newUser.StartDate = DateOnly.FromDateTime(userSemesterDate.Value);
         }
         
         Console.WriteLine($"Bruger oprettet: {newUser.UserName} ({newUser.Role})");
