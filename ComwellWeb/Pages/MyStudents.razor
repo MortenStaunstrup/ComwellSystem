@@ -1,148 +1,77 @@
-@using ComwellWeb.Komponents.Modal
 @using Core;
 @page "/MyStudents"
-<div id="AltIndhold">
-    <div class="student-scroll-container">
-        @foreach (var Student in MyStudentsList)
-        {
-            <div class="student-card">
-                @if (Student.Picture == null)
-                {
-                    <img class="profile-picture" alt="Intet Profil billede" src="Pictures/NoProfilePicture.png" />
-                }
-                else
-                {
-                    <img class="profile-picture" alt="Profil billede" src="@Student.Picture" />
-                }
 
-                <h3>@Student.UserName</h3>
+<div class="page-wrapper">
+    <div class="header">
+        <div class="search-container">
+            <input type="text" @bind="searchQuery" placeholder="Søg på studerende..." class="search-input" />
+            <select @bind="sortOrder" class="sort-dropdown">
+                <option value="asc">A-Z</option>
+                <option value="desc">Z-A</option>
+            </select>
+        </div>
+    </div>
 
-                <div class="emojidiv">
-                    <img class="EmojiPic" alt="Progress emoji" src="Pictures/NoProfilePicture.png" />
-                </div>
+    <div id="AltIndhold">
+        <div class="student-scroll-container">
+            @foreach (var Student in FilteredStudents)
+            {
+                <a href="@($"/StudentOverview/{Student.UserId}")" class="student-row-link">
+                    <div class="student-row">
+                        @if (Student.Picture == null)
+                        {
+                            <img class="profile-picture" alt="Intet Profil billede" src="Pictures/NoProfilePicture.png" />
+                        }
+                        else
+                        {
+                            <img class="profile-picture" alt="Profil billede" src="@Student.Picture" />
+                        }
 
-                <div class="progress-container">
-                    <div class="progress-bar"></div>
-                </div>
-            </div>
-        }
+                        <div class="progress-and-name">
+                            <h3>@Student.UserName</h3>
+                            <div class="progress-container">
+                                <div class="progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="emoji-container">
+                            <img class="EmojiPic" alt="Progress emoji" src="Pictures/NoProfilePicture.png" />
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
     </div>
 </div>
-@code {
 
+@code {
     public List<User> MyStudentsList = new()
     {
-        new User
-        {
-            UserId = 1,
-            UserName = "Karl Hansen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "karl.hansen@email.com",
-            UserPhone = "12345678",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1001
-        },
-        new User
-        {
-            UserId = 2,
-            UserName = "Emma Sørensen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "emma.sorensen@email.com",
-            UserPhone = "87654321",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1001
-        },
-        new User
-        {
-            UserId = 3,
-            UserName = "Mikkel Thomsen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "mikkel.thomsen@email.com",
-            UserPhone = "22334455",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1001
-        },
-        new User
-        {
-            UserId = 4,
-            UserName = "Sofie Nielsen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "sofie.nielsen@email.com",
-            UserPhone = "99887766",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1002
-        },
-        new User
-        {
-            UserId = 5,
-            UserName = "Jonas Pedersen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "jonas.pedersen@email.com",
-            UserPhone = "55667788",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1002
-        },
-        new User
-        {
-            UserId = 6,
-            UserName = "Laura Jensen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "laura.jensen@email.com",
-            UserPhone = "11223344",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1003
-        },
-        new User
-        {
-            UserId = 7,
-            UserName = "Oliver Madsen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "oliver.madsen@email.com",
-            UserPhone = "44332211",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1003
-        },
-        new User
-        {
-            UserId = 8,
-            UserName = "Freja Kristensen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "freja.kristensen@email.com",
-            UserPhone = "33445566",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1001
-        },
-        new User
-        {
-            UserId = 9,
-            UserName = "Lukas Mortensen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "lukas.mortensen@email.com",
-            UserPhone = "66778899",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1002
-        },
-        new User
-        {
-            UserId = 10,
-            UserName = "Ida Lauritsen",
-            Role = "Student",
-            UserPassword = "Test123!",
-            UserEmail = "ida.lauritsen@email.com",
-            UserPhone = "77889900",
-            StartDate = DateOnly.Parse("2024-08-15"),
-            UserIdResponsible = 1003
-        }
+        new User { UserId = 1, UserName = "Karl Hansen", Role = "Student", UserEmail = "karl.hansen@email.com" },
+        new User { UserId = 2, UserName = "Emma Sørensen", Role = "Student", UserEmail = "emma.sorensen@email.com" },
+        new User { UserId = 3, UserName = "Mikkel Thomsen", Role = "Student", UserEmail = "mikkel.thomsen@email.com" },
+        new User { UserId = 4, UserName = "Sofie Nielsen", Role = "Student", UserEmail = "sofie.nielsen@email.com" },
+        new User { UserId = 5, UserName = "Jonas Pedersen", Role = "Student", UserEmail = "jonas.pedersen@email.com" },
+        new User { UserId = 6, UserName = "Laura Jensen", Role = "Student", UserEmail = "laura.jensen@email.com" },
+        new User { UserId = 7, UserName = "Oliver Madsen", Role = "Student", UserEmail = "oliver.madsen@email.com" },
+        new User { UserId = 8, UserName = "Freja Kristensen", Role = "Student", UserEmail = "freja.kristensen@email.com" },
+        new User { UserId = 9, UserName = "Lukas Mortensen", Role = "Student", UserEmail = "lukas.mortensen@email.com" },
+        new User { UserId = 10, UserName = "Ida Lauritsen", Role = "Student", UserEmail = "ida.lauritsen@email.com" }
     };
-    
-    
+
+    private string searchQuery = string.Empty;
+    private string sortOrder = "asc";
+
+    private IEnumerable<User> FilteredStudents
+    {
+        get
+        {
+            var filteredList = MyStudentsList
+                .Where(s => string.IsNullOrEmpty(searchQuery) || s.UserName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+
+            return sortOrder == "asc"
+                ? filteredList.OrderBy(s => s.UserName)
+                : filteredList.OrderByDescending(s => s.UserName);
+        }
+    }
 }
