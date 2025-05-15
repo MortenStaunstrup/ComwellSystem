@@ -58,6 +58,14 @@ public class SubGoalController : ControllerBase
         Console.WriteLine("No offered subgoals returning empty list: controller");
         return result;
     }
+
+    [HttpGet]
+    [Route("getpct/{studentId:int}")]
+    public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var result = await repository.GetPctCompletedSubGoalsByStudentIdAsync(studentId);
+        return result;
+    }
     
     [HttpPost]
     [Route("create")]

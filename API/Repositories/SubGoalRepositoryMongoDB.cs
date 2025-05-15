@@ -73,6 +73,46 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return subgoals;
     }
 
+    public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var studentFilter = Builders<User>.Filter.Eq("_id", studentId);
+
+        var aggregation = await userCollection.Aggregate()
+            .Match(studentFilter)
+            .Unwind(u => u.StudentPlan)
+            .Group(new BsonDocument
+            {
+                { "_id", "$StudentPlan.SubGoalStatus" }, // Correct access to the subgoal status
+                { "Count", new BsonDocument("$sum", 1) }
+            })
+            .ToListAsync();
+
+        // Initialize counters
+        int totalCount = 0;
+        int completedCount = 0;
+
+        // Calculate completed and total count
+        foreach (var result in aggregation)
+        {
+            bool status = result["_id"].AsBoolean;
+            int count = result["Count"].AsInt32;
+            totalCount += count;
+            if (status)
+            {
+                completedCount += count;
+            }
+        }
+
+        if (totalCount == 0)
+        {
+            return 0;
+        }
+
+        var percentage = (completedCount / (double)totalCount) * 100;
+        Console.WriteLine($"The result for student {studentId} is {percentage}");
+        return percentage;
+    }
+
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         var filter = Builders<SubGoal>.Filter.Eq("SubGoalType", "Extra");

@@ -40,6 +40,12 @@ public class SubGoalServiceServer : ISubGoalService
 
         return result;
     }
+
+    public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var result = await _client.GetFromJsonAsync<double>($"{BaseURL}/getpct/{studentId}");
+        return result;
+    }
     
 
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()

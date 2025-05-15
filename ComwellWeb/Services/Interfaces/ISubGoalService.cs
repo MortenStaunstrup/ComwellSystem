@@ -7,6 +7,7 @@ public interface ISubGoalService
     Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId); // Find listen af alle elevens ikke færdiggjorte subgoals, også kaldes 'Student Plan'
     Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<List<SubGoal>?> GetOfferedSubGoalsAsync();
+    Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId);
     
     
     void CreateSubGoal(SubGoal subGoal); // Lav subgoal

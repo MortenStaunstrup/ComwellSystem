@@ -6,14 +6,12 @@
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
-            <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
             <h3>@Goal.SubGoalName</h3>
             <p>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
-            <p><strong>Slutdato:</strong> @Goal.SubGoalDueDate.ToString("dd-MM-yyyy")</p>
             @if (VejenDerTil == true)
             {
-                <button class="btn btn-primary">Ansøg</button>
+                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Ansøg</button>
             }
             else
             {
@@ -30,7 +28,14 @@
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }
+    [Parameter] public User CurrentUser { get; set; }
 
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
+
+    private async void NotifyResponsibleCook(int subGoalId)
+    {
+        // Todo giv notification til ansvarlig for elev, at eleven er interesseret i dette delmål
+    }
+
 }

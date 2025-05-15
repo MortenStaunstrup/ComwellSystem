@@ -126,6 +126,11 @@ public class SubGoalServiceClient : ISubGoalService
     {
         return null;
     }
+
+    public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
+    {
+        return 0;
+    }
     
     public void CreateSubGoal(SubGoal subGoal)
     {
