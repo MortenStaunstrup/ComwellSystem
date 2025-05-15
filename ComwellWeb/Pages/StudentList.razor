@@ -42,8 +42,9 @@ else
                 <span>@student.UserName</span>
                 <span>@student.StartDate</span>
             </div>
+            <span>@_pctCompleted[student.UserId]%</span>
             <div class="progress-container">
-                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div> <!-- Todo logik til at udregne procentvis gennemførte opgaver -->
+                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
             </div>
         </div>
     }
