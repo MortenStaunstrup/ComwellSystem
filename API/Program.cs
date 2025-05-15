@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
 builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddCors(options =>
 {

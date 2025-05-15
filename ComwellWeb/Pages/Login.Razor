@@ -1,15 +1,34 @@
 ﻿@page "/login"
+@using ComwellWeb.Services.Interfaces
+@inject IUserService userService
+@inject NavigationManager nav     
 
-<div class="login-container">
-    <div class="login-box">
-        <div class="login-logo">
-            <img src="https://img.icons8.com/ios-filled/100/lock.png" alt="Login Icon" />
-        </div>
-        <h2>Login</h2>
-        <form>
-            <input type="email" placeholder="Indtast e-mail" required />
-            <input type="password" placeholder="Indtast kode" required />
-            <button type="submit">Log ind</button>
-        </form>
-    </div>
-</div>
+<h3>Log ind</h3>
+
+<input @bind="email" placeholder="Email" />           <!-- Email input -->
+<input @bind="password" type="password" placeholder="Adgangskode" />  <!-- Password input -->
+<button @onclick="TryLogin">Log ind</button>          <!-- Knap til at starte login -->
+
+<p>@message</p>  <!-- Viser besked, fx fejl ved login -->
+
+@code {
+    string email;
+    string password;
+    string message;
+
+    // Kører når brugeren klikker login
+    private async Task TryLogin()
+    {
+        var user = await userService.Login(email, password);  // Prøv at logge ind via service
+
+        if (user != null && !string.IsNullOrEmpty(user.UserEmail))
+        {
+            // Login gik godt = naviger til forsiden
+            nav.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            message = "Wrong Username or Password";  // Fejlbesked hvis login fejler
+        }
+    }
+}

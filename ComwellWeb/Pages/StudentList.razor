@@ -1,87 +1,33 @@
-@page "/studentlist"
-@using ComwellWeb.Services.Interfaces
+@page "/StudentList"
+@using ComwellWeb.Services
 @using Core
-@inject ISubGoalService SubGoalService
+@inject HttpClient Http
+@inject IUserService _userservice
 
-<h3>Studenterfremskridt</h3>
+<h3>Elevliste</h3>
 
-<div class="filter-container">
-    <select id="semesterFilter">
-        <option value="">Alle praktik perioder</option>
-        <option value="1">1. praktik</option>
-        <option value="2">2. praktik</option>
-        <option value="3">3. praktik</option>
-    </select>
+<!--Hvis der ikke kan findes elever : vis "indlæser"-->
 
-    <select id="subgoalFilter">
-        <option value="">Alle subgoals</option>
-        <option value="safety">Lære om fødevaresikkerhed</option>
-        <option value="praktik">Bestå kokkepraktik</option>
-        <option value="menu">Udvikle egen menu</option>
-    </select>
-
-    <select id="tripFilter">
-        <option value="">Alle ture</option>
-        <option value="italy">Studietur til Italien</option>
-        <option value="michelin">Besøg på Michelin-restaurant</option>
-        <option value="madfestival">Madfestival i Aarhus</option>
-    </select>
-</div>
-
-<!-- Eksempeldata – kan senere erstattes med loop over rigtig data -->
-@if (_sortedStudents == null && _allStudents == null && _pctCompleted == null || _pctCompleted.Count == 0)
+@if (students == null)
 {
-    <p>Loading students...</p>
+    <p>Indlæser...</p>
 }
 else
+    //indlæs alle elever 
 {
-    foreach (var student in _sortedStudents)
-    {
-        <div class="student-card" @onclick="()=>ShowStudentPlan(student.UserId)">
-            <div class="student-info">
-                <span>@student.UserName</span>
-                <span>@student.StartDate</span>
-            </div>
-            <span>@_pctCompleted[student.UserId]%</span>
-            <div class="progress-container">
-                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
-            </div>
-        </div>
-    }
+    <ul>
+        @foreach (var student in students)
+        {
+            <li>@student.UserName</li>
+        }
+    </ul>
 }
+<!--Indlæser liste af elever fra vores API, som bliver brugt i overstående foreach-loop.-->
+@code {
+    List<User>? students;
 
-@code{
-    User? _currentUser;
-    List<User>? _allStudents;
-    // De elever man har efter sortering, det som bliver vist for HR
-    List<User>? _sortedStudents;
-    Dictionary<int, double>? _pctCompleted;
-    
     protected override async Task OnInitializedAsync()
     {
-        //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
-        _allStudents = new List<User>()
-        {
-            new User()
-            {
-                Role = "Student",
-                UserId = 2,
-                UserName = "lars",
-                UserIdResponsible = 23,
-                StartDate = new DateOnly(2025, 6, 16)
-            }
-        };
-        _sortedStudents = _allStudents;
-        _pctCompleted = new Dictionary<int, double>();
-        foreach (var student in _allStudents)
-        {
-            _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
-        }
+        students = await _userservice.GetAllUsersAsync();
     }
-
-    private void ShowStudentPlan(int studentId)
-    {
-        // Todo navigere enten til elevens mySubgoals page. Eller viser elevens subgoals i et modalvindue
-    }
-
 }

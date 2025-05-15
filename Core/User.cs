@@ -3,8 +3,10 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Core;
 
+//En slags skabelon for en bruger - hvordan ser brugeren ud/brugerens egenskaber
 public class User
-{
+
+{   [BsonId]
     [BsonElement("_id")]
     public int UserId { get; set; }
     public string UserName { get; set; }
