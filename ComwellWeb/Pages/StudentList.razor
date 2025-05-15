@@ -1,6 +1,7 @@
 @page "/studentlist"
 @using ComwellWeb.Services.Interfaces
 @using Core
+@using ComwellWeb.Komponents.Modal
 @inject ISubGoalService SubGoalService
 
 <h3>Studenterfremskridt</h3>
@@ -28,7 +29,6 @@
     </select>
 </div>
 
-<!-- Eksempeldata – kan senere erstattes med loop over rigtig data -->
 @if (_sortedStudents == null && _allStudents == null && _pctCompleted == null || _pctCompleted.Count == 0)
 {
     <p>Loading students...</p>
@@ -48,6 +48,10 @@ else
             </div>
         </div>
     }
+    @if (ShowModal)
+    {
+        <ShowStudentPlan CurrentUser="_currentUser" Visible="ShowModal" _studentId="_currentShownStudent" OnCloseRequested="CloseModal"></ShowStudentPlan>
+    }
 }
 
 @code{
@@ -56,6 +60,8 @@ else
     // De elever man har efter sortering, det som bliver vist for HR
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
+    int _currentShownStudent;
+    bool ShowModal = false;
     
     protected override async Task OnInitializedAsync()
     {
@@ -67,6 +73,14 @@ else
                 Role = "Student",
                 UserId = 2,
                 UserName = "lars",
+                UserIdResponsible = 23,
+                StartDate = new DateOnly(2025, 6, 16)
+            },
+            new User()
+            {
+                Role = "Student",
+                UserId = 1,
+                UserName = "tis",
                 UserIdResponsible = 23,
                 StartDate = new DateOnly(2025, 6, 16)
             }
@@ -82,6 +96,13 @@ else
     private void ShowStudentPlan(int studentId)
     {
         // Todo navigere enten til elevens mySubgoals page. Eller viser elevens subgoals i et modalvindue
+        _currentShownStudent = studentId;
+        ShowModal = true;
+    }
+    
+    private void CloseModal()
+    {
+        ShowModal = false;
     }
 
 }
