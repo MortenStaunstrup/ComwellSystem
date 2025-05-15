@@ -1,0 +1,80 @@
+@page "/StudentOverview/{UserId:int}"
+@using Core
+@inject NavigationManager Navigation
+
+@if (student != null)
+{
+    <h4 style="margin-bottom: 1rem;">@student.UserName</h4>
+
+    <table class="student-task-table">
+        <thead>
+            <tr>
+                <th>Frist</th>
+                <th>Opgave</th>
+                <th>Beskrivelse</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in studentTasks)
+            {
+                <tr>
+                    <td>@task.Deadline.ToString("dd/MM/yyyy")</td>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@(task.IsCompleted ? "✅" : "❌")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Ingen elev fundet med ID: @UserId</p>
+}
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+
+    private User? student;
+    private List<TaskItem> studentTasks = new();
+
+    private List<User> testStudents = new()
+    {
+        new User { UserId = 1, UserName = "Karl Hansen", UserEmail = "karl.hansen@email.com" },
+        new User { UserId = 2, UserName = "Emma Sørensen", UserEmail = "emma.sorensen@email.com" },
+        new User { UserId = 3, UserName = "Mikkel Thomsen", UserEmail = "mikkel.thomsen@email.com" }
+    };
+
+    protected override void OnInitialized()
+    {
+        student = testStudents.FirstOrDefault(s => s.UserId == UserId);
+
+        if (student != null)
+        {
+            studentTasks = student.UserId switch
+            {
+                1 => new List<TaskItem> {
+                    new TaskItem { Title = "Menuplan", Description = "Planlæg 3-retters menu", Deadline = DateTime.Now.AddDays(3), IsCompleted = false },
+                    new TaskItem { Title = "Hygiejne", Description = "Aflever teoriopgave", Deadline = DateTime.Now.AddDays(5), IsCompleted = true }
+                },
+                2 => new List<TaskItem> {
+                    new TaskItem { Title = "Servering", Description = "Server for gæster", Deadline = DateTime.Now.AddDays(2), IsCompleted = false }
+                },
+                3 => new List<TaskItem> {
+                    new TaskItem { Title = "Opskrift", Description = "Udarbejd opskrift på hovedret", Deadline = DateTime.Now.AddDays(1), IsCompleted = true }
+                },
+                _ => new List<TaskItem>()
+            };
+        }
+    }
+
+    public class TaskItem
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Deadline { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+}
