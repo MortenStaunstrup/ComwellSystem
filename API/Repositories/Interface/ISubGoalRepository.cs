@@ -5,6 +5,7 @@ public interface ISubGoalRepository
 {
     Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
+    Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId);
     Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<SubGoal?> GetSubGoalByIdAsync(int id);
     Task<List<SubGoal>?> GetOfferedSubGoalsAsync();

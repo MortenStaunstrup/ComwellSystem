@@ -43,7 +43,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
         if (user?.StudentPlan == null)
         {
-            return null;
+            return new List<SubGoal>();
         }
 
         var subgoals = user.StudentPlan
@@ -66,7 +66,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
         if (user?.StudentPlan == null)
         {
-            return null;
+            return new List<SubGoal>();
         }
 
         var subgoals = user.StudentPlan
@@ -117,10 +117,35 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return percentage;
     }
 
+    public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
+    {
+        var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
+        var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalType == "Extra");
+        var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
+        var projection = Builders<User>.Projection.Include("StudentPlan");
+        
+        var user = await userCollection
+            .Find(combinedFilter)
+            .Project<User>(projection)
+            .FirstOrDefaultAsync();
+
+        if (user?.StudentPlan == null)
+        {
+            return new List<SubGoal>();
+        }
+        
+
+        Console.WriteLine($"Returning extra subgoals for student {studentId}");
+        return user.StudentPlan.ToList();
+    }
+
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         var filter = Builders<SubGoal>.Filter.Eq("SubGoalType", "Extra");
         var result = await subCollection.Find(filter).ToListAsync();
+        
+        if (result == null || result.Count == 0)
+            return new List<SubGoal>();
         return result;
     }
 

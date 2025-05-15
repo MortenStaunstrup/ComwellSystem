@@ -15,18 +15,22 @@
             
             @foreach (var subgoal in _offeredSubGoals)
             {
-                <li style="background-color: white;" @onclick="() => OpenModal(subgoal)">
-                    <span><b>Delmål Navn: </b></span>@subgoal.SubGoalName
-                    <span><b>Delmål Beskrivelse: </b></span>@subgoal.SubGoalDescription
-                    <span><b>Delmål Kategori: </b></span>@subgoal.SubGoalCategory
-                </li>
+                @if (!ownGoalsDict.ContainsKey(subgoal.SubGoalId))
+                {
+                    <li style="background-color: white;" @onclick="() => OpenModal(subgoal)">
+                        <span><b>Delmål Navn: </b></span>@subgoal.SubGoalName
+                        <span><b>Delmål Beskrivelse: </b></span>@subgoal.SubGoalDescription
+                        <span><b>Delmål Kategori: </b></span>@subgoal.SubGoalCategory
+                    </li>
+                }
             }
         </ul>
     }
 
 <SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil" CurrentUser="_currentUser"/>
 @code {
-    private List<SubGoal> _offeredSubGoals; 
+    private List<SubGoal> _offeredSubGoals;
+    private Dictionary<int, int> ownGoalsDict;
     
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
@@ -46,6 +50,14 @@ protected override async Task OnInitializedAsync()
         Role = "Student"
     };
     _offeredSubGoals = await SubGoalService.GetOfferedSubGoalsAsync();
+    var _ownOfferedSubGoals = await SubGoalService.GetOfferedSubGoalsByStudentIdAsync(_currentUser.UserId);
+    if (_ownOfferedSubGoals != null)
+    {
+        foreach (var owngoal in _ownOfferedSubGoals)
+        {
+            ownGoalsDict[owngoal.SubGoalId] = 0;
+        }
+    }
 }
 
 private void OpenModal(SubGoal goal)

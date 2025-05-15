@@ -191,7 +191,7 @@ else
                 {
                     studentIds.Add(student.UserId);
                 }
-                SubGoalService.CreateSubGoal(_model); //TODO create sub goal funktion virker ikke af én eller anden årsag
+                SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalSpecific(_model, studentIds);
             }
             ResetModels();
@@ -204,6 +204,7 @@ else
         EditContext = new EditContext(_model);
         _addedStudents = new List<User>();
         _nonAddedStudents = _myStudents;
+        Thread.Sleep(2000);
         currentMaxId = await SubGoalService.MaxSubGoalId();
         StateHasChanged();
     }
