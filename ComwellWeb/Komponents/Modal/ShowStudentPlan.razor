@@ -7,40 +7,44 @@
 
 <!-- Todo få til at se bedre ud med styling -->
 
-@if (Visible && _studentSubGoalsCompleted != null || _studentSubGoalsNotCompleted != null)
+@if (Visible)
 {
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
-            <ul>
-                @if (_studentSubGoalsCompleted != null)
-                {
-                    @foreach (var sub in _studentSubGoalsCompleted)
+            @if (_studentSubGoalsCompleted != null || _studentSubGoalsNotCompleted != null)
+            {
+                <ul>
+                    @if (_studentSubGoalsCompleted != null)
                     {
-                        <li>
-                            @sub.SubGoalName
-                            @sub.SubGoalDescription
-                            @sub.SubGoalCategory
-                            @sub.SubGoalDueDate
-                        </li>
+                        @foreach (var sub in _studentSubGoalsCompleted)
+                        {
+                            <li>
+                                @sub.SubGoalName
+                                @sub.SubGoalDescription
+                                @sub.SubGoalCategory
+                                @sub.SubGoalDueDate
+                            </li>
+                        }
                     }
-                }
-            </ul>
-            
-            <ul>
-                @if (_studentSubGoalsNotCompleted != null)
-                {
-                    @foreach (var sub in _studentSubGoalsNotCompleted)
+                </ul>
+                
+                <ul>
+                    @if (_studentSubGoalsNotCompleted != null)
                     {
-                        <li>
-                            @sub.SubGoalName
-                            @sub.SubGoalDescription
-                            @sub.SubGoalCategory
-                            @sub.SubGoalDueDate
-                        </li>
+                        @foreach (var sub in _studentSubGoalsNotCompleted)
+                        {
+                            <li>
+                                @sub.SubGoalName
+                                @sub.SubGoalDescription
+                                @sub.SubGoalCategory
+                                @sub.SubGoalDueDate
+                            </li>
+                        }
                     }
-                }
-            </ul>
+                </ul>
+                
+            }
             
         </div>
     </div>
