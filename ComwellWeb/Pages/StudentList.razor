@@ -5,21 +5,12 @@
 @inject ISubGoalService SubGoalService
 
 <h3>Studenterfremskridt</h3>
+@inject HttpClient Http
+@inject IUserService _userservice
 
-<div class="filter-container">
-    <select id="semesterFilter">
-        <option value="">Alle praktik perioder</option>
-        <option value="1">1. praktik</option>
-        <option value="2">2. praktik</option>
-        <option value="3">3. praktik</option>
-    </select>
+<h3>Elevliste</h3>
 
-    <select id="subgoalFilter">
-        <option value="">Alle subgoals</option>
-        <option value="safety">Lære om fødevaresikkerhed</option>
-        <option value="praktik">Bestå kokkepraktik</option>
-        <option value="menu">Udvikle egen menu</option>
-    </select>
+<!--Hvis der ikke kan findes elever : vis "indlæser"-->
 
     <select id="tripFilter">
         <option value="">Alle ture</option>
@@ -30,10 +21,12 @@
 </div>
 
 @if (_sortedStudents == null && _allStudents == null && _pctCompleted == null || _pctCompleted.Count == 0)
+@if (students == null)
 {
-    <p>Loading students...</p>
+    <p>Indlæser...</p>
 }
 else
+    //indlæs alle elever 
 {
     foreach (var student in _sortedStudents)
     {
@@ -48,21 +41,23 @@ else
             </div>
         </div>
     }
-    @if (ShowModal)
-    {
-        <ShowStudentPlan CurrentUser="_currentUser" Visible="ShowModal" _studentId="_currentShownStudent" OnCloseRequested="CloseModal"></ShowStudentPlan>
-    }
 }
 
 @code{
     User? _currentUser;
+
     List<User>? _allStudents;
+
     // De elever man har efter sortering, det som bliver vist for HR
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
     int _currentShownStudent;
     bool ShowModal = false;
-    
+
+    <!--Indlæser liste af elever fra vores API, som bliver brugt i overstående foreach-loop.-->
+@code {
+    List<User>? students;
+
     protected override async Task OnInitializedAsync()
     {
         //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
@@ -91,6 +86,8 @@ else
         {
             _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
         }
+
+        students = await _userservice.GetAllUsersAsync();
     }
 
     private void ShowStudentPlan(int studentId)
@@ -99,10 +96,11 @@ else
         _currentShownStudent = studentId;
         ShowModal = true;
     }
-    
+
     private void CloseModal()
     {
         ShowModal = false;
     }
 
+}
 }

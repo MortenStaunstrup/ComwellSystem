@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ComwellWeb;
 using ComwellWeb.Services;
 using ComwellWeb.Services.Interfaces;
+using Blazored.LocalStorage;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddSingleton(sp => new HttpClient
 {
@@ -14,5 +18,8 @@ builder.Services.AddSingleton(sp => new HttpClient
 });
 
 builder.Services.AddSingleton<ISubGoalService, SubGoalServiceServer>();
+builder.Services.AddScoped<IUserService, UserService>(); //undtagelsesvist brug af scoped
+
+
 
 await builder.Build().RunAsync();
