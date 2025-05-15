@@ -69,10 +69,10 @@ public class SubGoalController : ControllerBase
     
     [HttpPost]
     [Route("create")]
-    public void CreateSubgoal(SubGoalRequest subgoal)
+    public void CreateSubgoal(SubGoal subgoal)
     {
         Console.WriteLine("Creating subgoal: controller");
-        repository.CreateSubgoal(subgoal.SubGoal);
+        repository.CreateSubgoal(subgoal);
     }
 
     [HttpPost]
