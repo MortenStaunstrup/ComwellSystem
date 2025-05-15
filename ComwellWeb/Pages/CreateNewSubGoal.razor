@@ -43,7 +43,7 @@ else
                         </div>
                         
                         <div class="mb-3">
-                            <InputSelect @bind-Value="_model.SubGoalType" class="form-control">
+                            <InputSelect @bind-Value="_model.SubGoalType" @onchange="OnSubGoalTypeChange" class="form-control">
                                 <option value="">Vælg type</option>
                                 @foreach (var type in _types)
                                 {
@@ -62,7 +62,10 @@ else
                         <div class="mb-3">
                             @if (_myStudents != null)
                             {
-                                <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
+                                @if (_model.SubGoalType == "Extra")
+                                {
+                                    <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
+                                }
                             }
                         </div>
 
@@ -70,6 +73,7 @@ else
                             <button type="submit" class="btn btn-success">Tildel Delmål</button>
                         </div>
                     </EditForm>
+                    <p style="color: red">@_errorMessage</p>
                 </div>
             </div>
             
@@ -79,45 +83,15 @@ else
 
 @code {
     User _currentUser;
-    List<User>? _myStudents = new List<User>()
-    {
-        new User()
-        {
-            UserId = 1,
-            UserName = "tis",
-            UserEmail = "MF@Comwell.dk",
-            UserPassword = "hejhej",
-            UserPhone = "238240289",
-            Role = "Student",
-            Messages = null,
-            Notifications = null,
-            Picture = null,
-            StudentPlan = null,
-            UserIdResponsible = 23,
-            StartDate = new DateOnly(2022, 6, 16)
-        },
-        new User()
-        {
-            UserId = 2,
-            UserName = "lars",
-            UserEmail = "Egg@Comwell.dk",
-            UserPassword = "bilsd",
-            UserPhone = "95283984",
-            Role = "Student",
-            Messages = null,
-            Notifications = null,
-            Picture = null,
-            StudentPlan = null,
-            UserIdResponsible = 23,
-            StartDate = new DateOnly(2022, 6, 16)
-        }
-    };
-
+    List<User>? _myStudents;
+    List<User> _nonAddedStudents;
     List<User> _addedStudents = new List<User>();
+    
     SubGoal _model;
     EditContext EditContext;
+    
     StudentDropdown? dropdown { get; set; }
-
+    string _errorMessage;
     int currentMaxId;
 
     string[] _categories = new[]
@@ -156,6 +130,41 @@ else
         _model = new SubGoal();
         EditContext = new EditContext(_model);
         currentMaxId = await SubGoalService.MaxSubGoalId();
+        _myStudents = new List<User>()
+        {
+            new User()
+            {
+                UserId = 1,
+                UserName = "tis",
+                UserEmail = "MF@Comwell.dk",
+                UserPassword = "hejhej",
+                UserPhone = "238240289",
+                Role = "Student",
+                Messages = null,
+                Notifications = null,
+                Picture = null,
+                StudentPlan = null,
+                UserIdResponsible = 23,
+                StartDate = new DateOnly(2022, 6, 16)
+            },
+            new User()
+            {
+                UserId = 2,
+                UserName = "lars",
+                UserEmail = "Egg@Comwell.dk",
+                UserPassword = "bilsd",
+                UserPhone = "95283984",
+                Role = "Student",
+                Messages = null,
+                Notifications = null,
+                Picture = null,
+                StudentPlan = null,
+                UserIdResponsible = 23,
+                StartDate = new DateOnly(2022, 6, 16)
+            }
+        };
+
+        _nonAddedStudents = _myStudents;
     }
 
     private async void HandleSubmit()
@@ -166,28 +175,43 @@ else
         {
             if (_model.SubGoalType == "Standard")
             {
-                SubGoalService.CreateSubGoal(_model, new List<int>());
+                SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalAll(_model);
             }
             else
             {
+                if (_addedStudents.Count == 0)
+                {
+                    _errorMessage = "Du skal angive mindst én elev til en ekstra opgave";
+                    StateHasChanged();
+                    return;
+                }
                 var studentIds = new List<int>();
                 foreach (var student in _addedStudents)
                 {
                     studentIds.Add(student.UserId);
                 }
-                SubGoalService.CreateSubGoal(_model, studentIds);
+                SubGoalService.CreateSubGoal(_model); //TODO create sub goal funktion virker ikke af én eller anden årsag
                 SubGoalService.InsertSubgoalSpecific(_model, studentIds);
             }
-            StateHasChanged();
-            NavMan.NavigateTo("/createnewsubgoal", true);
+            ResetModels();
         }
     }
-
-    private void ResetModels()
+    
+    private async void ResetModels()
     {
         _model = new SubGoal();
         EditContext = new EditContext(_model);
+        _addedStudents = new List<User>();
+        _nonAddedStudents = _myStudents;
+        currentMaxId = await SubGoalService.MaxSubGoalId();
         StateHasChanged();
     }
+
+    private void OnSubGoalTypeChange(ChangeEventArgs e)
+    {
+        _model.SubGoalType = e.Value.ToString();
+        StateHasChanged();
+    }
+
 }

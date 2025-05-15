@@ -9,7 +9,7 @@ public interface ISubGoalService
     Task<List<SubGoal>?> GetOfferedSubGoalsAsync();
     
     
-    void CreateSubGoal(SubGoal subGoal, List<int> studentId); // Lav subgoal
+    void CreateSubGoal(SubGoal subGoal); // Lav subgoal
     Task<int> MaxSubGoalId(); // Find max id i subgoals
     void InsertSubgoalAll(SubGoal subgoal); // Indsæt subgoal til alle elever
     void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds); // Indsæt subgoal til specifikke elever

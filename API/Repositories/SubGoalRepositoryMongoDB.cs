@@ -98,24 +98,11 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return maxSubGoalId?.SubGoalId ?? 0;
     }
 
-    public async void CreateSubgoal(SubGoal subgoal, List<int> studentIds)
+    public async void CreateSubgoal(SubGoal subgoal)
     {
-        if (studentIds == null || studentIds.Count == 0 || subgoal.SubGoalType == "Standard")
-        {
-            // Indsætter subgoal i SubGoal collection, når den er standdart
-            await subCollection.InsertOneAsync(subgoal);
-            Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
-        }
-        else
-        {
-            foreach (var id in studentIds)
-            {
-                // Indsætter subgoal for hver studerende
-                subgoal.StudentId = id;
-                await subCollection.InsertOneAsync(subgoal);
-                Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection for student {id}");
-            }
-        }
+        // Indsætter subgoal i SubGoal collection
+        await subCollection.InsertOneAsync(subgoal);
+        Console.WriteLine($"Inserting subgoal {subgoal.SubGoalId} into subgoal collection");
     }
 
 
@@ -133,7 +120,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         foreach (var studentId in studentIds)
         {
-            subgoal.StudentId = studentId;
             var filter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
             var update = Builders<User>.Update.Push("StudentPlan", subgoal);
             Console.WriteLine($"Inserting subgoal into student {studentId}");
@@ -168,6 +154,32 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public void DeleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
         
+    }
+
+    //TODO Skal ind i userRepo, controller og service
+    public async void CreateUser(User user)
+    {
+        //Funktion til max User id indsættes her
+        user.UserId = 1;
+        if (user.Role == "Student")
+        {
+            await userCollection.InsertOneAsync(user);
+            
+            var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
+            var standardSubGoals = await subCollection.Find(filter).ToListAsync();
+
+            var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
+            
+            foreach (var subGoal in standardSubGoals)
+            {
+                subGoal.StudentId = user.UserId;
+                var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
+                subGoal.SubGoalDueDate = subGoal.SubGoalDueDate.AddYears(userYear - subGoal.SubGoalDueDate.Year);
+                var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
+                await userCollection.UpdateOneAsync(userFilter, userUpdate);
+            }
+            
+        }
     }
     
 }

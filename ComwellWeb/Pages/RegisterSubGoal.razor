@@ -5,29 +5,24 @@
 @inject ISubGoalService SubGoalService
 
 
-<div class="kort-container">
     @if (_offeredSubGoals == null)
     {
         <p>Fetching subgoals</p>
     }
     else
     {
-        @foreach (var subgoal in _offeredSubGoals)
-        {
-            <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
-                <img alt="No image available" class="DelmålBillede" src="Pictures/No_Image_Available.jpg"/>
-
-                <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
-                <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
-                <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
-
-                <p class="delmål-dato">
-                    Deadline: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy")
-                </p>
-            </div>
-        }
+        <ul>
+            
+            @foreach (var subgoal in _offeredSubGoals)
+            {
+                <li style="background-color: white;" @onclick="() => OpenModal(subgoal)">
+                    <span><b>Delmål Navn: </b></span>@subgoal.SubGoalName
+                    <span><b>Delmål Beskrivelse: </b></span>@subgoal.SubGoalDescription
+                    <span><b>Delmål Kategori: </b></span>@subgoal.SubGoalCategory
+                </li>
+            }
+        </ul>
     }
-</div>
 
 <SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
 @code {
@@ -147,9 +142,4 @@ private void CloseModal()
 {
     ShowModal = false;
 }
-}
-
-
-@code {
-    
 }
