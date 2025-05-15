@@ -1,24 +1,29 @@
-﻿using MongoDB.Bson;
+﻿using System.Collections.Generic;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Core;
-
-//En slags skabelon for en bruger - hvordan ser brugeren ud/brugerens egenskaber
-public class User
-
-{   [BsonId]
-    [BsonElement("_id")]
-    public int UserId { get; set; }
-    public string UserName { get; set; }
-    public SubGoal[]? StudentPlan { get; set; }
-    public Notification[]? Notifications { get; set; }
-    public Message[]? Messages { get; set; }
-    public ObjectId? PictureId { get; set; }
-    public string? Picture { get; set; }
-    public string Role { get; set;}
-    public string UserPassword { get; set; }
-    public string UserEmail { get; set; }
-    public string UserPhone { get; set; }
-    public DateOnly? StartDate { get; set; }
-    public int? UserIdResponsible { get; set; }
+namespace Core
+{
+    public class User
+    {
+        [BsonId]
+        [BsonElement("_id")]
+        public int UserId { get; set; }
+        
+        public string UserName { get; set; }
+        
+        // Initialiserer til tomme lister, så de aldrig er null
+        public List<SubGoal> StudentPlan { get; set; } = new List<SubGoal>();
+        public List<Notification> Notifications { get; set; } = new List<Notification>();
+        public List<Message> Messages { get; set; } = new List<Message>();
+        
+        public ObjectId? PictureId { get; set; }
+        public string? Picture { get; set; }
+        public string Role { get; set; }
+        public string UserPassword { get; set; }
+        public string UserEmail { get; set; }
+        public string UserPhone { get; set; }
+        public DateOnly? StartDate { get; set; }
+        public int? UserIdResponsible { get; set; }
+    }
 }
