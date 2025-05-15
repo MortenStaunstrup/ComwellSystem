@@ -34,42 +34,46 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
-        var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalStatus == false);
-        var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
-        var projection = Builders<User>.Projection.Exclude("_id").Include("StudentPlan");
-        
-        var result = await userCollection
-            .Find(combinedFilter)
-            .Project(projection)
+        var projection = Builders<User>.Projection.Include("StudentPlan");
+
+        var user = await userCollection
+            .Find(studentFilter)
+            .Project<User>(projection)
             .FirstOrDefaultAsync();
 
-        var subgoals = result["StudentPlan"]
-            .AsBsonArray
-            .Select(subgoal => BsonSerializer.Deserialize<SubGoal>(subgoal.ToBsonDocument()))
+        if (user?.StudentPlan == null)
+        {
+            return null;
+        }
+
+        var subgoals = user.StudentPlan
+            .Where(subgoal => subgoal.SubGoalStatus == false)
             .ToList();
-        
-        Console.WriteLine($"Returing unfinished subgoals for student {studentId}");
+
+        Console.WriteLine($"Returning unfinished subgoals for student {studentId}");
         return subgoals;
     }
 
     public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
-        var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalStatus == true);
-        var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
-        var projection = Builders<User>.Projection.Exclude("_id").Include("StudentPlan");
-        
-        var result = await userCollection
-            .Find(combinedFilter)
-            .Project(projection)
+        var projection = Builders<User>.Projection.Include("StudentPlan");
+
+        var user = await userCollection
+            .Find(studentFilter)
+            .Project<User>(projection)
             .FirstOrDefaultAsync();
 
-        var subgoals = result["StudentPlan"]
-            .AsBsonArray
-            .Select(subgoal => BsonSerializer.Deserialize<SubGoal>(subgoal.ToBsonDocument()))
+        if (user?.StudentPlan == null)
+        {
+            return null;
+        }
+
+        var subgoals = user.StudentPlan
+            .Where(subgoal => subgoal.SubGoalStatus == true)
             .ToList();
-        
-        Console.WriteLine($"Returing finished subgoals for student {studentId}");
+
+        Console.WriteLine($"Returning finished subgoals for student {studentId}");
         return subgoals;
     }
 
