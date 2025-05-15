@@ -21,7 +21,20 @@
                 <StdNavBar/>
             }
         </div>
+        @if (CurrentUser != null)
+        {
+            <div class="Noti" @onclick="ToggleNotification">
+                <span class="notification-icon">🔔</span>
 
+                @if (ShowNotification)
+                {
+                    <div class="notification-dropdown">
+                        <Notification />
+                    </div>
+                }
+            </div>
+        }
+   
         <article class="content px-4">
             @Body
         </article>
@@ -29,6 +42,12 @@
 </div>
 
 @code {
+    private bool ShowNotification = false;
+
+    private void ToggleNotification()
+    {
+        ShowNotification = !ShowNotification;
+    }
     [Parameter]
     public User CurrentUser { get; set; }
     
