@@ -127,7 +127,7 @@ public class SubGoalServiceClient : ISubGoalService
         return null;
     }
     
-    public void CreateSubGoal(SubGoal subGoal, List<int> studentId)
+    public void CreateSubGoal(SubGoal subGoal)
     {
         subGoal.SubGoalId = subGoals.Max(s => s.SubGoalId) + 1;
         subGoals.Add(subGoal);

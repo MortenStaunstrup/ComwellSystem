@@ -7,7 +7,7 @@ public interface ISubGoalRepository
     Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<SubGoal?> GetSubGoalByIdAsync(int id);
     Task<List<SubGoal>?> GetOfferedSubGoalsAsync();
-    void CreateSubgoal(SubGoal subgoal, List<int> studentIds);
+    void CreateSubgoal(SubGoal subgoal);
     Task<int> MaxSubGoalId();
     void InsertSubgoalAll(SubGoal subgoal);
     void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds);

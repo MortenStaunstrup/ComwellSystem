@@ -52,7 +52,7 @@ public class SubGoalController : ControllerBase
         var result = await repository.GetOfferedSubGoalsAsync();
         if (result.Count != 0)
         {
-            Console.WriteLine("Returning completed subgoals: controller");
+            Console.WriteLine("Returning offered subgoals: controller");
             return result;
         }
         Console.WriteLine("No offered subgoals returning empty list: controller");
@@ -64,7 +64,7 @@ public class SubGoalController : ControllerBase
     public void CreateSubgoal(SubGoalRequest subgoal)
     {
         Console.WriteLine("Creating subgoal: controller");
-        repository.CreateSubgoal(subgoal.SubGoal, subgoal.StudentIds);
+        repository.CreateSubgoal(subgoal.SubGoal);
     }
 
     [HttpPost]
@@ -87,8 +87,9 @@ public class SubGoalController : ControllerBase
     [Route("getmaxid")]
     public async Task<int> GetMaxId()
     {
-        Console.WriteLine("Getting max id: controller");
-        return await repository.MaxSubGoalId();
+        var result = await repository.MaxSubGoalId();
+        Console.WriteLine($"Getting max id {result}: controller");
+        return result;
     }
     
 

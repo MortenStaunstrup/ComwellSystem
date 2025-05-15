@@ -55,15 +55,10 @@ public class SubGoalServiceServer : ISubGoalService
         return result;
     }
     
-    public async void CreateSubGoal(SubGoal subGoal, List<int> studentId)
+    public async void CreateSubGoal(SubGoal subGoal)
     {
         Console.WriteLine("Creating subgoal: service");
-        var request = new SubGoalRequest()
-        {
-            SubGoal = subGoal,
-            StudentIds = studentId
-        };
-        await _client.PostAsJsonAsync($"{BaseURL}/create", request);
+        await _client.PostAsJsonAsync($"{BaseURL}/create", subGoal);
     }
 
     public async Task<int> MaxSubGoalId()
