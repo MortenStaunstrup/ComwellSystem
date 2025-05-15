@@ -204,9 +204,9 @@ else
         EditContext = new EditContext(_model);
         _addedStudents = new List<User>();
         _nonAddedStudents = _myStudents;
+        StateHasChanged();
         Thread.Sleep(2000);
         currentMaxId = await SubGoalService.MaxSubGoalId();
-        StateHasChanged();
     }
 
     private void OnSubGoalTypeChange(ChangeEventArgs e)
