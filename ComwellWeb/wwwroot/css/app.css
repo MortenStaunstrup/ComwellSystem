@@ -6,6 +6,7 @@ html, body {
     background-position: center;
     height: 100%;
     overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 h1:focus {
@@ -122,6 +123,7 @@ code {
     padding: 10px 10px;
     display: flex;
     justify-content: center;
+    cursor: pointer;
 }
 
 .BtnsDiv {
@@ -135,17 +137,46 @@ code {
     padding: 10px 20px;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    left: -54px;
 }
 .NavAnker {
     text-decoration: none;
     color: black;
     font-family: sans-serif;
     font-size: 14px;
-    cursor: pointer;
+}
+#AltNotiIndhold {
+    background: whitesmoke;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #333;
+    position: relative;
+    right: 180px;
+    width: max-content;
+    bottom: 10px;
+}
 
-    .notification-icon {
-        position: relative;
-        font-size: 22px;
-        display: inline-block;
-    }
+.Notification {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.Notification:last-child {
+    border-bottom: none;
+}
+
+.notiTxt {
+    margin: 0;
+    font-weight: 500;
+}
+
+.Notification small {
+    color: #666;
+    font-size: 12px;
 }
