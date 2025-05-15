@@ -24,110 +24,27 @@
         </ul>
     }
 
-<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
+<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil" CurrentUser="_currentUser"/>
 @code {
     private List<SubGoal> _offeredSubGoals; 
-    /*new()
-{
-    new SubGoal
-    { //en masse test data 
-        SubGoalId = 1,
-        
-        SubGoalName = "Udskæring af Gris",
-        SubGoalDescription = "Hej Markus, du skal i fremtiden i køkkenet lære at udskære et eller andet i en gris. Her er et link til en video der viser det: link",
-        SubGoalCategory = "Køkkenkompetance",
-        SubGoalDueDate = new DateOnly(2025, 3, 12),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 2,
-        
-        SubGoalName = "Kursus: Slibning af kniv",
-        SubGoalDescription = "Alle Elever bedes se denne video før kurset begynder: link",
-        SubGoalCategory = "Kursus",
-        SubGoalDueDate = new DateOnly(2025, 3, 25),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 3,
-        
-        SubGoalName = "Sikkerhed i køkkenet",
-        SubGoalDescription = "Læs sikkerhedsguiden og gennemfør quizzen bagefter.",
-        SubGoalCategory = "Sikkerhed",
-        SubGoalDueDate = new DateOnly(2025, 4, 2),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 4,
-        
-        SubGoalName = "Hygiejne-test",
-        SubGoalDescription = "Aflever et hygiejnecertifikat efter færdiggørelse af online kurset.",
-        SubGoalCategory = "Hygiejne",
-        SubGoalDueDate = new DateOnly(2025, 4, 8),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 5,
-        
-        SubGoalName = "Lav en forret",
-        SubGoalDescription = "Design og tilbered en simpel forret med tilhørende servering.",
-        SubGoalCategory = "Madlavning",
-        SubGoalDueDate = new DateOnly(2025, 4, 20),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 6,
-        
-        SubGoalName = "Lær råvarekendskab",
-        SubGoalDescription = "Identificer og beskriv 10 råvarer, deres anvendelse og opbevaring.",
-        SubGoalCategory = "Teori",
-        SubGoalDueDate = new DateOnly(2025, 4, 28),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 7,
-        
-        SubGoalName = "Fælles madlavning",
-        SubGoalDescription = "Planlæg og gennemfør en fælles madlavning med andre elever.",
-        SubGoalCategory = "Gruppearbejde",
-        SubGoalDueDate = new DateOnly(2025, 5, 5),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 8,
-        
-        SubGoalName = "Bag en kage",
-        SubGoalDescription = "Vælg en opskrift, bag en kage og dokumenter processen med billeder.",
-        SubGoalCategory = "Bageprojekt",
-        SubGoalDueDate = new DateOnly(2025, 5, 10),
-        SubGoalStatus = false
-    },
-    new SubGoal
-    {
-        SubGoalId = 9,
-        
-        SubGoalName = "Afslutningsevaluering",
-        SubGoalDescription = "Skriv en kort evaluering af dit forløb og hvad du har lært.",
-        SubGoalCategory = "Evaluering",
-        SubGoalDueDate = new DateOnly(2025, 5, 15),
-        SubGoalStatus = false
-    }
-};*/
-
+    
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
 public bool VejenDerTil = true;
+private User _currentUser;
 
-
+// Offered subgoals bliver alle extra opgaver som andre elever har fået. Hvis en elev synes det er interessant kan han byde ind på den også
 protected override async Task OnInitializedAsync()
 {
+    //Todo tilføj initialisering af bruger (elev)
+    _currentUser = new User()
+    {
+        UserId = 1,
+        UserName = "Martin",
+        UserIdResponsible = 23,
+        UserEmail = "afsdf@aga.com",
+        Role = "Student"
+    };
     _offeredSubGoals = await SubGoalService.GetOfferedSubGoalsAsync();
 }
 

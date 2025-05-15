@@ -1,17 +1,16 @@
 @page "/studentlist"
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject ISubGoalService SubGoalService
 
 <h3>Studenterfremskridt</h3>
 
 <div class="filter-container">
     <select id="semesterFilter">
-        <option value="">Alle semestre</option>
-        <option value="1">1. semester</option>
-        <option value="2">2. semester</option>
-        <option value="3">3. semester</option>
-        <option value="4">4. semester</option>
-        <option value="5">5. semester</option>
-        <option value="6">6. semester</option>
-        <option value="7">7. semester</option>
+        <option value="">Alle praktik perioder</option>
+        <option value="1">1. praktik</option>
+        <option value="2">2. praktik</option>
+        <option value="3">3. praktik</option>
     </select>
 
     <select id="subgoalFilter">
@@ -30,12 +29,58 @@
 </div>
 
 <!-- Eksempeldata – kan senere erstattes med loop over rigtig data -->
-<div class="student-card">
-    <div class="student-info">
-        <span>Navn på elev</span>
-        <span>X. semester - XX%</span>
-    </div>
-    <div class="progress-container">
-        <div class="progress-bar" style="width: XX%;"></div>
-    </div>
-</div>
+@if (_sortedStudents == null && _allStudents == null && _pctCompleted == null || _pctCompleted.Count == 0)
+{
+    <p>Loading students...</p>
+}
+else
+{
+    foreach (var student in _sortedStudents)
+    {
+        <div class="student-card" @onclick="()=>ShowStudentPlan(student.UserId)">
+            <div class="student-info">
+                <span>@student.UserName</span>
+                <span>@student.StartDate</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div> <!-- Todo logik til at udregne procentvis gennemførte opgaver -->
+            </div>
+        </div>
+    }
+}
+
+@code{
+    User? _currentUser;
+    List<User>? _allStudents;
+    // De elever man har efter sortering, det som bliver vist for HR
+    List<User>? _sortedStudents;
+    Dictionary<int, double>? _pctCompleted;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
+        _allStudents = new List<User>()
+        {
+            new User()
+            {
+                Role = "Student",
+                UserId = 2,
+                UserName = "lars",
+                UserIdResponsible = 23,
+                StartDate = new DateOnly(2025, 6, 16)
+            }
+        };
+        _sortedStudents = _allStudents;
+        _pctCompleted = new Dictionary<int, double>();
+        foreach (var student in _allStudents)
+        {
+            _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
+        }
+    }
+
+    private void ShowStudentPlan(int studentId)
+    {
+        // Todo navigere enten til elevens mySubgoals page. Eller viser elevens subgoals i et modalvindue
+    }
+
+}
