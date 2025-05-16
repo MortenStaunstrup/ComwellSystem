@@ -18,9 +18,8 @@
                 @if (!ownGoalsDict.ContainsKey(subgoal.SubGoalId))
                 {
                     <li style="background-color: white;" @onclick="() => OpenModal(subgoal)">
-                        <span><b>Delmål Navn: </b></span>@subgoal.SubGoalName
-                        <span><b>Delmål Beskrivelse: </b></span>@subgoal.SubGoalDescription
-                        <span><b>Delmål Kategori: </b></span>@subgoal.SubGoalCategory
+                        <label><b>Navn: </b></label> @subgoal.SubGoalName
+                        <label><b>  Kategori: </b></label> @subgoal.SubGoalCategory
                     </li>
                 }
             }
@@ -30,6 +29,7 @@
 <SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil" CurrentUser="_currentUser"/>
 @code {
 // Offered subgoals bliver alle extra opgaver som andre elever har fået. Hvis en elev synes det er interessant kan han byde ind på den også
+// Hvis han allerede har den, fremgår den ikke
     private List<SubGoal> _offeredSubGoals;
     private Dictionary<int, int> ownGoalsDict = new Dictionary<int, int>();
     

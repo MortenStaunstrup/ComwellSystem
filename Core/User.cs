@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -23,7 +24,7 @@ namespace Core
         public string UserPassword { get; set; }
         public string UserEmail { get; set; }
         public string UserPhone { get; set; }
-        public DateOnly? StartDate { get; set; }
+        public DateOnly? StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
         public int? UserIdResponsible { get; set; }
     }
 }
