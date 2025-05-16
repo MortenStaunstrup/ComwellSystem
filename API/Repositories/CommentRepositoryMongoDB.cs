@@ -31,7 +31,7 @@ public class CommentRepositoryMongoDB : ICommentRepository
     public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId, int studentId)
     {
         var filter = Builders<Comment>.Filter.Eq(x => x.CommentSubGoalId, subGoalId);
-        var userFilter = Builders<Comment>.Filter.Eq(x => x.CommentSenderId, studentId);
+        var userFilter = Builders<Comment>.Filter.Eq(x => x.StudentId, studentId);
         var combinedFilter = Builders<Comment>.Filter.And(filter, userFilter);
         var result = commentCollection.Find(combinedFilter).ToList();
         result.Sort((x, y) => x.CommentDate.CompareTo(y.CommentDate));
@@ -53,7 +53,7 @@ public class CommentRepositoryMongoDB : ICommentRepository
         
         // Tilføjer comment i studentplan subgoal
 
-        var filter = Builders<User>.Filter.Eq(x => x.UserId, comment.CommentSenderId);
+        var filter = Builders<User>.Filter.Eq(x => x.UserId, comment.StudentId);
         var subGoalFilter = Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == comment.CommentSubGoalId);
         var combinedFilter = Builders<User>.Filter.And(filter, subGoalFilter);
 

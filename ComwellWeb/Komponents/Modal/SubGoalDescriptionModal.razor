@@ -46,6 +46,7 @@
 }
 
 @code {
+    //Todo datetime stamp for kommentar er 2 timer bagud idk why
     [Parameter] public bool VejenDerTil { get; set; }
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
@@ -99,6 +100,8 @@
         try
         {
             _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId, CurrentUser.UserId);
+            if (_comments == null)
+                _comments = new List<Comment>();
         }
         catch (Exception ex)
         {
@@ -143,7 +146,8 @@
             CommentDate = DateTime.Now,
             CommentSubGoalId = Goal.SubGoalId,
             CommentContent = writtenComment,
-            CommentSenderId = CurrentUser.UserId
+            CommentSenderId = CurrentUser.UserId,
+            StudentId = CurrentUser.UserId
         };
 
         try
@@ -151,12 +155,13 @@
             _comments.Add(theComment);
             CommentService.AddComment(theComment);
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            errorMessage = $"Failed to add comment: {ex.Message}";
+            errorMessage = $"Failed to add comment: {e.Message}";
             StateHasChanged();
             return;
         }
+        
 
         writtenComment = string.Empty;
         errorMessage = string.Empty;

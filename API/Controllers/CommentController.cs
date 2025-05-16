@@ -33,7 +33,7 @@ public class CommentController : ControllerBase
     [Route("addcomment")]
     public async void AddCommentAsync(Comment comment)
     {
-        Console.WriteLine($"Adding comment for subgoal {comment.CommentSubGoalId}: controller");
+        Console.WriteLine($"Adding comment for subgoal {comment.CommentSubGoalId} for student {comment.StudentId}: controller");
         commentRepository.AddComment(comment);
     }
     

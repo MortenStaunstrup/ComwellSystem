@@ -31,7 +31,7 @@ public class CommentServiceServer : ICommentService
 
     public void AddComment(Comment comment)
     {
-        Console.WriteLine($"Adding comment for subgoal {comment.CommentSubGoalId}: service");
+        Console.WriteLine($"Adding comment to subgoal {comment.CommentSubGoalId} for student {comment.StudentId}: service");
         _client.PostAsJsonAsync($"{BaseURL}/addcomment", comment);
     }
 }
