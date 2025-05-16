@@ -65,7 +65,7 @@ protected override async Task OnInitializedAsync()
 {
     _currentUser = new User()
     {
-        UserId = 3
+        UserId = 4
     };
     MySubGoalsList = await SubGoalService.GetNotCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
     _completedSubGoals = await SubGoalService.GetCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);

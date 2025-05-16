@@ -15,16 +15,17 @@ public class CommentServiceServer : ICommentService
     }
     
     
-    public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId)
+    public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId, int studentId)
     {
-        Console.WriteLine($"Getting student {subGoalId} comments: service");
-        var result = await _client.GetFromJsonAsync<List<Comment>?>($"{BaseURL}/getcomments/{subGoalId}");
+        Console.WriteLine($"Getting student {studentId} comments for subgoal {subGoalId}: service");
+        var result = await _client.GetFromJsonAsync<List<Comment>?>($"{BaseURL}/getcomments/{subGoalId}/{studentId}");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Comments null: service");
             return null;
+            
         }
-
+        Console.WriteLine($"Returning comments for subgoal {subGoalId}: service");
         return result;
     }
 

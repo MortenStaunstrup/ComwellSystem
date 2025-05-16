@@ -98,7 +98,7 @@
 
         try
         {
-            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId);
+            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId, CurrentUser.UserId);
         }
         catch (Exception ex)
         {
