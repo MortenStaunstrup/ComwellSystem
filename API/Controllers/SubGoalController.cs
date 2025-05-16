@@ -21,12 +21,12 @@ public class SubGoalController : ControllerBase
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var result = await repository.GetNotCompletedSubGoalsByStudentIdAsync(studentId);
-        if (result == null || result.Count != 0)
+        if (result == null || result.Count == 0)
         {
-            Console.WriteLine("Returning unfinished subgoals: controller");
-            return result;
+            Console.WriteLine("No unfinished subgoals for student exist, returning empty list: controller");
+            return new List<SubGoal>();
         }
-        Console.WriteLine("No unfinished subgoals for student exist, returning empty list: controller");
+        Console.WriteLine("Returning unfinished subgoals: controller");
         return result;
     }
     
@@ -35,27 +35,27 @@ public class SubGoalController : ControllerBase
     public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var result = await repository.GetCompletedSubGoalsByStudentIdAsync(studentId);
-        if (result == null || result.Count != 0)
+        if (result == null || result.Count == 0)
         {
-            Console.WriteLine("Returning completed subgoals: controller");
-            return result;
+            Console.WriteLine("No completed subgoals for student exist, returning empty list: controller");
+            return new List<SubGoal>();
         }
-        Console.WriteLine("No completed subgoals for student exist, returning empty list: controller");
+        Console.WriteLine("Returning completed subgoals: controller");
         return result;
     }
-
-
+    
     [HttpGet]
-    [Route("getofferedsubgoals/{studentId:int}")]
+    [Route("getstudentextras/{studentId:int}")]
     public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
     {
+        Console.WriteLine($"Trying to get offered subgoals for student {studentId}: controller");
         var result = await repository.GetOfferedSubGoalsByStudentIdAsync(studentId);
-        if (result == null || result.Count != 0)
+        if (result == null || result.Count == 0)
         {
-            Console.WriteLine("Returning user offered subgoals: controller");
-            return result;
+            Console.WriteLine("No offered subgoals for student exist, returning empty list: controller");
+            return new List<SubGoal>();
         }
-        Console.WriteLine("No offered subgoals for student exist, returning empty list: controller");
+        Console.WriteLine("Returning user offered subgoals: controller");
         return result;
     }
     
@@ -65,12 +65,12 @@ public class SubGoalController : ControllerBase
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         var result = await repository.GetOfferedSubGoalsAsync();
-        if (result == null || result.Count != 0)
+        if (result == null || result.Count == 0)
         {
-            Console.WriteLine("Returning offered subgoals: controller");
-            return result;
+            Console.WriteLine("No offered subgoals returning empty list: controller");
+            return new List<SubGoal>();
         }
-        Console.WriteLine("No offered subgoals returning empty list: controller");
+        Console.WriteLine("Returning offered subgoals: controller");
         return result;
     }
 

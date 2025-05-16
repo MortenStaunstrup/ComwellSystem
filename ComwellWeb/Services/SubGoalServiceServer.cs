@@ -44,12 +44,13 @@ public class SubGoalServiceServer : ISubGoalService
     public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
     {
         Console.WriteLine($"Getting student {studentId} offered subgoals: service");
-        var result = await _client.GetFromJsonAsync<List<SubGoal>>($"getofferedsubgoals/{studentId})");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/getstudentextras/{studentId}");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Subgoals either null or empty list, returning null: service");
             return null;
         }
+        Console.WriteLine($"Returning offered subgoals for student {studentId}: service");
         return result;
     }
 
