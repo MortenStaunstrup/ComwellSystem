@@ -11,13 +11,16 @@
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
             @if (VejenDerTil == true)
             {
-                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Ansøg</button>
+                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">Ansøg</button>
             }
             else
             {
-              
+                <div>
+                    @foreach(var comment in )
+                </div>
                 <input class="input" type="text" placeholder="Skriv din kommentar her.." />
-         
+                <button>Send kommentar</button>
+                <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
             }
         </div>
     </div>
@@ -30,12 +33,25 @@
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
+    private List<Comment> _comments;
+    
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
+    protected override async Task OnInitializedAsync()
+    {
+        _comments
+    }
+
     private async void NotifyResponsibleCook(int subGoalId)
     {
+        
+    }
+    
+    private async void NotifyResponsibleCookApplication(int subGoalId)
+    {
         // Todo giv notification til ansvarlig for elev, at eleven er interesseret i dette delmål
+        
     }
 
 }

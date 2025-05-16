@@ -20,8 +20,7 @@
     </select>
 </div>
 
-@if (_sortedStudents == null && _allStudents == null && _pctCompleted == null || _pctCompleted.Count == 0)
-@if (students == null)
+@if (_allStudents == null)
 {
     <p>Indlæser...</p>
 }
@@ -47,47 +46,23 @@ else
     User? _currentUser;
 
     List<User>? _allStudents;
-
     // De elever man har efter sortering, det som bliver vist for HR
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
     int _currentShownStudent;
     bool ShowModal = false;
 
-    <!--Indlæser liste af elever fra vores API, som bliver brugt i overstående foreach-loop.-->
-@code {
-    List<User>? students;
-
     protected override async Task OnInitializedAsync()
     {
         //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
-        _allStudents = new List<User>()
-        {
-            new User()
-            {
-                Role = "Student",
-                UserId = 3,
-                UserName = "Mark",
-                UserIdResponsible = 23,
-                StartDate = new DateOnly(2025, 6, 16)
-            },
-            new User()
-            {
-                Role = "Student",
-                UserId = 1,
-                UserName = "tis",
-                UserIdResponsible = 23,
-                StartDate = new DateOnly(2025, 6, 16)
-            }
-        };
+        _allStudents = await _userservice.GetAllUsersAsync();
         _sortedStudents = _allStudents;
         _pctCompleted = new Dictionary<int, double>();
         foreach (var student in _allStudents)
         {
             _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
         }
-
-        students = await _userservice.GetAllUsersAsync();
+        
     }
 
     private void ShowStudentPlan(int studentId)
@@ -101,5 +76,4 @@ else
         ShowModal = false;
     }
 
-}
 }
