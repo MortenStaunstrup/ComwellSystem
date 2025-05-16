@@ -4,6 +4,8 @@
 public interface IUserService
 {
     Task<List<User>> GetAllUsersAsync();  // Hent alle brugere
+    
+    Task<List<User>> GetAllStudentsAsync();
 
     Task<User> Login(string email, string password);  // Log ind med email og password
 

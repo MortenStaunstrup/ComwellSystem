@@ -11,5 +11,7 @@ public interface IUserRepository
 
     Task<List<User>> GetAllUsersAsync();  // Hent alle brugere
 
+    Task<List<User>> GetAllStudentsAsync();
+
     Task<int> GetMaxUserId();  // Hent den højeste bruger-id i databasen
 }

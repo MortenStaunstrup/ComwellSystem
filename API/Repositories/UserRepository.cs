@@ -25,6 +25,11 @@ public class UserRepository : IUserRepository
     {
         return await _collection.Find(new BsonDocument()).ToListAsync();
     }
+    
+    public async Task<List<User>> GetAllStudentsAsync()
+    {
+        return await _collection.Find(new BsonDocument()).ToListAsync();
+    }
 
     public async Task AddUserAsync(User user)
     {
