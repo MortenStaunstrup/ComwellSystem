@@ -12,7 +12,6 @@ public class UserRepository : IUserRepository
     private IMongoDatabase database;
     private IMongoCollection<User> _collection;
     private IMongoCollection<SubGoal> _subGoalCollection;
-
     public UserRepository()
     {
         _client = new MongoClient(connectionString);

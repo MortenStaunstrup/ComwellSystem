@@ -19,6 +19,7 @@ builder.Services.AddSingleton(sp => new HttpClient
 
 builder.Services.AddSingleton<ISubGoalService, SubGoalServiceServer>();
 builder.Services.AddScoped<IUserService, UserService>(); //undtagelsesvist brug af scoped
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 

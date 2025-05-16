@@ -1,6 +1,8 @@
 @using ComwellWeb.Komponents.Modal
 @using ComwellWeb.Pages
 @using Core
+@inject INotificationService NotificationService
+<p>Goal: @(Goal?.SubGoalName ?? "null") | Visible: @Visible</p>
 
 @if (Visible && Goal != null)
 {
@@ -13,7 +15,9 @@
 
             @if (VejenDerTil)
             {
-                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">Ansøg</button>
+                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">
+                    Ansøg
+                </button>
             }
             else
             {
@@ -33,7 +37,12 @@
 
                 <input class="input" type="text" placeholder="Skriv din kommentar her.." @bind="_newCommentText" />
                 <button @onclick="SendComment">Send kommentar</button>
-                <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
+                <button @onclick="NotifyDoneClicked">Jeg er færdig med delmål</button>
+                <button @onclick="TestClick">Test knap</button>
+
+
+
+
             }
         </div>
     </div>
@@ -52,11 +61,10 @@
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (Goal != null)
         {
-          
             _comments = new List<Comment>
             {
                 new Comment { Author = "Anna", Text = "Godt gået!" },
@@ -64,6 +72,7 @@
             };
         }
     }
+
 
     private async Task SendComment()
     {
@@ -79,14 +88,53 @@
         }
     }
 
-    private async void NotifyResponsibleCook(int subGoalId)
+    private async Task NotifyResponsibleCook(int subGoalId)
     {
-        // TODO: Notifikation til ansvarlig for færdiggørelse
+        if (CurrentUser == null || CurrentUser.UserIdResponsible == null)
+            return;
+
+        var notification = new Notification
+        {
+            SubGoalId = subGoalId,
+            SenderUserId = CurrentUser.UserId,
+            ReceiverUserId = CurrentUser.UserIdResponsible.Value,
+            Message = $"{CurrentUser.UserEmail} har markeret et delmål som færdigt.",
+            CreatedAt = DateTime.UtcNow
+        };
+        
+
+
+        try
+        {
+            await NotificationService.SendNotificationAsync(notification);
+            // evt. vis besked til bruger
+        }
+        catch (Exception ex)
+        {
+            // log fejl eller vis besked
+        }
+    }
+    void TestClick()
+    {
+        Console.WriteLine("Testknap trykket");
     }
 
-    private async void NotifyResponsibleCookApplication(int subGoalId)
+
+    private async Task NotifyResponsibleCookApplication(int subGoalId)
     {
-        // TODO: Notifikation om interesse
+        if (CurrentUser == null || CurrentUser.UserIdResponsible == null)
+            return;
+
+        var notification = new Notification
+        {
+            SubGoalId = subGoalId,
+            SenderUserId = CurrentUser.UserId,
+            ReceiverUserId = CurrentUser.UserIdResponsible.Value,
+            Message = $"{CurrentUser.UserEmail} har ansøgt om at starte på delmål.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await NotificationService.SendNotificationAsync(notification);
     }
 
     public class Comment
@@ -94,4 +142,18 @@
         public string Author { get; set; } = "";
         public string Text { get; set; } = "";
     }
+    private async Task NotifyDoneClicked()
+    {
+        Console.WriteLine("Klik registreret");
+
+        if (Goal?.SubGoalId != null)
+        {
+            await NotifyResponsibleCook(Goal.SubGoalId);
+        }
+        else
+        {
+            Console.WriteLine("Goal eller SubGoalId er null");
+        }
+    }
+
 }

@@ -1,0 +1,44 @@
+﻿@using Core
+@inject INotificationService NotificationService
+
+<h3>Dine notifikationer</h3>
+
+@if (_notifications == null)
+{
+    <p>Indlæser...</p>
+}
+else
+{
+    @foreach (var notification in _notifications)
+    {
+        <div class="notification">
+            <p>@notification.Message</p>
+            @if (!notification.IsConfirmed)
+            {
+                <button @onclick="() => Confirm(notification.Id)">Bekræft</button>
+
+            }
+            else
+            {
+                <span>✅ Bekræftet</span>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public User CurrentUser { get; set; }
+
+    private List<Notification>? _notifications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _notifications = await NotificationService.GetNotificationsForUserAsync(CurrentUser.UserId);
+    }
+    
+    private async Task Confirm(int notificationId)
+    {
+        await NotificationService.ConfirmSubGoalCompletionAsync(notificationId);
+        _notifications = await NotificationService.GetNotificationsForUserAsync(CurrentUser.UserId);
+    }
+}
