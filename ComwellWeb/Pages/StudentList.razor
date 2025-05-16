@@ -55,7 +55,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
-        _allStudents = await _userservice.GetAllUsersAsync();
+        _allStudents = await _userservice.GetAllStudentsAsync();
         _sortedStudents = _allStudents;
         _pctCompleted = new Dictionary<int, double>();
         foreach (var student in _allStudents)

@@ -44,11 +44,16 @@ public class UsersController : ControllerBase
 
         return user;
     }
-
     [HttpGet]  // Henter alle brugere fra databasen
     public async Task<List<User>> GetAllUsersAsync()
     {
         return await _repo.GetAllUsersAsync();
+    }
+    
+    [HttpGet("student")]  // Henter alle brugere fra databasen
+    public async Task<List<User>> GetAllStudentsAsync()
+    {
+        return await _repo.GetAllStudentsAsync();
     }
 
     [HttpGet("maxid")]  // Henter den højeste bruger-id fra databasen

@@ -1,6 +1,7 @@
-@using ComwellWeb.Komponents.Modal;
+@using ComwellWeb.Komponents.Modal
 @using ComwellWeb.Pages
-@using Core;
+@using Core
+
 @if (Visible && Goal != null)
 {
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
@@ -9,17 +10,29 @@
             <h3>@Goal.SubGoalName</h3>
             <p>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
-            @if (VejenDerTil == true)
+
+            @if (VejenDerTil)
             {
                 <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">Ansøg</button>
             }
             else
             {
                 <div>
-                    @foreach(var comment in )
+                    @if (_comments != null)
+                    {
+                        @foreach (var comment in _comments)
+                        {
+                            <p><strong>@comment.Author:</strong> @comment.Text</p>
+                        }
+                    }
+                    else
+                    {
+                        <p>Indlæser kommentarer...</p>
+                    }
                 </div>
-                <input class="input" type="text" placeholder="Skriv din kommentar her.." />
-                <button>Send kommentar</button>
+
+                <input class="input" type="text" placeholder="Skriv din kommentar her.." @bind="_newCommentText" />
+                <button @onclick="SendComment">Send kommentar</button>
                 <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
             }
         </div>
@@ -33,25 +46,52 @@
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
-    private List<Comment> _comments;
-    
+    private List<Comment>? _comments = new();
+    private string _newCommentText = string.Empty;
+
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
     protected override async Task OnInitializedAsync()
     {
-        _comments
+        if (Goal != null)
+        {
+          
+            _comments = new List<Comment>
+            {
+                new Comment { Author = "Anna", Text = "Godt gået!" },
+                new Comment { Author = "Jens", Text = "Mangler lidt info." }
+            };
+        }
+    }
+
+    private async Task SendComment()
+    {
+        if (!string.IsNullOrWhiteSpace(_newCommentText))
+        {
+            _comments?.Add(new Comment
+            {
+                Author = CurrentUser.UserEmail,
+                Text = _newCommentText
+            });
+
+            _newCommentText = string.Empty;
+        }
     }
 
     private async void NotifyResponsibleCook(int subGoalId)
     {
-        
-    }
-    
-    private async void NotifyResponsibleCookApplication(int subGoalId)
-    {
-        // Todo giv notification til ansvarlig for elev, at eleven er interesseret i dette delmål
-        
+        // TODO: Notifikation til ansvarlig for færdiggørelse
     }
 
+    private async void NotifyResponsibleCookApplication(int subGoalId)
+    {
+        // TODO: Notifikation om interesse
+    }
+
+    public class Comment
+    {
+        public string Author { get; set; } = "";
+        public string Text { get; set; } = "";
+    }
 }

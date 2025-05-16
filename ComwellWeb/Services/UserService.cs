@@ -23,6 +23,12 @@ namespace ComwellWeb.Services
             var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
             return users ?? new List<User>();   // Returner tom liste hvis null
         }
+        
+        public async Task<List<User>> GetAllStudentsAsync()
+        {
+            var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
+            return users?.Where(u => u.Role == "Student").ToList() ?? new List<User>();
+        }
 
         // Login: prøv at logge ind med email og password, og gem bruger i localStorage hvis OK
         public async Task<User?> Login(string email, string password)
