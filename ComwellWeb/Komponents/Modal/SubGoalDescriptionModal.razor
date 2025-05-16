@@ -24,16 +24,20 @@
                     {
                         @foreach (var comment in _comments)
                         {
-                            <p><strong>@comment.Author:</strong> @comment.Text</p>
+                            <div>
+                                @comment.CommentContent
+                                @comment.CommentDate
+                            </div>
                         }
                     }
                     else
                     {
                         <p>Indlæser kommentarer...</p>
                     }
+                    <p style="color: red">@errorMessage</p>
                 </div>
 
-                <input class="input" type="text" placeholder="Skriv din kommentar her.." @bind="_newCommentText" />
+                <InputText class="input" type="text" placeholder="Skriv din kommentar her.." @bind-Value="writtenComment"/>
                 <button @onclick="SendComment">Send kommentar</button>
                 <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
             }
@@ -56,10 +60,14 @@
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
-    protected override async Task OnInitializedAsync()
+    // Når student går ind på mySubGoals, klikker på et subgoal. Så bliver comments loaded.
+    // Fordi parameteren 'Goal' bliver sat når man klikker på et subgoal
+    protected override async Task OnParametersSetAsync()
     {
-        if (!VejenDerTil)
-            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId);
+        if (!VejenDerTil && Goal != null)
+        {
+            await InitializeComments();
+        }
     }
 
     private async void NotifyResponsibleCook(int subGoalId)
@@ -72,24 +80,88 @@
         // TODO: Notifikation om interesse
     }
 
+    public async Task InitializeComments()
+    {
+        if (Goal == null)
+        {
+            errorMessage = "Goal is not set.";
+            StateHasChanged();
+            return;
+        }
+
+        if (CommentService == null)
+        {
+            errorMessage = "Comment service is not available.";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load comments: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    // Check til kommentar der bliver sendt
     private void SendComment()
     {
-        if (!string.IsNullOrWhiteSpace(writtenComment))
-        {
-            var newComment = new Comment()
-            {
-                CommentContent = writtenComment,
-                CommentDate = DateTime.Now,
-                CommentSubGoalId = Goal.SubGoalId,
-                CommentSenderId = CurrentUser.UserId
-            };
-            CommentService.AddComment(newComment);
-        }
-        else
+        if (string.IsNullOrWhiteSpace(writtenComment))
         {
             errorMessage = "Comment must have value";
             StateHasChanged();
+            return;
         }
+
+        if (Goal == null)
+        {
+            errorMessage = "Goal is not set.";
+            StateHasChanged();
+            return;
+        }
+
+        if (CurrentUser == null)
+        {
+            errorMessage = "CurrentUser is not set.";
+            StateHasChanged();
+            return;
+        }
+
+        if (CommentService == null)
+        {
+            errorMessage = "Comment service is not available.";
+            StateHasChanged();
+            return;
+        }
+
+        var theComment = new Comment()
+        {
+            CommentDate = DateTime.Now,
+            CommentSubGoalId = Goal.SubGoalId,
+            CommentContent = writtenComment,
+            CommentSenderId = CurrentUser.UserId
+        };
+
+        try
+        {
+            _comments.Add(theComment);
+            CommentService.AddComment(theComment);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to add comment: {ex.Message}";
+            StateHasChanged();
+            return;
+        }
+
+        writtenComment = string.Empty;
+        errorMessage = string.Empty;
+        StateHasChanged();
+    }
     }
 
 }

@@ -8,6 +8,7 @@ Env.Load();
 
 builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<ICommentRepository, CommentRepositoryMongoDB>();
 
 builder.Services.AddCors(options =>
 {

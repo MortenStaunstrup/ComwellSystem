@@ -32,6 +32,8 @@ public class CommentRepositoryMongoDB : ICommentRepository
     {
         var filter = Builders<Comment>.Filter.Eq(x => x.CommentSubGoalId, subGoalId);
         var result = commentCollection.Find(filter).ToList();
+        result.Sort((x, y) => x.CommentDate.CompareTo(y.CommentDate));
+        
         if (result != null)
         {
             Console.WriteLine("Returning comments: repository");
@@ -41,9 +43,32 @@ public class CommentRepositoryMongoDB : ICommentRepository
         return result;
     }
 
-    public void AddComment(Comment comment)
+    public async void AddComment(Comment comment)
     {
+        comment.CommentId = await MaxCommentId() + 1;
         Console.WriteLine("Adding comment: repository");
-        commentCollection.InsertOne(comment);
+        await commentCollection.InsertOneAsync(comment);
+        
+        // Tilføjer comment i studentplan subgoal
+
+        var filter = Builders<User>.Filter.Eq(x => x.UserId, comment.CommentSenderId);
+        var subGoalFilter = Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == comment.CommentSubGoalId);
+        var combinedFilter = Builders<User>.Filter.And(filter, subGoalFilter);
+
+        var update = Builders<User>.Update.Push("StudentPlan.$.Comments", comment);
+        
+        await userCollection.UpdateOneAsync(combinedFilter, update);
+
+    }
+
+    public async Task<int> MaxCommentId()
+    {
+        var sort = Builders<Comment>.Sort.Descending(x => x.CommentId);
+        var maxSubGoalId = await commentCollection
+            .Find(Builders<Comment>.Filter.Empty)
+            .Sort(sort)
+            .Limit(1)
+            .FirstOrDefaultAsync();
+        return maxSubGoalId?.CommentId ?? 0;
     }
 }

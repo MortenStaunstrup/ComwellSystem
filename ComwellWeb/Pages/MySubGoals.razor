@@ -50,13 +50,13 @@ else
     </div>
 }
 
-<SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
+<SubGoalDescriptionModal @ref="modal" CurrentUser="_currentUser" Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
 @code {
     private List<SubGoal>? MySubGoalsList;
     private List<SubGoal>? _completedSubGoals;
     private User _currentUser;
 
-    
+    SubGoalDescriptionModal? modal { get; set; }
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
 public bool VejenDerTil = false;
@@ -71,7 +71,7 @@ protected override async Task OnInitializedAsync()
     _completedSubGoals = await SubGoalService.GetCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
 }
 
-private void OpenModal(SubGoal goal)
+private async void OpenModal(SubGoal goal)
 {
     SelectedSubGoal = goal;
     ShowModal = true;
