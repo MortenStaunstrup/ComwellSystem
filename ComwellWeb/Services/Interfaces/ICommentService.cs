@@ -1,8 +1,8 @@
 using Core;
 
-namespace API.Repositories.Interface;
+namespace ComwellWeb.Services.Interfaces;
 
-public interface ICommentRepository
+public interface ICommentService
 {
     Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId);
     void AddComment(Comment comment);

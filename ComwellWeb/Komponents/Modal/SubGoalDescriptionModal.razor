@@ -1,6 +1,8 @@
 @using ComwellWeb.Komponents.Modal;
 @using ComwellWeb.Pages
+@using ComwellWeb.Services.Interfaces
 @using Core;
+@inject ICommentService CommentService
 @if (Visible && Goal != null)
 {
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
@@ -16,10 +18,15 @@
             else
             {
                 <div>
-                    @foreach(var comment in )
+                    @foreach (var comment in _comments)
+                    {
+                        @comment.CommentContent
+                        @comment.CommentDate
+                    }
                 </div>
-                <input class="input" type="text" placeholder="Skriv din kommentar her.." />
-                <button>Send kommentar</button>
+                <span style="color: red">@errorMessage</span>
+                <InputText class="input" type="text" placeholder="Skriv din kommentar her.." @bind-Value="@writtenComment"/>
+                <button @onclick="SendComment">Send kommentar</button>
                 <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
             }
         </div>
@@ -33,25 +40,49 @@
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
+    private string writtenComment;
     private List<Comment> _comments;
+
+    private string errorMessage;
     
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
     protected override async Task OnInitializedAsync()
     {
-        _comments
+        if (!VejenDerTil)
+            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId);
     }
 
     private async void NotifyResponsibleCook(int subGoalId)
     {
-        
+        // Todo giv notification til ansvarlig for elev, at eleven er færdig med delmål
     }
     
     private async void NotifyResponsibleCookApplication(int subGoalId)
     {
         // Todo giv notification til ansvarlig for elev, at eleven er interesseret i dette delmål
         
+    }
+
+    private void SendComment()
+    {
+        if (!string.IsNullOrWhiteSpace(writtenComment))
+        {
+            var newComment = new Comment()
+            {
+                CommentContent = writtenComment,
+                CommentDate = DateTime.Now,
+                CommentSubGoalId = Goal.SubGoalId,
+                CommentSenderId = CurrentUser.UserId
+            };
+            CommentService.AddComment(newComment);
+        }
+        else
+        {
+            errorMessage = "Comment must have value";
+            StateHasChanged();
+        }
     }
 
 }
