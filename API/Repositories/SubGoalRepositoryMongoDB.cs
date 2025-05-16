@@ -204,13 +204,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
     public async void CompleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
-        // updater i SubGoal collection
-        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoalId);
-        var subcollUserFilter = Builders<SubGoal>.Filter.Eq(x => x.StudentId, studentId);
-        var userCollCombinedFilter = Builders<SubGoal>.Filter.And(filter, subcollUserFilter);
-        var update = Builders<SubGoal>.Update.Set(x => x.SubGoalStatus, true);
-        await subCollection.UpdateOneAsync(userCollCombinedFilter, update);
-        
         // updater i User
         var userFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
         var subgoalsFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, g => g.SubGoalId == subGoalId);
@@ -223,32 +216,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public void DeleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
         
-    }
-
-    //TODO Skal ind i userRepo, controller og service
-    public async void CreateUser(User user)
-    {
-        //Funktion til max User id indsættes her
-        user.UserId = 1;
-        if (user.Role == "Student")
-        {
-            await userCollection.InsertOneAsync(user);
-            
-            var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
-            var standardSubGoals = await subCollection.Find(filter).ToListAsync();
-
-            var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
-            
-            foreach (var subGoal in standardSubGoals)
-            {
-                subGoal.StudentId = user.UserId;
-                var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
-                subGoal.SubGoalDueDate = subGoal.SubGoalDueDate.AddYears(userYear - subGoal.SubGoalDueDate.Year);
-                var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
-                await userCollection.UpdateOneAsync(userFilter, userUpdate);
-            }
-            
-        }
     }
     
 }

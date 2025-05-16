@@ -11,12 +11,14 @@ public class UserRepository : IUserRepository
     private MongoClient _client;
     private IMongoDatabase database;
     private IMongoCollection<User> _collection;
+    private IMongoCollection<SubGoal> _subGoalCollection;
 
     public UserRepository()
     {
         _client = new MongoClient(connectionString);
         database = _client.GetDatabase("Comwell");
         _collection = database.GetCollection<User>("Users");
+        _subGoalCollection = database.GetCollection<SubGoal>("SubGoals");
     }
 
     public async Task<List<User>> GetAllUsersAsync()
@@ -25,8 +27,29 @@ public class UserRepository : IUserRepository
     }
 
     public async Task AddUserAsync(User user)
-    { 
-        await _collection.InsertOneAsync(user);
+    {
+        user.UserId = await GetMaxUserId() + 1;
+        if (user.Role == "Student")
+        {
+            await _collection.InsertOneAsync(user);
+            
+            var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
+            var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
+
+            var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
+            
+            foreach (var subGoal in standardSubGoals)
+            {
+                var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
+                subGoal.SubGoalDueDate = subGoal.SubGoalDueDate.AddYears(userYear - subGoal.SubGoalDueDate.Year);
+                var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
+                await _collection.UpdateOneAsync(userFilter, userUpdate);
+            }
+        }
+        else
+        {
+            await _collection.InsertOneAsync(user);
+        }
     }
 
     public async Task<User?> Login(string email, string password)
