@@ -11,5 +11,6 @@ public class Comment
     public string CommentContent { get; set; }
     public DateTime CommentDate { get; set; }
     public int CommentSubGoalId { get; set; }
+    public int StudentId { get; set; }
     public int CommentSenderId { get; set; }
 }

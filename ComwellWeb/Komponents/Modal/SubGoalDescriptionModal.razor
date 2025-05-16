@@ -1,8 +1,8 @@
 @using ComwellWeb.Komponents.Modal
 @using ComwellWeb.Pages
-@using Core
-@inject INotificationService NotificationService
-<p>Goal: @(Goal?.SubGoalName ?? "null") | Visible: @Visible</p>
+@using ComwellWeb.Services.Interfaces
+@using Core;
+@inject ICommentService CommentService
 
 @if (Visible && Goal != null)
 {
@@ -75,16 +75,13 @@
 
 
     private async Task SendComment()
+    // Når student går ind på mySubGoals, klikker på et subgoal. Så bliver comments loaded.
+    // Fordi parameteren 'Goal' bliver sat når man klikker på et subgoal
+    protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrWhiteSpace(_newCommentText))
+        if (!VejenDerTil && Goal != null)
         {
-            _comments?.Add(new Comment
-            {
-                Author = CurrentUser.UserEmail,
-                Text = _newCommentText
-            });
-
-            _newCommentText = string.Empty;
+            await InitializeComments();
         }
     }
 

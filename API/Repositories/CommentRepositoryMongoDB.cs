@@ -28,10 +28,14 @@ public class CommentRepositoryMongoDB : ICommentRepository
         commentCollection = database.GetCollection<Comment>("Comments");
     }
     
-    public async Task<List<Comment>?> GetCommentsBySubGoalAndStudentId(int userId, int subGoalId)
+    public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId, int studentId)
     {
         var filter = Builders<Comment>.Filter.Eq(x => x.CommentSubGoalId, subGoalId);
-        var result = commentCollection.Find(filter).ToList();
+        var userFilter = Builders<Comment>.Filter.Eq(x => x.StudentId, studentId);
+        var combinedFilter = Builders<Comment>.Filter.And(filter, userFilter);
+        var result = commentCollection.Find(combinedFilter).ToList();
+        result.Sort((x, y) => x.CommentDate.CompareTo(y.CommentDate));
+        
         if (result != null)
         {
             Console.WriteLine("Returning comments: repository");
@@ -41,8 +45,32 @@ public class CommentRepositoryMongoDB : ICommentRepository
         return result;
     }
 
-    public void AddComment(Comment comment)
+    public async void AddComment(Comment comment)
     {
-        commentCollection.InsertOne(comment);
+        comment.CommentId = await MaxCommentId() + 1;
+        Console.WriteLine("Adding comment: repository");
+        await commentCollection.InsertOneAsync(comment);
+        
+        // Tilføjer comment i studentplan subgoal
+
+        var filter = Builders<User>.Filter.Eq(x => x.UserId, comment.StudentId);
+        var subGoalFilter = Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == comment.CommentSubGoalId);
+        var combinedFilter = Builders<User>.Filter.And(filter, subGoalFilter);
+
+        var update = Builders<User>.Update.Push("StudentPlan.$.Comments", comment);
+        
+        await userCollection.UpdateOneAsync(combinedFilter, update);
+
+    }
+
+    public async Task<int> MaxCommentId()
+    {
+        var sort = Builders<Comment>.Sort.Descending(x => x.CommentId);
+        var maxSubGoalId = await commentCollection
+            .Find(Builders<Comment>.Filter.Empty)
+            .Sort(sort)
+            .Limit(1)
+            .FirstOrDefaultAsync();
+        return maxSubGoalId?.CommentId ?? 0;
     }
 }
