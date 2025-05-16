@@ -16,10 +16,10 @@ public class CommentController : ControllerBase
     }
 
     [HttpGet]
-    [Route("getcomments/{subgoalId:int}")]
-    public async Task<List<Comment>?> GetCommentsBySubGoalIdAsync(int subgoalId)
+    [Route("getcomments/{subgoalId:int}/{studentId}")]
+    public async Task<List<Comment>?> GetCommentsBySubGoalIdAsync(int subgoalId, int studentId)
     {
-        var result = await commentRepository.GetCommentsBySubGoalId(subgoalId);
+        var result = await commentRepository.GetCommentsBySubGoalId(subgoalId, studentId);
         if (result == null)
         {
             Console.WriteLine($"No comments found for {subgoalId} returning empty list: controller");
@@ -33,7 +33,7 @@ public class CommentController : ControllerBase
     [Route("addcomment")]
     public async void AddCommentAsync(Comment comment)
     {
-        Console.WriteLine($"Adding comment for subgoal {comment.CommentSubGoalId}: controller");
+        Console.WriteLine($"Adding comment for subgoal {comment.CommentSubGoalId} for student {comment.StudentId}: controller");
         commentRepository.AddComment(comment);
     }
     
