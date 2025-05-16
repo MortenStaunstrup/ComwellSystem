@@ -3,10 +3,6 @@
 @using Core
 @inject NavigationManager NavigationManager
 @inject IUserService _userService
-
-
-<h3>Opret ny bruger</h3>
-
 <EditForm Model="@newUser" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
@@ -36,10 +32,15 @@
             <label for="role">Rolle:</label>
             <InputSelect id="role" class="form-control" @bind-Value="newUser.Role">
                 <option value="">-- Vælg rolle --</option>
-                <option value="Elev">Elev</option>
-                <option value="Køkkenleder">Køkkenleder</option>
+                <option value="Student">Elev</option>
+                <option value="KitchenManager">Køkkenleder</option>
                 <option value="HR">HR</option>
             </InputSelect>
+        </div>
+        
+        <div class="form-group">
+            <label>Start Dato:</label>
+            <InputDate @bind-Value="@newUser.StartDate"></InputDate>
         </div>
 
         <button class="btn btn-primary" type="submit">Opret</button>

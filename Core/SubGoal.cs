@@ -21,7 +21,6 @@ public class SubGoal
     [Required]
     public bool SubGoalStatus { get; set; }
     [Required]
-    [Deadline]
     public DateOnly SubGoalDueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     
 }
