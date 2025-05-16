@@ -1,6 +1,8 @@
 @using ComwellWeb.Komponents.Modal
 @using ComwellWeb.Pages
-@using Core
+@using ComwellWeb.Services.Interfaces
+@using Core;
+@inject ICommentService CommentService
 
 @if (Visible && Goal != null)
 {
@@ -46,37 +48,18 @@
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
-    private List<Comment>? _comments = new();
-    private string _newCommentText = string.Empty;
+    private string writtenComment;
+    private List<Comment>? _comments;
 
+    private string errorMessage;
+    
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
     protected override async Task OnInitializedAsync()
     {
-        if (Goal != null)
-        {
-          
-            _comments = new List<Comment>
-            {
-                new Comment { Author = "Anna", Text = "Godt gået!" },
-                new Comment { Author = "Jens", Text = "Mangler lidt info." }
-            };
-        }
-    }
-
-    private async Task SendComment()
-    {
-        if (!string.IsNullOrWhiteSpace(_newCommentText))
-        {
-            _comments?.Add(new Comment
-            {
-                Author = CurrentUser.UserEmail,
-                Text = _newCommentText
-            });
-
-            _newCommentText = string.Empty;
-        }
+        if (!VejenDerTil)
+            _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId);
     }
 
     private async void NotifyResponsibleCook(int subGoalId)
@@ -89,9 +72,24 @@
         // TODO: Notifikation om interesse
     }
 
-    public class Comment
+    private void SendComment()
     {
-        public string Author { get; set; } = "";
-        public string Text { get; set; } = "";
+        if (!string.IsNullOrWhiteSpace(writtenComment))
+        {
+            var newComment = new Comment()
+            {
+                CommentContent = writtenComment,
+                CommentDate = DateTime.Now,
+                CommentSubGoalId = Goal.SubGoalId,
+                CommentSenderId = CurrentUser.UserId
+            };
+            CommentService.AddComment(newComment);
+        }
+        else
+        {
+            errorMessage = "Comment must have value";
+            StateHasChanged();
+        }
     }
+
 }

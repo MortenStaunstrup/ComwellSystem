@@ -28,7 +28,7 @@ public class CommentRepositoryMongoDB : ICommentRepository
         commentCollection = database.GetCollection<Comment>("Comments");
     }
     
-    public async Task<List<Comment>?> GetCommentsBySubGoalAndStudentId(int userId, int subGoalId)
+    public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId)
     {
         var filter = Builders<Comment>.Filter.Eq(x => x.CommentSubGoalId, subGoalId);
         var result = commentCollection.Find(filter).ToList();
@@ -43,6 +43,7 @@ public class CommentRepositoryMongoDB : ICommentRepository
 
     public void AddComment(Comment comment)
     {
+        Console.WriteLine("Adding comment: repository");
         commentCollection.InsertOne(comment);
     }
 }
