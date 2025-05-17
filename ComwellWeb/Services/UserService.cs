@@ -87,9 +87,15 @@ namespace ComwellWeb.Services
         }
 
         // (Ekstra) Hent bruger efter ID hvis nødvendigt
-        public async Task<User> GetUserById(int id)
+        public async Task<User?> GetUserByUserId(int userId)
         {
-            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/{id}");
+            Console.WriteLine($"Returning user: {userId}: service");
+            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
+        }
+        
+        public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId)
+        {
+            return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/students/{responisbleId}");
         }
     }
 }

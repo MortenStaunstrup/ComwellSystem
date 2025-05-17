@@ -56,9 +56,22 @@ public class UsersController : ControllerBase
         return await _repo.GetAllStudentsAsync();
     }
 
+    [HttpGet("user/{userId:int}")]
+    public async Task<User?> GetUserByUserId(int userId)
+    {
+        Console.WriteLine($"Returning user: {userId}: controller");
+        return await _repo.GetUserByUserId(userId);
+    }
+
     [HttpGet("maxid")]  // Henter den højeste bruger-id fra databasen
     public async Task<int> GetMaxUserId()
     {
         return await _repo.GetMaxUserId();
+    }
+    
+    [HttpGet("students/{responsibleId:int}")]
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        return await _repo.GetAllStudentsByResponsibleIdAsync(responsibleId);
     }
 }

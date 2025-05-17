@@ -31,12 +31,26 @@ public class UserRepository : IUserRepository
         return await _collection.Find(new BsonDocument()).ToListAsync();
     }
 
+    public async Task<User?> GetUserByUserId(int userId)
+    {
+        Console.WriteLine($"Returning user: {userId}: repo");
+        var filter = Builders<User>.Filter.Eq("_id", userId);
+        return await _collection.Find(filter).FirstOrDefaultAsync();
+    }
+
     public async Task AddUserAsync(User user)
     {
         user.UserId = await GetMaxUserId() + 1;
         await _collection.InsertOneAsync(user);
         if (user.Role == "Student")
             InsertAllStandardSubGoalsInStudent(user);
+    }
+
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
     }
 
     public async void InsertAllStandardSubGoalsInStudent(User user)
