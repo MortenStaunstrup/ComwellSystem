@@ -6,12 +6,16 @@ public interface IUserService
     Task<List<User>> GetAllUsersAsync();  // Hent alle brugere
     
     Task<List<User>> GetAllStudentsAsync();
+    Task<User?> GetUserByUserId(int userId);
 
     Task<User> Login(string email, string password);  // Log ind med email og password
 
     Task<int> GetMaxUserId();  // Find højeste bruger-id
 
     Task<User?> AddUserAsync(User user);  // Opret en ny bruger, hvis den ikke findes
+
+    Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId);
+   
     
     Task Logout();  // Log ud
     
