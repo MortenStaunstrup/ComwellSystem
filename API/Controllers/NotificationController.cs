@@ -2,6 +2,8 @@
 using Core;
 using Microsoft.AspNetCore.Mvc;
 
+
+
 namespace API.Controllers
 {
     [ApiController]
@@ -15,9 +17,9 @@ namespace API.Controllers
             _notificationRepository = notificationRepository;
         }
 
-        // Student sender notifikation om færdig opgave til køkkenleder
+        // Elev sender notifikation om færdig opgave til køkkenleder
         [HttpPost("send")]
-        public async Task<IActionResult> SendNotification([FromBody] Notification notification)
+        public async Task<IActionResult> SendNotificationAsync([FromBody] Notification notification)
         {
             if (notification == null || notification.ReceiverUserId == 0)
                 return BadRequest("Invalid notification data");
@@ -38,8 +40,17 @@ namespace API.Controllers
         [HttpPost("confirm/{notificationId}")]
         public async Task<IActionResult> ConfirmNotification(int notificationId)
         {
-            await _notificationRepository.ConfirmNotificationAsync(notificationId);
+            await _notificationRepository.ConfirmNotifiedSubgoalAsync(notificationId);
             return Ok("Notification confirmed");
         }
+        [HttpGet("maxid")]
+        public async Task<ActionResult<int>> GetMaxNotificationId()
+        {
+            int maxId = await _notificationRepository.GetMaxNotificationIdAsync();
+            return Ok(maxId);
+        }
+
+        
     }
+    
 }

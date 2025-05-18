@@ -15,23 +15,24 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("login/{email}/{password}")]  // Endpoint til login med e-mail og password
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(string email, string password) // (bruger iactionresult, så den kan returne forskelligt)
     {
         var user = await _repo.Login(email, password);  // Tjekker om brugeren findes
         if (user == null)
         {
-            return Unauthorized();  // Hvis ikke, send et eller andet svar. Lige nu sender den 404. Burde nok bare sende en fejlbesked. Rettes.
+            return Unauthorized("Forkert email eller adgangskode... prøv igen ");  // Hvis ikke, send et eller andet svar.
         }
 
         return Ok(new User
         {
             UserId = user.UserId,
             UserEmail = user.UserEmail,
-            Role = user.Role
+            Role = user.Role,
+            UserIdResponsible = user.UserIdResponsible,
         });
     }
 
-    [HttpPost("Opret")]  // Endpoint til at oprette ny bruger
+    [HttpPost("Opret")]
     public async Task<User?> AddUserAsync(User user)
     {
         var existingUser = await _repo.GetUserByLoginAsync(user.UserId);  // Tjekker om brugeren allerede findes
@@ -60,6 +61,16 @@ public class UsersController : ControllerBase
     public async Task<int> GetMaxUserId()
     {
         return await _repo.GetMaxUserId();
+    }
+    [HttpPost("{userId}/add-notification")]
+    public async Task<IActionResult> AddNotificationToUser(int userId, [FromBody] Notification notification) //frombody fordi metoden skal bruge inforamtion fra andet end bare http
+    {
+        var user = await _repo.GetUserByLoginAsync(userId);
+        if (user == null)
+            return NotFound("User not found");
+
+        await _repo.EmbedNotificationToUserAsync(user, notification);
+        return Ok();
     }
     
 }

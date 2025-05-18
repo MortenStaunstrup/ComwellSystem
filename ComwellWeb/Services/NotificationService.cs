@@ -7,14 +7,14 @@ using System.Collections.Generic;
 public class NotificationService : INotificationService
 {
     private readonly HttpClient _httpClient;
-    private string BaseURL = "http://localhost:5116/api/notification";  // match controller route
+    private string BaseURL = "http://localhost:5116/api/notification"; 
 
     public NotificationService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
-    public async Task SendNotificationAsync(Notification notification)
+    public async Task SendNotificationAsync(Notification notification) 
     {
         var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/send", notification);
         response.EnsureSuccessStatusCode();
@@ -28,7 +28,13 @@ public class NotificationService : INotificationService
 
     public async Task ConfirmSubGoalCompletionAsync(int notificationId)
     {
-        var response = await _httpClient.PostAsync($"{BaseURL}/confirm/{notificationId}", null);  // POST, ikke PUT
+        var response = await _httpClient.PostAsync($"{BaseURL}/confirm/{notificationId}", null);  
         response.EnsureSuccessStatusCode();
     }
+    public async Task<int> GetMaxNotificationIdAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<int>($"{BaseURL}/maxid");
+    }
+
+    
 }

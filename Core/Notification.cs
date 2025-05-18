@@ -10,15 +10,13 @@ namespace Core
         public int Id { get; set; }
 
         
-        public int NotificationId { get; set; } // valgfrit: eller brug bare string Id
+        public int NotificationId { get; set; }
         public int SubGoalId { get; set; }
         public int SenderUserId { get; set; }
         public int? ReceiverUserId { get; set; }
         public string Message { get; set; } = "";
         public bool IsConfirmed { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public bool IsCconfirmed { get; set; }
         public int NotificationUserId { get; set; }
         public string NotificationContent { get; set; }
         public DateTime NotificationDate { get; set; }

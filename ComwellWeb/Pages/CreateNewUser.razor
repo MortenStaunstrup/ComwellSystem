@@ -3,7 +3,7 @@
 @using Core
 @inject NavigationManager NavigationManager
 @inject IUserService _userService
-<EditForm Model="@newUser" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="@newUser" OnValidSubmit="CreateUserValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -63,7 +63,7 @@
         newUser.UserId = maxId + 1;
     }
 
-    private async Task HandleValidSubmit()
+    private async Task CreateUserValidSubmit()
     {
         if (StartDate.HasValue)
         {

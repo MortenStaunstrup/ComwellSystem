@@ -2,7 +2,9 @@
 @using ComwellWeb.Services.Interfaces
 @using Core;
 @page "/MyGoals"
+@inject IUserService UserService
 @inject ISubGoalService SubGoalService
+@inject NavigationManager Navigation
 @if (MySubGoalsList == null)
 {
     <p>Loading your subgoals</p>
@@ -55,7 +57,7 @@ else
 @code {
     private List<SubGoal>? MySubGoalsList;
     private List<SubGoal>? _completedSubGoals;
-    private User _currentUser;
+    private User? _currentUser;
 
     SubGoalDescriptionModal? modal { get; set; }
 private SubGoal? SelectedSubGoal;
@@ -64,15 +66,18 @@ public bool VejenDerTil = false;
 
 protected override async Task OnInitializedAsync()
 {
-    _currentUser = new User()
+    _currentUser = await UserService.GetUserLoggedInAsync();
+
+    if (_currentUser == null || _currentUser.UserId == 0)
     {
-        UserId = 3
-    };
+        Navigation.NavigateTo("/login", forceLoad: true);
+        return;
+    }
     MySubGoalsList = await SubGoalService.GetNotCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
     _completedSubGoals = await SubGoalService.GetCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
 }
 
-private async void OpenModal(SubGoal goal)
+private void OpenModal(SubGoal goal)
 {
     SelectedSubGoal = goal;
     ShowModal = true;

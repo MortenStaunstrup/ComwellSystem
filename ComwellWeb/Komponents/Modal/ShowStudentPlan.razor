@@ -15,8 +15,7 @@
             @if (_studentSubGoalsCompleted != null || _studentSubGoalsNotCompleted != null)
             {
                 <ul>
-                    @if (_studentSubGoalsCompleted != null)
-                    {
+                    @if (_studentSubGoalsCompleted != null) {
                         @foreach (var sub in _studentSubGoalsCompleted)
                         {
                             <li>

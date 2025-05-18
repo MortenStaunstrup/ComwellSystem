@@ -6,7 +6,6 @@ namespace Core;
 public class Comment
 {
     [BsonElement("_id")]
-    public int studentId { get; set; }
     public int CommentId { get; set; }
     public string CommentContent { get; set; }
     public DateTime CommentDate { get; set; }

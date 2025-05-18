@@ -18,25 +18,38 @@ namespace API.Repositories
             _collection = _database.GetCollection<Notification>("Notifications");
         } 
 
-        public async Task AddNotificationAsync(Notification notification) //elev sender en notifikation til køkkenleder
+        public async Task AddNotificationAsync(Notification notification) //tilføjer til notifikationer
         {
             notification.CreatedAt = DateTime.UtcNow;
             notification.IsConfirmed = false; //IsConfirmed bruges af køkkenleder
             await _collection.InsertOneAsync(notification);
         }
 
-        public async Task<List<Notification>> GetNotificationsForUserAsync(int userId) //Køkkenleder modtager notifikationen
+        public async Task<List<Notification>> GetNotificationsForUserAsync(int userId) //Vilkårlig user modtager notifikationen
         {
             var filter = Builders<Notification>.Filter.Eq(n => n.ReceiverUserId, userId);
             return await _collection.Find(filter).ToListAsync();
         }
 
-        public async Task ConfirmNotificationAsync(int notificationId) //køkkenleder bekræfter.
+        public async Task ConfirmNotifiedSubgoalAsync(int notificationId) //køkkenleder bekræfter, at delmålet er færdigt. Isconfirmed, som er false fra start bliver sat til true, gennem en update.
         {
             var filter = Builders<Notification>.Filter.Eq(n => n.NotificationId, notificationId);
             var update = Builders<Notification>.Update.Set(n => n.IsConfirmed, true);
             await _collection.UpdateOneAsync(filter, update);
         }
+
+        public async Task<int> GetMaxNotificationIdAsync()
+        {
+            var sort = Builders<Notification>.Sort.Descending(n => n.Id);
+            var maxNotification = await _collection
+                .Find(Builders<Notification>.Filter.Empty)
+                .Sort(sort)
+                .Limit(1)
+                .FirstOrDefaultAsync();
+
+            return maxNotification?.Id ?? 0;
+        }
+
+        }
         
     }
-}

@@ -1,34 +1,37 @@
 ﻿@page "/login"
 @using ComwellWeb.Services.Interfaces
+@using Core
 @inject IUserService userService
-@inject NavigationManager nav     
+@inject NavigationManager nav
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 <h3>Log ind</h3>
 
-<input @bind="email" placeholder="Email" />           <!-- Email input -->
-<input @bind="password" type="password" placeholder="Adgangskode" />  <!-- Password input -->
-<button @onclick="TryLogin">Log ind</button>          <!-- Knap til at starte login -->
+<input @bind="email" placeholder="Email" />
+<input @bind="password" type="password" placeholder="Adgangskode" />
+<button @onclick="TryLogin">Log ind</button>
 
-<p>@message</p>  <!-- Viser besked, fx fejl ved login -->
+<p>@message</p>
 
 @code {
-    string email;
-    string password;
-    string message;
+    private string email;
+    private string password;
+    private string message;
 
-    // Kører når brugeren klikker login
     private async Task TryLogin()
     {
-        var user = await userService.Login(email, password);  // Prøv at logge ind via service
+        var user = await userService.Login(email, password);
 
         if (user != null && !string.IsNullOrEmpty(user.UserEmail))
         {
-            // Login gik godt = naviger til forsiden
-            nav.NavigateTo("/", forceLoad: true);
+            Console.WriteLine($"Login success – Responsible: {user.UserIdResponsible}");
+            await localStorage.SetItemAsync("user", user);
+            nav.NavigateTo("/MyGoals", forceLoad: true);
         }
         else
         {
-            message = "Wrong Username or Password";  // Fejlbesked hvis login fejler
+            message = "Forkert brugernavn eller adgangskode.";
         }
+        
     }
 }

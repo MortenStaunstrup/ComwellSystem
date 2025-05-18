@@ -15,5 +15,10 @@ public interface IUserService
     
     Task Logout();  // Log ud
     
-    Task<User> GetUserLoggedInAsync();  // Hent den bruger, der er logget ind lige nu
+    Task<User?> GetUserLoggedInAsync();  // Hent den bruger, der er logget ind lige nu
+    
+    Task<bool> AddNotificationToUserAsync(int userId, Notification notification);
+    
+    
+
 }

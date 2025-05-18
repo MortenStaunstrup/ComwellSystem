@@ -1,18 +1,20 @@
 ﻿@inherits LayoutComponentBase
 @using ComwellWeb.Komponents
 @using Core
+@inject IUserService UserService
+
 <div class="page">
     <main>
         <div class="top-row px-4 NavBarPlace">
-            @if (CurrentUser.Role == "HR")
+            @if (CurrentUser?.Role == "HR")
             {
-                <HRNavBar/> 
+                <HRNavBar/>
             }
-            else if (CurrentUser.Role == "Student")
+            else if (CurrentUser?.Role == "Student")
             {
                 <StudentNavBar/>
             }
-            else if (CurrentUser.Role == "KitchenManager")
+            else if (CurrentUser?.Role == "KitchenManager")
             {
                 <KitchenManagerNavBar/>
             }
@@ -21,11 +23,11 @@
                 <StdNavBar/>
             }
         </div>
+
         @if (CurrentUser != null)
         {
             <div class="Noti" @onclick="ToggleNotification">
                 <span class="notification-icon">🔔</span>
-
                 @if (ShowNotification)
                 {
                     <div class="notification-dropdown">
@@ -34,7 +36,7 @@
                 }
             </div>
         }
-   
+
         <article class="content px-4">
             @Body
         </article>
@@ -48,15 +50,13 @@
     {
         ShowNotification = !ShowNotification;
     }
-    [Parameter]
-    public User CurrentUser { get; set; }
-    
-    protected override void OnInitialized()
-    {
-        //CurrentUser = new User { Role = "" };
-        //CurrentUser = new User { Role = "KitchenManager" };
-        //CurrentUser = new User { Role = "HR" };
-        CurrentUser = new User { Role = "Student" };
-    }
 
+    [Parameter]
+    public User CurrentUser { get; set; } = new User();
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUser = await UserService.GetUserLoggedInAsync() ?? new User();
+
+    }
 }

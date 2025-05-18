@@ -1,11 +1,19 @@
-﻿@using Core
-@inject INotificationService NotificationService
+﻿@page  "/noti"
 
-<h3>Dine notifikationer</h3>
+@using Blazored.LocalStorage
+@using Core
+@inject INotificationService NotificationService
+@inject ILocalStorageService LocalStorage 
+
+<h3>Dine notifikationer</h3> <!--udkast til en notifikations-side. mangler dog at få reciever til at kunne se dem.-->
 
 @if (_notifications == null)
 {
     <p>Indlæser...</p>
+}
+else if (!_notifications.Any())
+{
+    <p>Ingen notifikationer.</p>
 }
 else
 {
@@ -16,7 +24,6 @@ else
             @if (!notification.IsConfirmed)
             {
                 <button @onclick="() => Confirm(notification.Id)">Bekræft</button>
-
             }
             else
             {
@@ -27,18 +34,33 @@ else
 }
 
 @code {
-    [Parameter] public User CurrentUser { get; set; }
-
     private List<Notification>? _notifications;
+    private int _userId;
 
     protected override async Task OnInitializedAsync()
     {
-        _notifications = await NotificationService.GetNotificationsForUserAsync(CurrentUser.UserId);
+        _userId = await LocalStorage.GetItemAsync<int>("userId");
+
+        if (_userId == 0)
+        {
+            // Brugeren er ikke logget ind, håndter det her.
+            return;
+        }
+
+        _notifications = await NotificationService.GetNotificationsForUserAsync(_userId);
     }
-    
+
     private async Task Confirm(int notificationId)
     {
         await NotificationService.ConfirmSubGoalCompletionAsync(notificationId);
-        _notifications = await NotificationService.GetNotificationsForUserAsync(CurrentUser.UserId);
+
+        var notification = _notifications?.FirstOrDefault(n => n.Id == notificationId);
+        if (notification != null)
+        {
+            notification.IsConfirmed = true;
+            
+            
+        }
+        
     }
 }

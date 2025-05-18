@@ -10,6 +10,7 @@ builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISubGoalRepository, SubGoalRepositoryMongoDB>();
+
 DotNetEnv.Env.Load();
 
 

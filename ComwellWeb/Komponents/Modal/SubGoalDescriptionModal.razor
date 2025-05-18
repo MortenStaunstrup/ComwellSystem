@@ -1,49 +1,34 @@
-@using ComwellWeb.Komponents.Modal
-@using ComwellWeb.Pages
 @using ComwellWeb.Services.Interfaces
-@using Core;
+@using Core
 @inject ICommentService CommentService
+@inject INotificationService NotificationService
+@inject IUserNotificationService UserNotificationService
 
 @if (Visible && Goal != null)
 {
-    <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
+    <div class="modal-backdrop" @onclick="Close">
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
+
             <h3>@Goal.SubGoalName</h3>
             <p>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
 
-            @if (VejenDerTil)
+            @if (_comments != null)
             {
-                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">
-                    Ansøg
-                </button>
+                @foreach (var c in _comments)
+                {
+                    <p><strong>@c.commentSender:</strong> @c.Text</p>
+                }
             }
             else
             {
-                <div>
-                    @if (_comments != null)
-                    {
-                        @foreach (var comment in _comments)
-                        {
-                            <p><strong>@comment.Author:</strong> @comment.Text</p>
-                        }
-                    }
-                    else
-                    {
-                        <p>Indlæser kommentarer...</p>
-                    }
-                </div>
-
-                <input class="input" type="text" placeholder="Skriv din kommentar her.." @bind="_newCommentText" />
-                <button @onclick="SendComment">Send kommentar</button>
-                <button @onclick="NotifyDoneClicked">Jeg er færdig med delmål</button>
-                <button @onclick="TestClick">Test knap</button>
-
-
-
-
+                <p>Indlæser kommentarer...</p>
             }
+
+            <input type="text" @bind="_newCommentText" placeholder="Skriv kommentar..." />
+            <button @onclick="SendComment">Send kommentar</button>
+            <button @onclick="SendDoneNotification">Jeg er færdig</button>
         </div>
     </div>
 }
@@ -53,104 +38,80 @@
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }
-    [Parameter] public User CurrentUser { get; set; }
 
-    private List<Comment>? _comments = new();
-    private string _newCommentText = string.Empty;
+    [Parameter]
+    public User CurrentUser { get; set; } = new User();
 
-    private Task Close() => OnCloseRequested.InvokeAsync();
-    private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
+    private List<Comment>? _comments;
+    private string _newCommentText = "";
 
     protected override async Task OnParametersSetAsync()
     {
         if (Goal != null)
         {
-            _comments = new List<Comment>
+            _comments = new()
             {
-                new Comment { Author = "Anna", Text = "Godt gået!" },
-                new Comment { Author = "Jens", Text = "Mangler lidt info." }
+                new Comment { commentSender = "Anna", Text = "Godt gået!" },
+                new Comment { commentSender = "Jens", Text = "Mangler lidt info." }
             };
         }
     }
 
+    private Task Close() => OnCloseRequested.InvokeAsync();
 
-    private async Task SendComment()
-    // Når student går ind på mySubGoals, klikker på et subgoal. Så bliver comments loaded.
-    // Fordi parameteren 'Goal' bliver sat når man klikker på et subgoal
-    protected override async Task OnParametersSetAsync()
+    private Task SendComment()
     {
-        if (!VejenDerTil && Goal != null)
+        if (!string.IsNullOrWhiteSpace(_newCommentText))
         {
-            await InitializeComments();
+            _comments?.Add(new Comment
+            {
+                commentSender = CurrentUser?.UserEmail ?? "Ukendt",
+                Text = _newCommentText
+            });
+            _newCommentText = "";
         }
+        return Task.CompletedTask;
     }
 
-    private async Task NotifyResponsibleCook(int subGoalId)
+    private async Task SendDoneNotification()
     {
-        if (CurrentUser == null || CurrentUser.UserIdResponsible == null)
-            return;
-
-        var notification = new Notification
+        if (CurrentUser?.UserId == 0 || CurrentUser?.UserIdResponsible == null || Goal == null)
         {
-            SubGoalId = subGoalId,
+            return;
+        }
+
+        int nextId = await NotificationService.GetMaxNotificationIdAsync();
+        var note = new Notification
+        {
+            Id = nextId + 1,
+            SubGoalId = Goal.SubGoalId,
             SenderUserId = CurrentUser.UserId,
             ReceiverUserId = CurrentUser.UserIdResponsible.Value,
             Message = $"{CurrentUser.UserEmail} har markeret et delmål som færdigt.",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            NotificationContent = "Delmål afsluttet. Du kan nu bekræfte." //gør det samme som message. Den var her bare før jeg begyndte, turde ikke slette den.
         };
-        
 
-
-        try
-        {
-            await NotificationService.SendNotificationAsync(notification);
-            // evt. vis besked til bruger
-        }
-        catch (Exception ex)
-        {
-            // log fejl eller vis besked
-        }
-    }
-    void TestClick()
-    {
-        Console.WriteLine("Testknap trykket");
-    }
-
-
-    private async Task NotifyResponsibleCookApplication(int subGoalId)
-    {
-        if (CurrentUser == null || CurrentUser.UserIdResponsible == null)
+        if (note.ReceiverUserId is not int receiverId)
             return;
 
-        var notification = new Notification
+        var success = await UserNotificationService.NotifyUserAsync(receiverId, note);
+        ;
+
+        if (success)
         {
-            SubGoalId = subGoalId,
-            SenderUserId = CurrentUser.UserId,
-            ReceiverUserId = CurrentUser.UserIdResponsible.Value,
-            Message = $"{CurrentUser.UserEmail} har ansøgt om at starte på delmål.",
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await NotificationService.SendNotificationAsync(notification);
-    }
-
-    public class Comment
-    {
-        public string Author { get; set; } = "";
-        public string Text { get; set; } = "";
-    }
-    private async Task NotifyDoneClicked()
-    {
-        Console.WriteLine("Klik registreret");
-
-        if (Goal?.SubGoalId != null)
-        {
-            await NotifyResponsibleCook(Goal.SubGoalId);
+            Console.WriteLine("Delmål markeret færdigt");
         }
         else
         {
-            Console.WriteLine("Goal eller SubGoalId er null");
+            Console.WriteLine("Fejl");
         }
     }
 
+
+    public class Comment
+    {
+        public string commentSender { get; set; } = "";
+        public string Text { get; set; } = "";
+    }
 }

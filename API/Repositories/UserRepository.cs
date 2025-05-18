@@ -1,108 +1,113 @@
 ﻿using Core;
 using MongoDB.Driver;
 using MongoDB.Bson;
+
 namespace API.Repositories;
-//repositories generelt skal kun kunne snakke med databasen. Man kan sige: Du snakker kun dansk, men vil virkeligt -
-//tale med en englænder, som også kun snakker sit sprog. Repositories er tolken, som snakker begge sprog. Dog ved repositories -
-//ingen ting om logik; kun get, add, delete osv.
+ // Har prøvet at organisere lidt i koden, ved ikke om det giver mening at opdele det med kommentarer.
 public class UserRepository : IUserRepository
-{                                       //bare min egen string, tror godt I kan erstatte med jeres.
-    private string connectionString = "mongodb+srv://Hjalte:Hjalte123@clusterfree.a2y2b.mongodb.net/";
-    private MongoClient _client;
-    private IMongoDatabase database;
-    private IMongoCollection<User> _collection;
-    private IMongoCollection<SubGoal> _subGoalCollection;
+{
+    // 1. DATABASESETUP
+    private readonly string _connectionString;
+    private readonly MongoClient _client;
+    private readonly IMongoCollection<User> userCollection;
+    private readonly IMongoCollection<SubGoal> subCollection;
+    private readonly IMongoCollection<Notification> notificationCollection;
+
     public UserRepository()
     {
-        _client = new MongoClient(connectionString);
-        database = _client.GetDatabase("Comwell");
-        _collection = database.GetCollection<User>("Users");
-        _subGoalCollection = database.GetCollection<SubGoal>("SubGoals");
+        _connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+        if (string.IsNullOrEmpty(_connectionString))
+        {
+            throw new InvalidOperationException("No connection string configured");
+        }
+        _client = new MongoClient("mongodb+srv://Hjalte:Hjalte123@clusterfree.a2y2b.mongodb.net/");
+        var db = _client.GetDatabase("Comwell");
+
+        userCollection = db.GetCollection<User>("Users");
+        subCollection = db.GetCollection<SubGoal>("SubGoals");
+        notificationCollection = db.GetCollection<Notification>("Notifications");
     }
+
+    // 2. BRUGER
 
     public async Task<List<User>> GetAllUsersAsync()
     {
-        return await _collection.Find(new BsonDocument()).ToListAsync();
+        return await userCollection.Find(new BsonDocument()).ToListAsync();
     }
-    
+
     public async Task<List<User>> GetAllStudentsAsync()
     {
-        return await _collection.Find(new BsonDocument()).ToListAsync();
-    }
-
-    public async Task AddUserAsync(User user)
-    {
-        user.UserId = await GetMaxUserId() + 1;
-        await _collection.InsertOneAsync(user);
-        if (user.Role == "Student")
-            InsertAllStandardSubGoalsInStudent(user);
-    }
-
-    public async void InsertAllStandardSubGoalsInStudent(User user)
-    {
-        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
-        var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
-
-        var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
-            
-        var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
-        var earliestSubGoalYear = await GetEarliestYearForStandardSubGoals();
-        foreach (var subGoal in standardSubGoals)
-        {
-            // Calculate how many years have passed since the earliest standard subgoal year
-            var yearsPassedSinceEarliestSubGoal = subGoal.SubGoalDueDate.Year - earliestSubGoalYear;
-
-            // Set the new due date year based on the user's start year and how many years passed since the earliest
-            var newDueDateYear = userYear + yearsPassedSinceEarliestSubGoal;
-
-            // Update the subgoal's due date
-            subGoal.SubGoalDueDate = new DateOnly(newDueDateYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
-
-            // Update user's student plan
-            var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
-            await _collection.UpdateOneAsync(userFilter, userUpdate);
-        }
-    }
-
-    public async Task<int> GetEarliestYearForStandardSubGoals()
-    {
-        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
-        var sort = Builders<SubGoal>.Sort.Ascending(x => x.SubGoalDueDate);
-        var result = await _subGoalCollection.Find(filter).Sort(sort).Limit(1).FirstOrDefaultAsync();
-        return result.SubGoalDueDate.Year;
+        var filter = Builders<User>.Filter.Eq("Role", "Student");
+        return await userCollection.Find(filter).ToListAsync();
     }
 
     public async Task<User?> Login(string email, string password)
     {
         var filterEmail = Builders<User>.Filter.Eq("UserEmail", email);
         var filterPassword = Builders<User>.Filter.Eq("UserPassword", password);
-        var filterAnd = Builders<User>.Filter.And(filterEmail, filterPassword);
-        return await _collection.Find(filterAnd).FirstOrDefaultAsync();
+        var filter = Builders<User>.Filter.And(filterEmail, filterPassword);
+
+        return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
 
     public async Task<User> GetUserByLoginAsync(int userId)
     {
-        return await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
+        var filter = Builders<User>.Filter.Eq("_id", userId);
+        return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
-    
-    public async Task<int> GetMaxUserId() 
+
+    public async Task<int> GetMaxUserId()
     {
-        try
+        var sort = Builders<User>.Sort.Descending(x => x.UserId);
+        var user = await userCollection.Find(Builders<User>.Filter.Empty).Sort(sort).Limit(1).FirstOrDefaultAsync();
+        return user?.UserId ?? 0;
+    }
+
+    public async Task AddUserAsync(User user)
+    {
+        user.UserId = await GetMaxUserId() + 1;
+        await userCollection.InsertOneAsync(user);
+
+        if (user.Role == "Student")
         {
-            var sort = Builders<User>.Sort.Descending(x => x.UserId);
-            var maxUser = await _collection
-                .Find(Builders<User>.Filter.Empty)
-                .Sort(sort)
-                .Limit(1)
-                .FirstOrDefaultAsync();
-            return maxUser?.UserId ?? 0;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Fejl i GetMaxUserId(): {ex.Message}");
-            throw;
+            InsertAllStandardSubGoalsInStudent(user);
         }
     }
 
+    // 3. SUBGOALS OG NOTIFIKATIONER
 
+    public async Task EmbedNotificationToUserAsync(User user, Notification notification)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
+        var update = Builders<User>.Update.Push("Notifications", notification);
+        await userCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task<int> GetEarliestYearForStandardSubGoals()
+    {
+        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
+        var sort = Builders<SubGoal>.Sort.Ascending(x => x.SubGoalDueDate);
+        var result = await subCollection.Find(filter).Sort(sort).Limit(1).FirstOrDefaultAsync();
+        return result.SubGoalDueDate.Year;
+    }
+
+    public async void InsertAllStandardSubGoalsInStudent(User user)
+    {
+        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
+        var standardSubGoals = await subCollection.Find(filter).ToListAsync();
+        var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
+
+        var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
+        var earliestYear = await GetEarliestYearForStandardSubGoals();
+
+        foreach (var subGoal in standardSubGoals)
+        {
+            var yearsSince = subGoal.SubGoalDueDate.Year - earliestYear;
+            var newYear = userYear + yearsSince;
+
+            subGoal.SubGoalDueDate = new DateOnly(newYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
+            var update = Builders<User>.Update.Push("StudentPlan", subGoal);
+            await userCollection.UpdateOneAsync(userFilter, update);
+        }
+    }
 }
