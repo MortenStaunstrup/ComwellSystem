@@ -22,9 +22,12 @@ public class NotificationService : INotificationService
 
     public async Task<List<Notification>> GetNotificationsForUserAsync(int userId)
     {
-        var notifications = await _httpClient.GetFromJsonAsync<List<Notification>>($"{BaseURL}/user/{userId}");
+        var notifications = await _httpClient.GetFromJsonAsync<List<Notification>>($"{BaseURL}/notifications/user/{userId}");
+
+
         return notifications ?? new List<Notification>();
     }
+
 
     public async Task ConfirmSubGoalCompletionAsync(int notificationId)
     {

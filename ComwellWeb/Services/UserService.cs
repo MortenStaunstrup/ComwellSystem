@@ -16,8 +16,6 @@ namespace ComwellWeb.Services
             _httpClient = httpClient;
             _localStorage = localStorage;
         }
-
-     
         public async Task<List<User>> GetAllUsersAsync()
         {
             var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
@@ -96,6 +94,11 @@ namespace ComwellWeb.Services
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/{userId}/add-notification", notification);
             return response.IsSuccessStatusCode;
+        }
+        public async Task<User?> GetUserByUserId(int userId)
+        {
+            Console.WriteLine($"Returning user: {userId}: service");
+            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
         }
 
     }

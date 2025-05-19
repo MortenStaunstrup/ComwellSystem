@@ -29,10 +29,16 @@ namespace API.Controllers
         }
 
         // Køkkenleder henter sine notifikationer
-        [HttpGet("user/{userId}")]
+        [HttpGet("notifications/user/{userId}")]
         public async Task<IActionResult> GetNotificationsForUser(int userId)
         {
             var notifications = await _notificationRepository.GetNotificationsForUserAsync(userId);
+
+            if (notifications == null || !notifications.Any())
+            {
+                return NotFound("Ingen notifikationer fundet for denne bruger.");
+            }
+
             return Ok(notifications);
         }
 

@@ -4,14 +4,12 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Env.Load();
 
-builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 
-DotNetEnv.Env.Load();
+Env.Load();
 
 
 builder.Services.AddSingleton<ICommentRepository, CommentRepositoryMongoDB>();
@@ -41,11 +39,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseRouting();
 
 app.UseCors("policy");
+
+app.UseAuthorization();
 
 app.MapControllers();
 

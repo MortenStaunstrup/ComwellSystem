@@ -6,5 +6,4 @@ public interface INotificationService
     Task<List<Notification>> GetNotificationsForUserAsync(int userId);
     Task ConfirmSubGoalCompletionAsync(int notificationId);
     Task<int> GetMaxNotificationIdAsync();
-
 }

@@ -1,8 +1,9 @@
 ﻿using Core;
 using MongoDB.Driver;
 using MongoDB.Bson;
+
 namespace API.Repositories;
- // Har prøvet at organisere lidt i koden, ved ikke om det giver mening at opdele det med kommentarer.
+
 public class UserRepository : IUserRepository
 {
     // 1. DATABASESETUP
@@ -19,20 +20,16 @@ public class UserRepository : IUserRepository
         {
             throw new InvalidOperationException("No connection string configured");
         }
-        _client = new MongoClient("mongodb+srv://Hjalte:Hjalte123@clusterfree.a2y2b.mongodb.net/");
+        _client = new MongoClient(_connectionString);
         var db = _client.GetDatabase("Comwell");
-
         userCollection = db.GetCollection<User>("Users");
         subCollection = db.GetCollection<SubGoal>("SubGoals");
         notificationCollection = db.GetCollection<Notification>("Notifications");
     }
+    
+    //2. BRUGER
 
-    // 2. BRUGER
-
-    public async Task<List<User>> GetAllUsersAsync()
-    {
-        return await userCollection.Find(new BsonDocument()).ToListAsync();
-    }
+    public async Task<List<User>> GetAllUsersAsync() => await userCollection.Find(new BsonDocument()).ToListAsync();
 
     public async Task<List<User>> GetAllStudentsAsync()
     {
@@ -42,10 +39,10 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> Login(string email, string password)
     {
-        var filterEmail = Builders<User>.Filter.Eq("UserEmail", email);
-        var filterPassword = Builders<User>.Filter.Eq("UserPassword", password);
-        var filter = Builders<User>.Filter.And(filterEmail, filterPassword);
-
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq("UserEmail", email),
+            Builders<User>.Filter.Eq("UserPassword", password)
+        );
         return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
 
@@ -54,7 +51,12 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq("_id", userId);
         return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
-
+    public async Task<User?> GetUserByUserId(int userId)
+    {
+        Console.WriteLine($"Returning user: {userId}: repo");
+        var filter = Builders<User>.Filter.Eq("_id", userId);
+        return await userCollection.Find(filter).FirstOrDefaultAsync();
+    }
     public async Task<int> GetMaxUserId()
     {
         var sort = Builders<User>.Sort.Descending(x => x.UserId);
@@ -66,7 +68,6 @@ public class UserRepository : IUserRepository
     {
         user.UserId = await GetMaxUserId() + 1;
         await userCollection.InsertOneAsync(user);
-
         if (user.Role == "Student")
         {
             InsertAllStandardSubGoalsInStudent(user);
@@ -90,13 +91,6 @@ public class UserRepository : IUserRepository
         return result.SubGoalDueDate.Year;
     }
 
-    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
-    {
-        var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
-        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
-        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
-    }
-
     public async void InsertAllStandardSubGoalsInStudent(User user)
     {
         var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
@@ -105,6 +99,7 @@ public class UserRepository : IUserRepository
 
         var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
         var earliestSubGoalYear = await GetEarliestYearForStandardSubGoals();
+
         foreach (var subGoal in standardSubGoals)
         {
             // Calculate how many years have passed since the earliest standard subgoal year

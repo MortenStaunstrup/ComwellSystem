@@ -6,7 +6,7 @@
         @foreach (var noti in LastestNotiData.Notifications30)
         {
             <div class="Notification">
-                <p class="notiTxt">#@noti.NotificationId - @noti.NotificationContent</p>
+                <p class="notiTxt">#@noti.Id - @noti.Message</p>
                 <small>@noti.NotificationDate.ToShortDateString()</small>
             </div>
         }
@@ -21,11 +21,11 @@
 
 @code {
     private List<Core.Notification> Notifications;
-    private LastestNoti LastestNotiData;
+    private Core.Notification.LastestNoti LastestNotiData;
 
     protected override void OnInitialized()
     {
-      //TEst daTA
+        /*TEst daTA
         Notifications = new List<Core.Notification>
         {
             new Core.Notification
@@ -50,8 +50,9 @@
                 NotificationDate = DateTime.Now.AddDays(-5)
             }
         };
+        */
 
         // Filtrér notifikationer, der er under 30 dage gamle
-        LastestNotiData = new LastestNoti(Notifications);
+        LastestNotiData = new Core.Notification.LastestNoti(Notifications);
     }
 }
