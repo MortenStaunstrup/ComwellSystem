@@ -84,7 +84,6 @@ else
 @code {
     User _currentUser;
     List<User>? _myStudents;
-    List<User> _nonAddedStudents;
     List<User> _addedStudents = new List<User>();
     
     SubGoal _model;
@@ -163,8 +162,6 @@ else
                 StartDate = new DateOnly(2022, 6, 16)
             }
         };
-
-        _nonAddedStudents = _myStudents;
     }
 
     private async void HandleSubmit()
@@ -202,7 +199,6 @@ else
         _model = new SubGoal();
         EditContext = new EditContext(_model);
         _addedStudents = new List<User>();
-        _nonAddedStudents = _myStudents;
         StateHasChanged();
         Thread.Sleep(2000);
         currentMaxId = await SubGoalService.MaxSubGoalId();

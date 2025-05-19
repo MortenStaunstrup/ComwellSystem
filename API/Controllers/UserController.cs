@@ -72,6 +72,17 @@ public class UsersController : ControllerBase
     {
         return await _repo.GetMaxUserId();
     }
+    [HttpGet("students/{responsibleId:int}")]
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        return await _repo.GetAllStudentsByResponsibleIdAsync(responsibleId);
+    }
+
+    [HttpGet("kitchenmanagers")]
+    public async Task<List<User>?> GetAllKitchenManagersAsync()
+    {
+        return await _repo.GetAllKitchenManagersAsync();
+    }
 }
 
 /* [HttpPost("{userId}/add-notification")]
@@ -85,3 +96,4 @@ public class UsersController : ControllerBase
      return Ok();
  
     }*/
+    

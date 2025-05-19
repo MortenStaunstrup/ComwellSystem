@@ -1,88 +1,132 @@
 @page "/opret"
+@using ComwellWeb.Komponents
 @using ComwellWeb.Services
 @using Core
 @inject NavigationManager NavigationManager
 @inject IUserService _userService
-<EditForm Model="@newUser" OnValidSubmit="CreateUserValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
 
-    <div class="user-form-box">
-        <div class="form-group">
-            <label for="userName">Fornavn:</label>
-            <InputText id="userName" class="form-control" @bind-Value="newUser.UserName" />
-        </div>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 FormOverordnet">
+            <div class="card shadow p-4 mb-4">
+                <h3 class="text-center mb-4">Opret Bruger</h3>
+                <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
+                    @if (!string.IsNullOrEmpty(statusMessage))
+                    {
+                        <p class="mt-3 alert alert-info">@statusMessage</p>
+                    }
+                    
+                    <div class="mb-3">
+                        <label for="userName">Navn:</label>
+                        <InputText id="userName" class="form-control" @bind-Value="_model.UserName"/>
+                    </div>
 
-        <div class="form-group">
-            <label for="email">Mail:</label>
-            <InputText id="email" class="form-control" @bind-Value="newUser.UserEmail" />
-        </div>
+                    <div class="mb-3">
+                        <label for="email">Mail:</label>
+                        <InputText id="email" class="form-control" @bind-Value="_model.UserEmail"/>
+                    </div>
 
-        <div class="form-group">
-            <label for="phone">Telefonnummer:</label>
-            <InputText id="phone" class="form-control" @bind-Value="newUser.UserPhone" />
-        </div>
+                    <div class="mb-3">
+                        <label for="phone">Telefonnummer:</label>
+                        <InputText id="phone" class="form-control" @bind-Value="_model.UserPhone"/>
+                    </div>
 
-        <div class="form-group">
-            <label for="password">Adgangskode:</label>
-            <InputText id="password" type="password" class="form-control" @bind-Value="newUser.UserPassword" />
-        </div>
+                    <div class="mb-3">
+                        <label for="password">Adgangskode:</label>
+                        <InputText id="password" type="password" class="form-control" @bind-Value="_model.UserPassword"/>
+                    </div>
 
-        <div class="form-group">
-            <label for="role">Rolle:</label>
-            <InputSelect id="role" class="form-control" @bind-Value="newUser.Role">
-                <option value="">-- Vælg rolle --</option>
-                <option value="Student">Elev</option>
-                <option value="KitchenManager">Køkkenleder</option>
-                <option value="HR">HR</option>
-            </InputSelect>
-        </div>
-        
-        <div class="form-group">
-            <label>Start Dato:</label>
-            <InputDate @bind-Value="@newUser.StartDate"></InputDate>
-        </div>
+                    <div class="mb-3">
+                        <label for="role">Rolle:</label>
+                        <InputSelect id="role" class="form-control" @bind-Value="_model.Role" @onchange="OnRoleChange">
+                            <option value="">-- Vælg rolle --</option>
+                            <option value="Student">Elev</option>
+                            <option value="KitchenManager">Køkkenleder</option>
+                            <option value="HR">HR</option>
+                        </InputSelect>
+                    </div>
+                    <div class="mb-3">
+                        @if (_kitchenManagers != null)
+                        {
+                            @if (_model.Role == "Student")
+                            {
+                                <KitchenManagerDropdown @ref="dropdown" _kitchenManagers="_kitchenManagers" _kitchenManager="assignedKitchenManager" KitchenManagerChanged="@(user => assignedKitchenManager = user)"></KitchenManagerDropdown>
+                            }
+                        }
+                    </div>
 
-        <button class="btn btn-primary" type="submit">Opret</button>
+                    <div class="mb-3">
+                        <label>Start Dato:</label>
+                        <InputDate @bind-Value="@_model.StartDate"></InputDate>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Opret</button>
+                </EditForm>
+                
+            </div>
+        </div>
     </div>
-</EditForm>
-
-@if (!string.IsNullOrEmpty(statusMessage))
-{
-    <p class="mt-3 alert alert-info">@statusMessage</p>
-}
+</div>
 
 @code {
-    private User newUser = new();
+    private Core.User _model;
+    private EditContext EditContext;
     private DateTime? StartDate;
     private string statusMessage = "";
+    private List<User>? _kitchenManagers;
+    private User? assignedKitchenManager = new User();
+
+    KitchenManagerDropdown? dropdown { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        _model = new User();
+        EditContext = new EditContext(_model);
         int maxId = await _userService.GetMaxUserId();
-        newUser.UserId = maxId + 1;
+        _model.UserId = maxId + 1;
+        _kitchenManagers = await _userService.GetAllKitchenManagersAsync();
     }
 
-    private async Task CreateUserValidSubmit()
+    private async Task HandleSubmit()
+    //private async Task CreateUserValidSubmit()
     {
         if (StartDate.HasValue)
         {
-            newUser.StartDate = DateOnly.FromDateTime(StartDate.Value);
+            _model.StartDate = DateOnly.FromDateTime(StartDate.Value);
         }
-        
-        var result = await _userService.AddUserAsync(newUser);
 
-        if (result == null)
+        if (_model.Role == "Student" && assignedKitchenManager.UserId == 0)
         {
-            statusMessage = "Brugeren findes allerede.";
+            statusMessage = "En elev skal have en køkken chef tildelt";
+            return;
         }
-        else
+
+        if (_model.Role == "Student")
+            _model.UserIdResponsible = assignedKitchenManager.UserId;
+        if (EditContext.Validate())
         {
-            statusMessage = $"Bruger oprettet: {result.UserName} ({result.Role})";
-            newUser = new();
-            StartDate = null;
-            int nextId = await _userService.GetMaxUserId();
-            newUser.UserId = nextId + 1;
+            var result = await _userService.AddUserAsync(_model);
+
+            if (result == null)
+            {
+                statusMessage = "Brugeren findes allerede.";
+            }
+            else
+            {
+                statusMessage = $"Bruger oprettet: {result.UserName} ({result.Role})";
+                _model = new();
+                StartDate = null;
+                int nextId = await _userService.GetMaxUserId();
+                _model.UserId = nextId + 1;
+            }
         }
+    }
+    
+    private void OnRoleChange(ChangeEventArgs e)
+    {
+        _model.Role = e.Value.ToString();
+        StateHasChanged();
     }
 }

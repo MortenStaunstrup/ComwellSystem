@@ -26,6 +26,13 @@ public class UserRepository : IUserRepository
         subCollection = db.GetCollection<SubGoal>("SubGoals");
         notificationCollection = db.GetCollection<Notification>("Notifications");
     }
+
+    public async Task<List<User>?> GetAllKitchenManagersAsync()
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
+    }
     
     //2. BRUGER
 
