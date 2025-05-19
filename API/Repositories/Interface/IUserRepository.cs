@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<List<User>> GetAllUsersAsync();
     Task<List<User>> GetAllStudentsAsync();
     Task<int> GetMaxUserId();
+    Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId);
 }

@@ -31,7 +31,7 @@ public class UserRepository : IUserRepository
     {
         var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
         var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
-        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
+        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
     }
     
     //2. BRUGER
@@ -122,6 +122,12 @@ public class UserRepository : IUserRepository
             var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
             await userCollection.UpdateOneAsync(userFilter, userUpdate);
         }
+    }
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
     }
         }
     
