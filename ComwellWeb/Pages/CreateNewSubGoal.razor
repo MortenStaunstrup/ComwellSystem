@@ -170,7 +170,6 @@ else
     private async void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
-        _model.StudentId = 0;
         if (EditContext.Validate())
         {
             if (_model.SubGoalType == "Standard")

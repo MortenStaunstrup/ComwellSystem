@@ -82,9 +82,15 @@ namespace ComwellWeb.Services
             return await _httpClient.GetFromJsonAsync<int>($"{BaseURL}/maxid");
         }
         
-        public async Task<User> GetUserById(int id)
+        public async Task<User> GetUserById(int userId)
         {
-            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/{id}");
+            Console.WriteLine($"Returning user: {userId}: service");
+            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
+        }
+        
+        public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId)
+        {
+            return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/students/{responisbleId}");
         }
         public async Task<bool> AddNotificationToUserAsync(int userId, Notification notification)
         {

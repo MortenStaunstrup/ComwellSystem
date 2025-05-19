@@ -1,7 +1,6 @@
 ﻿using Core;
 using MongoDB.Driver;
 using MongoDB.Bson;
-
 namespace API.Repositories;
  // Har prøvet at organisere lidt i koden, ved ikke om det giver mening at opdele det med kommentarer.
 public class UserRepository : IUserRepository
@@ -91,6 +90,13 @@ public class UserRepository : IUserRepository
         return result.SubGoalDueDate.Year;
     }
 
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
+    }
+
     public async void InsertAllStandardSubGoalsInStudent(User user)
     {
         var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
@@ -98,16 +104,25 @@ public class UserRepository : IUserRepository
         var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
 
         var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
-        var earliestYear = await GetEarliestYearForStandardSubGoals();
-
+        var earliestSubGoalYear = await GetEarliestYearForStandardSubGoals();
         foreach (var subGoal in standardSubGoals)
         {
-            var yearsSince = subGoal.SubGoalDueDate.Year - earliestYear;
-            var newYear = userYear + yearsSince;
+            // Calculate how many years have passed since the earliest standard subgoal year
+            var yearsPassedSinceEarliestSubGoal = subGoal.SubGoalDueDate.Year - earliestSubGoalYear;
 
-            subGoal.SubGoalDueDate = new DateOnly(newYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
-            var update = Builders<User>.Update.Push("StudentPlan", subGoal);
-            await userCollection.UpdateOneAsync(userFilter, update);
+            // Set the new due date year based on the user's start year and how many years passed since the earliest
+            var newDueDateYear = userYear + yearsPassedSinceEarliestSubGoal;
+
+            // Update the subgoal's due date
+            subGoal.SubGoalDueDate = new DateOnly(newDueDateYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
+
+            // Update user's student plan
+            var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
+            await userCollection.UpdateOneAsync(userFilter, userUpdate);
         }
     }
-}
+        }
+    
+
+
+

@@ -57,12 +57,19 @@ public class UsersController : ControllerBase
         return await _repo.GetAllStudentsAsync();
     }
 
+    [HttpGet("user/{userId:int}")]
+    public async Task<User?> GetUserByUserId(int userId)
+    {
+        Console.WriteLine($"Returning user: {userId}: controller");
+        return await _repo.GetUserByUserId(userId);
+    }
+
     [HttpGet("maxid")]  // Henter den højeste bruger-id fra databasen
     public async Task<int> GetMaxUserId()
     {
         return await _repo.GetMaxUserId();
     }
-    [HttpPost("{userId}/add-notification")]
+    /*[HttpPost("{userId}/add-notification")]
     public async Task<IActionResult> AddNotificationToUser(int userId, [FromBody] Notification notification) //frombody fordi metoden skal bruge inforamtion fra andet end bare http
     {
         var user = await _repo.GetUserByLoginAsync(userId);
@@ -71,6 +78,6 @@ public class UsersController : ControllerBase
 
         await _repo.EmbedNotificationToUserAsync(user, notification);
         return Ok();
-    }
+    }*/
     
 }
