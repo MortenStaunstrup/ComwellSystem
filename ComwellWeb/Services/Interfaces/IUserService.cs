@@ -15,8 +15,8 @@ public interface IUserService
     Task<User?> AddUserAsync(User user);  // Opret en ny bruger, hvis den ikke findes
 
     Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId);
-   
-    
+
+    Task<List<User>?> GetAllKitchenManagersAsync();
     Task Logout();  // Log ud
     
     Task<User> GetUserLoggedInAsync();  // Hent den bruger, der er logget ind lige nu

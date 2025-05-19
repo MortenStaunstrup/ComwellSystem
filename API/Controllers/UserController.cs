@@ -74,4 +74,10 @@ public class UsersController : ControllerBase
     {
         return await _repo.GetAllStudentsByResponsibleIdAsync(responsibleId);
     }
+
+    [HttpGet("kitchenmanagers")]
+    public async Task<List<User>?> GetAllKitchenManagersAsync()
+    {
+        return await _repo.GetAllKitchenManagersAsync();
+    }
 }

@@ -1,0 +1,63 @@
+@using Core
+<div class="imagedropdown-container">
+    
+    <div class="imagedropdown-header" @onclick="ToggleDropdown">
+        <span class="imagedropdown-arrow">▼ Tildel Køkkenansvarlige</span>
+    </div>
+    @if (_isOpen)
+    {
+        <div>
+            <ul>
+            @if (_kitchenManagers != null && _kitchenManager.UserId == 0)
+            {
+                foreach (var manager in _kitchenManagers)
+                {
+                    <li>
+                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(manager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{manager.Picture}")"/>
+                    <span>@manager.UserName</span>
+                    <button type="button" @onclick="() => AssignKitchenManager(manager)">Assign</button>
+                    </li>
+                }
+            }
+            </ul>
+        </div>
+        <div>
+            <ul>
+            @if (_kitchenManager.UserId != 0)
+            {
+                
+                <li>
+                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(_kitchenManager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_kitchenManager.Picture}")"/>
+                    <span>@_kitchenManager.UserName</span>
+                    <button type="button" @onclick="() => UnassignKitchenManager(_kitchenManager)">Unassign</button>
+                </li>
+                
+            }
+            </ul>
+        </div>
+    }
+</div>
+@code {
+    [Parameter]
+    public List<User>? _kitchenManagers { get; set; } = new List<User>();
+    [Parameter] 
+    public User? _kitchenManager { get; set; } = new User();
+    private bool _isOpen = false;
+    private void ToggleDropdown() => _isOpen = !_isOpen;
+    [Parameter]
+    public EventCallback<User> KitchenManagerChanged { get; set; }
+
+    public async Task AssignKitchenManager(User manager)
+    {
+        _kitchenManagers.Remove(manager);
+        _kitchenManager = manager;
+        await KitchenManagerChanged.InvokeAsync(manager);
+    }
+
+    public async Task UnassignKitchenManager(User manager)
+    {
+        _kitchenManager = new User();
+        _kitchenManagers.Add(manager);
+        await KitchenManagerChanged.InvokeAsync(_kitchenManager);
+    }
+}

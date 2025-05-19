@@ -97,5 +97,10 @@ namespace ComwellWeb.Services
         {
             return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/students/{responisbleId}");
         }
+
+        public async Task<List<User>?> GetAllKitchenManagersAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/kitchenmanagers");
+        }
     }
 }

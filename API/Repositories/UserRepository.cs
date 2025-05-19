@@ -25,6 +25,13 @@ public class UserRepository : IUserRepository
     {
         return await _collection.Find(new BsonDocument()).ToListAsync();
     }
+
+    public async Task<List<User>?> GetAllKitchenManagersAsync()
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
+    }
     
     public async Task<List<User>> GetAllStudentsAsync()
     {

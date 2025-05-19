@@ -12,6 +12,7 @@ public interface IUserRepository
 
     Task<List<User>> GetAllUsersAsync();  // Hent alle brugere
 
+    Task<List<User>?> GetAllKitchenManagersAsync();
     Task<List<User>> GetAllStudentsAsync();
     Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId);
 

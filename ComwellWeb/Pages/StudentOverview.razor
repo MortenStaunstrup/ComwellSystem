@@ -12,6 +12,7 @@
             <tr>
                 <th>Frist</th>
                 <th>Opgave</th>
+                <th>Type</th>
                 <th>Beskrivelse</th>
                 <th>Status</th>
             </tr>
@@ -22,6 +23,7 @@
                 <tr>
                     <td>@subGoal.SubGoalDueDate.ToString("dd/MM/yyyy")</td>
                     <td>@subGoal.SubGoalName</td>
+                    <td>@subGoal.SubGoalType</td>
                     <td>@subGoal.SubGoalDescription</td>
                     <td>@(subGoal.SubGoalStatus ? "✅" : "❌")</td>
                 </tr>
