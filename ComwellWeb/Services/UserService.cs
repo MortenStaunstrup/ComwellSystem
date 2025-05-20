@@ -16,8 +16,6 @@ namespace ComwellWeb.Services
             _httpClient = httpClient;
             _localStorage = localStorage;
         }
-
-     
         public async Task<List<User>> GetAllUsersAsync()
         {
             var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
@@ -33,7 +31,9 @@ namespace ComwellWeb.Services
    
         public async Task<User?> Login(string email, string password)
         {
-            var response = await _httpClient.GetAsync($"{BaseURL}/login/{email}/{password}");
+            var loginRequest = new { Email = email, Password = password };
+            var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/login", loginRequest);
+
             if (!response.IsSuccessStatusCode)
                 return null;
 
@@ -46,6 +46,7 @@ namespace ComwellWeb.Services
 
             return null;
         }
+
         
         public async Task<User?> GetUserLoggedInAsync()
         {
@@ -82,15 +83,31 @@ namespace ComwellWeb.Services
             return await _httpClient.GetFromJsonAsync<int>($"{BaseURL}/maxid");
         }
         
-        public async Task<User> GetUserById(int id)
+        public async Task<User> GetUserById(int userId)
         {
-            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/{id}");
+            Console.WriteLine($"Returning user: {userId}: service");
+            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
+        }
+        
+        public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId)
+        {
+            return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/students/{responisbleId}");
         }
         public async Task<bool> AddNotificationToUserAsync(int userId, Notification notification)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/{userId}/add-notification", notification);
             return response.IsSuccessStatusCode;
         }
+        public async Task<User?> GetUserByUserId(int userId)
+        {
+            Console.WriteLine($"Returning user: {userId}: service");
+            return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
+        }
 
+
+        public async Task<List<User>?> GetAllKitchenManagersAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/kitchenmanagers");
+        }
     }
 }

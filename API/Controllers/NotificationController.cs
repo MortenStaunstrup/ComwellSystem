@@ -29,10 +29,16 @@ namespace API.Controllers
         }
 
         // Køkkenleder henter sine notifikationer
-        [HttpGet("user/{userId}")]
+        [HttpGet("notifications/user/{userId}")]
         public async Task<IActionResult> GetNotificationsForUser(int userId)
         {
             var notifications = await _notificationRepository.GetNotificationsForUserAsync(userId);
+
+            if (notifications == null || !notifications.Any())
+            {
+                return NotFound("Ingen notifikationer fundet for denne bruger.");
+            }
+
             return Ok(notifications);
         }
 
@@ -46,9 +52,18 @@ namespace API.Controllers
         [HttpGet("maxid")]
         public async Task<ActionResult<int>> GetMaxNotificationId()
         {
-            int maxId = await _notificationRepository.GetMaxNotificationIdAsync();
-            return Ok(maxId);
+            try
+            {
+                int maxId = await _notificationRepository.GetMaxNotificationIdAsync();
+                return Ok(maxId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Fejl i GetMaxNotificationId: " + ex.Message); // fordi det ikke duer
+                return StatusCode(500, "Kunne ikke hente max notification ID");
+            }
         }
+
 
         
     }

@@ -3,7 +3,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 
 namespace API.Repositories;
- // Har prøvet at organisere lidt i koden, ved ikke om det giver mening at opdele det med kommentarer.
+
 public class UserRepository : IUserRepository
 {
     // 1. DATABASESETUP
@@ -20,20 +20,23 @@ public class UserRepository : IUserRepository
         {
             throw new InvalidOperationException("No connection string configured");
         }
-        _client = new MongoClient("mongodb+srv://Hjalte:Hjalte123@clusterfree.a2y2b.mongodb.net/");
+        _client = new MongoClient(_connectionString);
         var db = _client.GetDatabase("Comwell");
-
         userCollection = db.GetCollection<User>("Users");
         subCollection = db.GetCollection<SubGoal>("SubGoals");
         notificationCollection = db.GetCollection<Notification>("Notifications");
     }
 
-    // 2. BRUGER
-
-    public async Task<List<User>> GetAllUsersAsync()
+    public async Task<List<User>?> GetAllKitchenManagersAsync()
     {
-        return await userCollection.Find(new BsonDocument()).ToListAsync();
+        var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
     }
+    
+    //2. BRUGER
+
+    public async Task<List<User>> GetAllUsersAsync() => await userCollection.Find(new BsonDocument()).ToListAsync();
 
     public async Task<List<User>> GetAllStudentsAsync()
     {
@@ -43,10 +46,10 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> Login(string email, string password)
     {
-        var filterEmail = Builders<User>.Filter.Eq("UserEmail", email);
-        var filterPassword = Builders<User>.Filter.Eq("UserPassword", password);
-        var filter = Builders<User>.Filter.And(filterEmail, filterPassword);
-
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq("UserEmail", email),
+            Builders<User>.Filter.Eq("UserPassword", password)
+        );
         return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
 
@@ -55,7 +58,12 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq("_id", userId);
         return await userCollection.Find(filter).FirstOrDefaultAsync();
     }
-
+    public async Task<User?> GetUserByUserId(int userId)
+    {
+        Console.WriteLine($"Returning user: {userId}: repo");
+        var filter = Builders<User>.Filter.Eq("_id", userId);
+        return await userCollection.Find(filter).FirstOrDefaultAsync();
+    }
     public async Task<int> GetMaxUserId()
     {
         var sort = Builders<User>.Sort.Descending(x => x.UserId);
@@ -67,7 +75,6 @@ public class UserRepository : IUserRepository
     {
         user.UserId = await GetMaxUserId() + 1;
         await userCollection.InsertOneAsync(user);
-
         if (user.Role == "Student")
         {
             InsertAllStandardSubGoalsInStudent(user);
@@ -98,16 +105,32 @@ public class UserRepository : IUserRepository
         var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
 
         var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
-        var earliestYear = await GetEarliestYearForStandardSubGoals();
+        var earliestSubGoalYear = await GetEarliestYearForStandardSubGoals();
 
         foreach (var subGoal in standardSubGoals)
         {
-            var yearsSince = subGoal.SubGoalDueDate.Year - earliestYear;
-            var newYear = userYear + yearsSince;
+            // Calculate how many years have passed since the earliest standard subgoal year
+            var yearsPassedSinceEarliestSubGoal = subGoal.SubGoalDueDate.Year - earliestSubGoalYear;
 
-            subGoal.SubGoalDueDate = new DateOnly(newYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
-            var update = Builders<User>.Update.Push("StudentPlan", subGoal);
-            await userCollection.UpdateOneAsync(userFilter, update);
+            // Set the new due date year based on the user's start year and how many years passed since the earliest
+            var newDueDateYear = userYear + yearsPassedSinceEarliestSubGoal;
+
+            // Update the subgoal's due date
+            subGoal.SubGoalDueDate = new DateOnly(newDueDateYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
+
+            // Update user's student plan
+            var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
+            await userCollection.UpdateOneAsync(userFilter, userUpdate);
         }
     }
-}
+    public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
+    {
+        var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
+        var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
+        return await userCollection.Find(filter).Project<User>(projection).ToListAsync();
+    }
+        }
+    
+
+
+

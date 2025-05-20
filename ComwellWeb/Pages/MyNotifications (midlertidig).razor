@@ -1,11 +1,11 @@
-﻿@page  "/noti"
+﻿@page "/noti"
 
 @using Blazored.LocalStorage
 @using Core
 @inject INotificationService NotificationService
-@inject ILocalStorageService LocalStorage 
+@inject ILocalStorageService LocalStorage
 
-<h3>Dine notifikationer</h3> <!--udkast til en notifikations-side. mangler dog at få reciever til at kunne se dem.-->
+<h3>Dine notifikationer</h3>
 
 @if (_notifications == null)
 {
@@ -39,16 +39,21 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _userId = await LocalStorage.GetItemAsync<int>("userId");
+        var user = await LocalStorage.GetItemAsync<User>("user");
 
-        if (_userId == 0)
+        if (user == null || user.UserId == 0)
         {
-            // Brugeren er ikke logget ind, håndter det her.
+            Console.WriteLine("DEBUG: Bruger ikke fundet eller userId er 0");
             return;
         }
 
+        _userId = user.UserId;
+
+        Console.WriteLine($"DEBUG: Hentet userId = {_userId}");
+
         _notifications = await NotificationService.GetNotificationsForUserAsync(_userId);
     }
+
 
     private async Task Confirm(int notificationId)
     {
@@ -58,9 +63,7 @@ else
         if (notification != null)
         {
             notification.IsConfirmed = true;
-            
-            
         }
-        
     }
+    
 }

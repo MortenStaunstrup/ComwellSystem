@@ -6,7 +6,7 @@
         @foreach (var noti in LastestNotiData.Notifications30)
         {
             <div class="Notification">
-                <p class="notiTxt">#@noti.NotificationId - @noti.NotificationContent</p>
+                <p class="notiTxt">#@noti.Id - @noti.Message</p>
                 <small>@noti.NotificationDate.ToShortDateString()</small>
             </div>
         }
@@ -21,7 +21,7 @@
 
 @code {
     private List<Core.Notification> Notifications;
-    private LastestNoti LastestNotiData;
+    private Core.Notification.LastestNoti LastestNotiData;
 
     protected override void OnInitialized()
     {
@@ -30,28 +30,28 @@
         {
             new Core.Notification
             {
-                NotificationId = 1,
-                NotificationUserId = 100,
-                NotificationContent = "Velkommen til systemet!",
+                Id = 1,
+                SenderUserId = 100,
+                Message = "Velkommen til systemet!",
                 NotificationDate = DateTime.Now.AddDays(-10)
             },
             new Core.Notification
             {
-                NotificationId = 2,
-                NotificationUserId = 100,
-                NotificationContent = "Du har fået en ny besked",
+                Id = 2,
+                SenderUserId = 100,
+                Message = "Du har fået en ny besked",
                 NotificationDate = DateTime.Now.AddDays(-40) // Ældre end 30 dage, så skal ikke vises (det duer)
             },
             new Core.Notification
             {
-                NotificationId = 3,
-                NotificationUserId = 101,
-                NotificationContent = "Din profil er opdateret",
+                Id = 3,
+                SenderUserId = 101,
+                Message = "Din profil er opdateret",
                 NotificationDate = DateTime.Now.AddDays(-5)
             }
         };
 
         // Filtrér notifikationer, der er under 30 dage gamle
-        LastestNotiData = new LastestNoti(Notifications);
+        LastestNotiData = new Core.Notification.LastestNoti(Notifications);
     }
 }

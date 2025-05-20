@@ -22,7 +22,7 @@
     {
         var user = await userService.Login(email, password);
 
-        if (user != null && !string.IsNullOrEmpty(user.UserEmail))
+        if (user != null)
         {
             Console.WriteLine($"Login success – Responsible: {user.UserIdResponsible}");
             await localStorage.SetItemAsync("user", user);
@@ -32,6 +32,5 @@
         {
             message = "Forkert brugernavn eller adgangskode.";
         }
-        
     }
 }

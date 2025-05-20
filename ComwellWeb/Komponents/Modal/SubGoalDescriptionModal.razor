@@ -28,7 +28,8 @@
 
             <input type="text" @bind="_newCommentText" placeholder="Skriv kommentar..." />
             <button @onclick="SendComment">Send kommentar</button>
-            <button @onclick="SendDoneNotification">Jeg er færdig</button>
+            <button @onclick="SendDoneNotification" disabled="@_sending">Jeg er færdig</button>
+
         </div>
     </div>
 }
@@ -73,40 +74,50 @@
         return Task.CompletedTask;
     }
 
+    private bool _sending = false;
+
     private async Task SendDoneNotification()
     {
-        if (CurrentUser?.UserId == 0 || CurrentUser?.UserIdResponsible == null || Goal == null)
+        if (_sending) return;
+        _sending = true;
+
+        try
         {
-            return;
+            if (CurrentUser?.UserId == 0 || CurrentUser?.UserIdResponsible == null || Goal == null)
+                return;
+
+            int nextId = await NotificationService.GetMaxNotificationIdAsync();
+            var note = new Notification
+            {
+                Id = nextId + 1,
+                SubGoalId = Goal.SubGoalId,
+                SenderUserId = CurrentUser.UserId,
+                ReceiverUserId = CurrentUser.UserIdResponsible.Value,
+                Message = $"{CurrentUser.UserEmail} har markeret et delmål som færdigt.",
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            if (note.ReceiverUserId is not int receiverId)
+                return;
+
+            await NotificationService.SendNotificationAsync(note);
+            //var success = await UserNotificationService.NotifyUserAsync(receiverId, note);
+
+            if (true)
+            {
+                Console.WriteLine("Delmål markeret færdigt");
+            }
+            else
+            {
+                Console.WriteLine("Fejl");
+            }
         }
-
-        int nextId = await NotificationService.GetMaxNotificationIdAsync();
-        var note = new Notification
+        finally
         {
-            Id = nextId + 1,
-            SubGoalId = Goal.SubGoalId,
-            SenderUserId = CurrentUser.UserId,
-            ReceiverUserId = CurrentUser.UserIdResponsible.Value,
-            Message = $"{CurrentUser.UserEmail} har markeret et delmål som færdigt.",
-            CreatedAt = DateTime.UtcNow,
-            NotificationContent = "Delmål afsluttet. Du kan nu bekræfte." //gør det samme som message. Den var her bare før jeg begyndte, turde ikke slette den.
-        };
-
-        if (note.ReceiverUserId is not int receiverId)
-            return;
-
-        var success = await UserNotificationService.NotifyUserAsync(receiverId, note);
-        ;
-
-        if (success)
-        {
-            Console.WriteLine("Delmål markeret færdigt");
-        }
-        else
-        {
-            Console.WriteLine("Fejl");
+            _sending = false;
         }
     }
+    
 
 
     public class Comment

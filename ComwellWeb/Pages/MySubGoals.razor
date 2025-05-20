@@ -11,6 +11,7 @@
 }
 else
 {
+    <h1>Manglende Delmål</h1>
     <div class="kort-container">
         @foreach (var subgoal in MySubGoalsList)
         {
@@ -36,6 +37,7 @@ else
 }
 else
 {
+    <h1>Færdiggjorte Delmål</h1>
     <div class="kort-container">
         @foreach (var subgoal in _completedSubGoals)
         {
