@@ -4,19 +4,46 @@
 @using ComwellWeb.Komponents.Modal
 @inject ISubGoalService SubGoalService
 
-<h3>Studenterfremskridt</h3>
 @inject HttpClient Http
 @inject IUserService _userservice
 
-<h3>Elevliste</h3>
+<div class="filter-container">
+    <!-- Lokation / Hoteller -->
+    <select id="hotelFilter">
+        <option value="">Alle hoteller</option>
+        @foreach (var hotel in hotelList)
+        {
+            <option value="@hotel">@hotel</option>
+        }
+    </select>
 
-<!--Hvis der ikke kan findes elever : vis "indlæser"-->
-<div>
+    <!-- Praktikperiode (Start og slut) -->
+    <div id="datoknapper">
+        <div class="datoknap">
+        <label for="startDateFilter">Startdato</label>
+        <input type="date" id="startDateFilter"/>
+        </div>
+        <div class="datoknap">
+        <label for="endDateFilter">Slutdato</label>
+        <input type="date" id="endDateFilter"/>
+        </div>
+    </div>
+    <!-- Uddannelse -->
+    <select id="educationFilter">
+        <option value="">Alle uddannelser</option>
+        @foreach (var edu in educationList)
+        {
+            <option value="@edu">@edu</option>
+        }
+    </select>
+
+    <!-- Ture -->
     <select id="tripFilter">
         <option value="">Alle ture</option>
-        <option value="italy">Studietur til Italien</option>
-        <option value="michelin">Besøg på Michelin-restaurant</option>
-        <option value="madfestival">Madfestival i Aarhus</option>
+        @foreach (var Trip in TripList)
+        {
+            <option value="@Trip">@Trip</option>
+        }
     </select>
 </div>
 
@@ -25,7 +52,6 @@
     <p>Indlæser...</p>
 }
 else
-    //indlæs alle elever 
 {
     foreach (var student in _sortedStudents)
     {
@@ -44,17 +70,19 @@ else
 
 @code{
     User? _currentUser;
-
     List<User>? _allStudents;
-    // De elever man har efter sortering, det som bliver vist for HR
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
     int _currentShownStudent;
     bool ShowModal = false;
 
+    // Hotel-, tur- og uddannelses-lister til dropdowns
+    List<string> hotelList = new() { "Comwell Aarhus", "Comwell Kolding", "Comwell H.C. Andersen Odense" };
+    List<string> educationList = new() { "Kok", "Tjener", "Receptionist", "Cater" };
+    List<string> TripList = new() { "Italiten", "ÅrhusGåGade", "Juleturen" };
+
     protected override async Task OnInitializedAsync()
     {
-        //Todo sæt currentuser til nuværende bruger OG hent alle elever fra db
         _allStudents = await _userservice.GetAllStudentsAsync();
         _sortedStudents = _allStudents;
         _pctCompleted = new Dictionary<int, double>();
@@ -62,7 +90,6 @@ else
         {
             _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
         }
-        
     }
 
     private void ShowStudentPlan(int studentId)
@@ -75,5 +102,6 @@ else
     {
         ShowModal = false;
     }
+}
 
 }
