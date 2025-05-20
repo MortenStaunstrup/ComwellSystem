@@ -11,6 +11,7 @@ public class CommentServiceServer : ICommentService
 
     public CommentServiceServer(HttpClient client)
     {
+        
         _client = client;
     }
     
