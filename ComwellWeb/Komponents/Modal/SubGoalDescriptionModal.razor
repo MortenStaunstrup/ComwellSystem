@@ -10,7 +10,7 @@
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
             <h3>@Goal.SubGoalName</h3>
-            <p>@Goal.SubGoalDescription</p>
+            <p><strong>Beskrivelse: </strong>@Goal.SubGoalDescription</p>
             <p><strong>Kategori:</strong> @Goal.SubGoalCategory</p>
 
             @if (VejenDerTil)
@@ -19,14 +19,15 @@
             }
             else
             {
-                <div>
+                <p>Dine kommentar:</p>
+                <div id="comments-container">
                     @if (_comments != null)
                     {
                         @foreach (var comment in _comments)
                         {
-                            <div>
+                            <div class="comment">
                                 @comment.CommentContent
-                                @comment.CommentDate
+                                <strong>@comment.CommentDate.ToString("yyyy-MM-dd HH:mm")</strong>
                             </div>
                         }
                     }
@@ -34,12 +35,13 @@
                     {
                         <p>Indlæser kommentarer...</p>
                     }
-                    <p style="color: red">@errorMessage</p>
                 </div>
-
+                <p style="color: red">@errorMessage</p>
                 <InputText class="input" type="text" placeholder="Skriv din kommentar her.." @bind-Value="writtenComment"/>
-                <button @onclick="SendComment">Send kommentar</button>
-                <button @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
+                <div id="buttons">
+                    <button class="btn-primary" @onclick="SendComment">Send kommentar</button>
+                    <button class="btn-primary" @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
+                </div>
             }
         </div>
     </div>
@@ -115,7 +117,7 @@
     {
         if (string.IsNullOrWhiteSpace(writtenComment))
         {
-            errorMessage = "Comment must have value";
+            errorMessage = "Kan ikke sende blank kommentar";
             StateHasChanged();
             return;
         }
