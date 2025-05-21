@@ -125,6 +125,11 @@ public class UserRepository : IUserRepository
             throw;
         }
     }
+    public async Task UpdateUserAsync(User user)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
+        await _collection.ReplaceOneAsync(filter, user);
+    }
 
 
 }

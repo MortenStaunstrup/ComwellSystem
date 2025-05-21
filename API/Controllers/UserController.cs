@@ -1,5 +1,7 @@
 ﻿using Core;
 using Microsoft.AspNetCore.Mvc;
+using API.Repositories.Interface;
+using API.Repositories;
 
 
 
@@ -79,5 +81,14 @@ public class UsersController : ControllerBase
     public async Task<List<User>?> GetAllKitchenManagersAsync()
     {
         return await _repo.GetAllKitchenManagersAsync();
+    }
+    [HttpPut("update")]
+    public async Task<IActionResult> UpdateUser([FromBody] User updatedUser)
+    {
+        if (updatedUser == null)
+            return BadRequest("Bruger er null");
+
+        await _repo.UpdateUserAsync(updatedUser);
+        return Ok();
     }
 }
