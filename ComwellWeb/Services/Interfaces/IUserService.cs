@@ -20,4 +20,7 @@ public interface IUserService
     Task Logout();  // Log ud
     
     Task<User> GetUserLoggedInAsync();  // Hent den bruger, der er logget ind lige nu
+    
+    Task UpdateUser(User user);
+
 }

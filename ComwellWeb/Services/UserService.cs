@@ -9,7 +9,7 @@ namespace ComwellWeb.Services
     {
         private readonly HttpClient _httpClient;           // Bruges til at sende HTTP-requests til backend API
         private readonly ILocalStorageService _localStorage; // Bruges til at gemme data i browserens localStorage
-        private string BaseURL = "http://localhost:5116/api/users";  // Base URL til bruger-API
+        private string BaseURL = "http://localhost:5116/api/Users";  // Base URL til bruger-API
 
         public UserService(HttpClient httpClient, ILocalStorageService localStorage)
         {
