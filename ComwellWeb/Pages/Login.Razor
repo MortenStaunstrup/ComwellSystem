@@ -1,15 +1,18 @@
-﻿@page "/login"
+﻿@page "/"
+@page "/login"
 @using ComwellWeb.Services.Interfaces
 @inject IUserService userService
 @inject NavigationManager nav     
+<div class="login-container">
+    <div class="login-box">
+        <h2>Log ind</h2>
+        <input @bind="email" placeholder="Email" class="login-input" />
+        <input @bind="password" type="password" placeholder="Adgangskode" class="login-input" />
+        <p class="login-message">@message</p>
+        <button @onclick="TryLogin" class="login-button">Log ind</button>
+    </div>
+</div>
 
-<h3>Log ind</h3>
-
-<input @bind="email" placeholder="Email" />           <!-- Email input -->
-<input @bind="password" type="password" placeholder="Adgangskode" />  <!-- Password input -->
-<button @onclick="TryLogin">Log ind</button>          <!-- Knap til at starte login -->
-
-<p>@message</p>  <!-- Viser besked, fx fejl ved login -->
 
 @code {
     string email;
@@ -24,11 +27,12 @@
         if (user != null && !string.IsNullOrEmpty(user.UserEmail))
         {
             // Login gik godt = naviger til forsiden
-            nav.NavigateTo("/", forceLoad: true);
+            nav.NavigateTo("/MyProfile", forceLoad: true);
         }
         else
         {
             message = "Wrong Username or Password";  // Fejlbesked hvis login fejler
         }
     }
+    
 }

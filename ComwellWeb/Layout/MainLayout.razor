@@ -1,62 +1,77 @@
 ﻿@inherits LayoutComponentBase
 @using ComwellWeb.Komponents
 @using Core
-<div class="page">
-    <main>
-        <div class="top-row px-4 NavBarPlace">
-            @if (CurrentUser.Role == "HR")
-            {
-                <HRNavBar/> 
-            }
-            else if (CurrentUser.Role == "Student")
-            {
-                <StudentNavBar/>
-            }
-            else if (CurrentUser.Role == "KitchenManager")
-            {
-                <KitchenManagerNavBar/>
-            }
-            else
-            {
-                <StdNavBar/>
-            }
-        </div>
-        @if (CurrentUser != null)
-        {
-            <div class="Noti" @onclick="ToggleNotification">
-                <span class="notification-icon">🔔</span>
+@inject IUserService userService
+@inject NavigationManager nav
 
-                @if (ShowNotification)
+@if (!loaded)
+{
+    <p>Indlæser...</p>
+}
+else
+{
+    <div class="page">
+        <main>
+            <div class="top-row px-4 NavBarPlace">
+                @if (CurrentUser?.Role == "HR")
                 {
-                    <div class="notification-dropdown">
-                        <Notification />
-                    </div>
+                    <HRNavBar />
+                }
+                else if (CurrentUser?.Role == "Student")
+                {
+                    <StudentNavBar />
+                }
+                else if (CurrentUser?.Role == "KitchenManager")
+                {
+                    <KitchenManagerNavBar />
+                }
+                else
+                {
+                    <StdNavBar />
                 }
             </div>
-        }
-   
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+
+            @if (CurrentUser?.Role == "HR" || CurrentUser?.Role == "Student" || CurrentUser?.Role == "KitchenManager")
+            {
+                <div class="Noti" @onclick="ToggleNotification">
+                    <span class="notification-icon">🔔</span>
+
+                    @if (ShowNotification)
+                    {
+                        <div class="notification-dropdown">
+                            <Notification />
+                        </div>
+                    }
+                </div>
+            }
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+}
 
 @code {
     private bool ShowNotification = false;
+    private User? CurrentUser;
+    private bool loaded = false;
 
     private void ToggleNotification()
     {
         ShowNotification = !ShowNotification;
     }
-    [Parameter]
-    public User CurrentUser { get; set; }
-    
-    protected override void OnInitialized()
-    {
-        //CurrentUser = new User { Role = "" };
-        CurrentUser = new User { Role = "KitchenManager" };
-       // CurrentUser = new User { Role = "HR" };
-        //CurrentUser = new User { Role = "Student" };
-    }
 
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUser = await userService.GetUserLoggedInAsync();
+
+        // Navigér direkte til profil hvis bruger allerede er logget ind
+        if (CurrentUser != null && nav.Uri.EndsWith("/"))
+        {
+            nav.NavigateTo("/MyProfile", true); // forceLoad: true = ny start
+        }
+
+        loaded = true;
+    }
 }
