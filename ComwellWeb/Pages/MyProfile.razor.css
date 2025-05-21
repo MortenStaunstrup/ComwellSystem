@@ -15,8 +15,9 @@
     margin: auto;
     padding: 40px;
     border-radius: 4px;
-    box-shadow: rgb(107 107 107) 7px 8px 20px;
+    box-shadow: rgb(0 0 0) 7px 8px 20px;
     position: relative;
+    top: -45px;
 }
 
 #UserName {
