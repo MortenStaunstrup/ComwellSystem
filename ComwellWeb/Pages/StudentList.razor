@@ -3,70 +3,73 @@
 @using Core
 @using ComwellWeb.Komponents.Modal
 @inject ISubGoalService SubGoalService
-
 @inject HttpClient Http
 @inject IUserService _userservice
 
-<div class="filter-container">
-    <!-- Lokation / Hoteller -->
-    <select id="hotelFilter">
-        <option value="">Alle hoteller</option>
-        @foreach (var hotel in hotelList)
-        {
-            <option value="@hotel">@hotel</option>
-        }
-    </select>
+<div class="studentlist-wrapper">
 
-    <!-- Praktikperiode (Start og slut) -->
-    <div id="datoknapper">
-        <div class="datoknap">
-        <label for="startDateFilter">Startdato</label>
-        <input type="date" id="startDateFilter"/>
+    <!-- FILTER -->
+    <div class="filter-container">
+        <!-- Lokation / Hoteller -->
+        <select id="hotelFilter">
+            <option value="">Alle hoteller</option>
+            @foreach (var hotel in hotelList)
+            {
+                <option value="@hotel">@hotel</option>
+            }
+        </select>
+
+        <!-- Praktikperiode (Start og slut) -->
+        <div id="datoknapper">
+            <div class="datoknap">
+                <label for="startDateFilter">Startdato</label>
+                <input type="date" id="startDateFilter" />
+            </div>
+            <div class="datoknap">
+                <label for="endDateFilter">Slutdato</label>
+                <input type="date" id="endDateFilter" />
+            </div>
         </div>
-        <div class="datoknap">
-        <label for="endDateFilter">Slutdato</label>
-        <input type="date" id="endDateFilter"/>
-        </div>
+
+        <!-- Uddannelse -->
+        <select id="educationFilter">
+            <option value="">Alle uddannelser</option>
+            @foreach (var edu in educationList)
+            {
+                <option value="@edu">@edu</option>
+            }
+        </select>
+
+        <!-- Ture -->
+        <select id="tripFilter">
+            <option value="">Alle ture</option>
+            @foreach (var Trip in TripList)
+            {
+                <option value="@Trip">@Trip</option>
+            }
+        </select>
     </div>
-    <!-- Uddannelse -->
-    <select id="educationFilter">
-        <option value="">Alle uddannelser</option>
-        @foreach (var edu in educationList)
-        {
-            <option value="@edu">@edu</option>
-        }
-    </select>
 
-    <!-- Ture -->
-    <select id="tripFilter">
-        <option value="">Alle ture</option>
-        @foreach (var Trip in TripList)
-        {
-            <option value="@Trip">@Trip</option>
-        }
-    </select>
-</div>
-
-@if (_allStudents == null)
-{
-    <p>Indlæser...</p>
-}
-else
-{
-    foreach (var student in _sortedStudents)
+    <!-- STUDENT LIST -->
+    @if (_allStudents == null)
     {
-        <div class="student-card" @onclick="()=>ShowStudentPlan(student.UserId)">
-            <div class="student-info">
-                <span>@student.UserName</span>
-                <span>@student.StartDate</span>
-            </div>
-            <span>@_pctCompleted[student.UserId]%</span>
-            <div class="progress-container">
-                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
-            </div>
-        </div>
+        <p>Indlæser...</p>
     }
-}
+    else
+    {
+        foreach (var student in _sortedStudents)
+        {
+            <div class="student-row" @onclick="()=>ShowStudentPlan(student.UserId)">
+                <span class="student-name">@student.UserName</span>
+                <span>@student.StartDate</span>
+                <span>@_pctCompleted[student.UserId]%</span>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
+                </div>
+            </div>
+        }
+    }
+</div>
 
 @code{
     User? _currentUser;
@@ -76,7 +79,6 @@ else
     int _currentShownStudent;
     bool ShowModal = false;
 
-    // Hotel-, tur- og uddannelses-lister til dropdowns
     List<string> hotelList = new() { "Comwell Aarhus", "Comwell Kolding", "Comwell H.C. Andersen Odense" };
     List<string> educationList = new() { "Kok", "Tjener", "Receptionist", "Cater" };
     List<string> TripList = new() { "Italiten", "ÅrhusGåGade", "Juleturen" };
@@ -102,6 +104,4 @@ else
     {
         ShowModal = false;
     }
-}
-
 }
