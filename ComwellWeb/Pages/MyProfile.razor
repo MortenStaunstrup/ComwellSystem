@@ -1,55 +1,57 @@
 @page "/MyProfile"
 @using Microsoft.AspNetCore.Components.Forms
 @using Core
+@inject IUserService userService
+@inject NavigationManager nav
 
 
-<div id="baggrund">
-    <h1 id="UserName">@CurrentUser.UserName</h1>
-    <div id="altindhold">
-        <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
-        <InputFile OnChange="HandleSelected" accept="image/*"/>
+@if (CurrentUser == null)
+{
+    <p>Indlæser profil...</p>
+}
+else
+{
+    <div id="baggrund">
+        <h1 id="UserName">@CurrentUser.UserName</h1>
+        <div id="altindhold">
+            <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
+            <InputFile OnChange="HandleSelected" accept="image/*"/>
 
-        <div id="infobox">
-            <div class="infobox-indhold">
-                <input class="Infobox-Input" type="text" value="@CurrentUser.UserName">
+            <div id="infobox">
+                <div class="infobox-indhold">
+                    <input class="Infobox-Input" type="text" value="@CurrentUser.UserName">
+                </div>
+                <div class="infobox-indhold">
+                    <input class="Infobox-Input" type="text" value="@CurrentUser.UserEmail">
+                </div>
+                <div class="infobox-indhold">
+                    <input class="Infobox-Input" type="text" value="@CurrentUser.UserPhone">
+                </div>
             </div>
-            <div class="infobox-indhold">
-                <input class="Infobox-Input" type="text" value="@CurrentUser.UserEmail">
-            </div>
-            <div class="infobox-indhold">
-                <input class="Infobox-Input" type="text" value="@CurrentUser.UserPhone">
+            <div id="GemLogudBtn">
+                <button class="btn btn-primary">Logud</button>
+                <button class="btn btn-primary">Gem ændringer</button>
             </div>
         </div>
-        <button class="btn btn-primary">Gem ændringer</button>
     </div>
-</div>
-
+}
 @code {
-    [Parameter]
-    public User CurrentUser { get; set; }
-
+    private User? CurrentUser;
     private string profilePicture;
-
     private string defaultPicture = "/Pictures/NoProfilePicture.png";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        CurrentUser = new User
-        {
-            UserName = "Test",
-            Picture = null,
-            UserEmail = "test@outlook.dk",
-            UserPhone = "42323602"
-        };
+        CurrentUser = await userService.GetUserLoggedInAsync();
 
-        if (CurrentUser.Picture == null)
+        if (CurrentUser == null)
         {
-            profilePicture = defaultPicture;
+            // Redirect hvis ikke logget ind
+            nav.NavigateTo("/login");
+            return;
         }
-        else
-        {
-            profilePicture = CurrentUser.Picture;
-        }
+
+        profilePicture = CurrentUser.Picture ?? defaultPicture;
     }
 
     private async Task HandleSelected(InputFileChangeEventArgs e)
