@@ -66,10 +66,16 @@ else
     {
         CurrentUser = await userService.GetUserLoggedInAsync();
 
-        // Navigér direkte til profil hvis bruger allerede er logget ind
-        if (CurrentUser != null && nav.Uri.EndsWith("/"))
+        if (CurrentUser != null && nav.Uri == nav.BaseUri)
         {
-            nav.NavigateTo("/MyProfile", true); // forceLoad: true = ny start
+            if (CurrentUser.Role?.ToLower() == "student")
+            {
+                nav.NavigateTo("/StudentHome", true);
+            }
+            else
+            {
+                nav.NavigateTo("/MyProfile", true);
+            }
         }
 
         loaded = true;
