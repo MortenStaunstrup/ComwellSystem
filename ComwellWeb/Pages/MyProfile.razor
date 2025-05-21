@@ -90,7 +90,7 @@ private bool showSuccess = false;
                 StateHasChanged();
 
                 await userService.Logout();
-                nav.NavigateTo("login");
+                localStorage.SetItemAsync("user", CurrentUser);
     }
     
     private async Task Logout()
