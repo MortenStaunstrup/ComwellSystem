@@ -1,5 +1,6 @@
 @page "/StudentHome"
 @inject IUserService _userservice
+@inject NavigationManager Navigation
 @using Core
 
 <div class="dashboard-container">
@@ -27,10 +28,6 @@
                 <p class="assignment-description">Kort beskrivelse til opgaven</p>
             </div>
             <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 3</h4>
-                <p class="assignment-description">Kort beskrivelse til opgaven</p>
-            </div>
-            <div class="assignment-card">
                 <h4 class="assignment-title">Opgave 4</h4>
                 <p class="assignment-description">Kort beskrivelse til opgaven</p>
             </div>
@@ -43,11 +40,22 @@
 
     <div class="right-section">
         <h2>Quiz dig selv</h2>
-        <div class="quiz-box">
+        <div class="quiz-box clickable" @onclick="NavigateToQuiz">
             <p>Vi kunne lave en lille quiz/test her</p>
         </div>
     </div>
 </div>
+
+<style>
+    .clickable {
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .clickable:hover {
+        background-color: #f0f0f0;
+    }
+</style>
 
 @code {
     User? _currentUser;
@@ -55,5 +63,10 @@
     protected override async Task OnInitializedAsync()
     {
         _currentUser = await _userservice.GetUserLoggedInAsync();
+    }
+
+    private void NavigateToQuiz()
+    {
+        Navigation.NavigateTo("/quizmodal");
     }
 }
