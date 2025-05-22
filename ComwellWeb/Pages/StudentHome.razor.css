@@ -1,4 +1,4 @@
-/* === STANDARD styling – til skærme op til 1280px CSS bredde (f.eks. 200% skalering) === */
+/* === STANDARD styling – optimeret til 1280px === */
 
 @keyframes gradientShift {
     0% { background-position: 0% 50%; }
@@ -18,21 +18,21 @@
 
 .dashboard-container {
     display: flex;
-    gap: 14px;
-    max-width: 900px;
+    gap: 20px;
+    max-width: 1100px;
     margin: 10px auto;
-    height: calc(100vh - 120px);
+    height: auto;
     animation: fadeIn 0.6s ease-out;
-    max-height: 370px;
     overflow: hidden;
+    padding: 10px;
 }
 
 .left-section,
 .right-section {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(6px);
-    padding: 14px;
-    border-radius: 12px;
+    padding: 20px;
+    border-radius: 14px;
     box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
     transition: all 0.25s ease-in-out;
     font-family: 'Poppins', sans-serif;
@@ -53,14 +53,14 @@
 }
 
 h2 {
-    font-size: 17px;
+    font-size: 22px;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
     color: #2c3e50;
 }
 
 .progress-and-name h3 {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     margin-bottom: 6px;
     display: flex;
@@ -74,7 +74,7 @@ h2 {
 
 .progress-container {
     width: 100%;
-    height: 12px;
+    height: 14px;
     background-color: #e0e0e0;
     border-radius: 6px;
     overflow: hidden;
@@ -91,19 +91,19 @@ h2 {
 }
 
 .assignments-container {
-    max-height: 260px;
+    max-height: 280px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 10px;
     padding-right: 5px;
     scroll-behavior: smooth;
     overflow-x: hidden;
 }
 
 .assignment-card {
-    padding: 10px;
+    padding: 12px;
     background: white;
     border-left: 3px solid #ff6a00;
     border-radius: 8px;
@@ -113,19 +113,19 @@ h2 {
 }
 
 .assignment-card:hover {
-    transform: scale(1.07);
+    transform: scale(1.05);
     background: linear-gradient(to right, #fff8f0, #e0f4ff);
 }
 
 .assignment-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     margin: 0;
     color: #34495e;
 }
 
 .assignment-description {
-    font-size: 12px;
+    font-size: 13px;
     color: #555;
     margin-top: 3px;
 }
@@ -151,6 +151,7 @@ h2 {
     border-style: solid;
     transform: scale(1.015) rotate(-0.8deg);
 }
+
 .clickable {
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
@@ -160,13 +161,12 @@ h2 {
     background-color: #f0f0f0;
 }
 
-/* === MEDIA QUERY til større skærme (f.eks. 2560x1600 @ 150%) === */
-@media (min-width: 1280px) {
+/* === MEDIA QUERY – til 1440px og op === */
+@media (min-width: 1440px) {
     .dashboard-container {
         gap: 40px;
         max-width: 1400px;
-        height: auto;
-        max-height: none;
+        padding: 30px;
     }
 
     .left-section,
@@ -198,7 +198,7 @@ h2 {
     .progress-container {
         height: 24px;
         border-radius: 12px;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .progress-bar {
