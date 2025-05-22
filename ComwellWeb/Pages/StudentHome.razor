@@ -1,6 +1,8 @@
 @page "/StudentHome"
 @inject IUserService _userservice
 @inject NavigationManager Navigation
+@inject ISubGoalService SubGoalService
+@using ComwellWeb.Services.Interfaces
 @using Core
 
 <div class="dashboard-container">
@@ -9,32 +11,21 @@
         <div class="progress-and-name">
             <h3>Din Procces</h3>
             <div class="progress-container">
-                <div class="progress-bar" style="width: 60%;"></div>
+                <div class="progress-bar" style="width: @(_pctCompleted ?? 0)%;"></div>
             </div>
         </div>
 
         <h2>Kommende opgaver inden skolestart</h2>
         <div class="assignments-container">
-            <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 1</h4>
-                <p class="assignment-description">Kort beksrivelse til opgaven</p>
-            </div>
-            <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 2</h4>
-                <p class="assignment-description">Kort beskrivelse til opgaven</p>
-            </div>
-            <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 3</h4>
-                <p class="assignment-description">Kort beskrivelse til opgaven</p>
-            </div>
-            <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 4</h4>
-                <p class="assignment-description">Kort beskrivelse til opgaven</p>
-            </div>
-            <div class="assignment-card">
-                <h4 class="assignment-title">Opgave 5</h4>
-                <p class="assignment-description">Kort beskrivelse til opgaven</p>
-            </div>
+            @if(_unfinishedGoals != null)
+            @foreach (var goal in _unfinishedGoals)
+            {
+                <div class="assignment-card">
+                    <h4 class="assignment-title">@goal.SubGoalName</h4>
+                    <p class="assignment-description">@goal.SubGoalDescription</p>
+                    <p>@goal.SubGoalDueDate.ToString("dd-MM-yyyy") (@(goal.SubGoalDueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber) days left)</p>
+                </div>
+            }
         </div>
     </div>
 
@@ -48,10 +39,17 @@
 
 @code {
     User? _currentUser;
+    List<SubGoal>? _unfinishedGoals;
+    private double? _pctCompleted;
 
     protected override async Task OnInitializedAsync()
     {
         _currentUser = await _userservice.GetUserLoggedInAsync();
+        if (_currentUser != null)
+        {
+            _unfinishedGoals = await SubGoalService.GetNotCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
+            _pctCompleted = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(_currentUser.UserId));
+        }
     }
 
     private void NavigateToQuiz()
