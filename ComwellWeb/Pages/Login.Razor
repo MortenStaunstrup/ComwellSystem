@@ -3,27 +3,32 @@
 @using ComwellWeb.Services.Interfaces
 @inject IUserService userService
 @inject NavigationManager nav     
+<form @onsubmit="HandleSubmit">
 <div class="login-container">
     <div class="login-box">
         <h2>Log ind</h2>
         <input @bind="email" placeholder="Email" class="login-input" />
         <input @bind="password" type="password" placeholder="Adgangskode" class="login-input" />
         <p class="login-message">@message</p>
-        <button @onclick="TryLogin" class="login-button">Log ind</button>
+        <button @onclick="TryLogin"  class="login-button">Log ind</button>
     </div>
 </div>
-
+</form>
 
 @code {
     string email;
     string password;
     string message;
+    private async Task HandleSubmit()
+    {
+        await TryLogin();
+    }
 
     // Kører når brugeren klikker login
     private async Task TryLogin()
     {
         var user = await userService.Login(email, password);  // Prøv at logge ind via service
-
+ 
         if (user != null && !string.IsNullOrEmpty(user.UserEmail))
         {
             // Login gik godt = naviger til forsiden
