@@ -5,79 +5,107 @@
 @inject ISubGoalService SubGoalService
 @inject HttpClient Http
 @inject IUserService _userservice
+@inject NavigationManager nav
 
-<div class="studentlist-wrapper">
+@if (!loaded)
+{
+    <p>Indlæser...</p>
+}
+else
+{
+    <div class="studentlist-wrapper">
 
-    <!-- FILTER -->
-    <div class="filter-container">
-        <!-- Lokation / Hoteller -->
-        <select id="hotelFilter">
-            <option value="">Alle hoteller</option>
-            @foreach (var hotel in hotelList)
-            {
-                <option value="@hotel">@hotel</option>
-            }
-        </select>
+        <!-- FILTERSTART -->
+        <div class="filter-container">
+            <!-- Lokation / Hoteller -->
+            <select id="hotelFilter">
+                <option value="">Alle hoteller</option>
+                @foreach (var hotel in hotelList)
+                {
+                    <option value="@hotel">@hotel</option>
+                }
+            </select>
 
-        <!-- Praktikperiode (Start og slut) -->
-        <div id="datoknapper">
-            <div class="datoknap">
-                <label for="startDateFilter">Startdato</label>
-                <input type="date" id="startDateFilter" />
-            </div>
-            <div class="datoknap">
-                <label for="endDateFilter">Slutdato</label>
-                <input type="date" id="endDateFilter" />
-            </div>
-        </div>
-
-        <!-- Uddannelse -->
-        <select id="educationFilter">
-            <option value="">Alle uddannelser</option>
-            @foreach (var edu in educationList)
-            {
-                <option value="@edu">@edu</option>
-            }
-        </select>
-
-        <!-- Ture -->
-        <select id="tripFilter">
-            <option value="">Alle ture</option>
-            @foreach (var Trip in TripList)
-            {
-                <option value="@Trip">@Trip</option>
-            }
-        </select>
-    </div>
-
-    <!-- STUDENT LIST -->
-    @if (_allStudents == null)
-    {
-        <p>Indlæser...</p>
-    }
-    else
-    {
-        foreach (var student in _sortedStudents)
-        {
-            <div class="student-row" @onclick="()=>ShowStudentPlan(student.UserId)">
-                <span class="student-name">@student.UserName</span>
-                <span>@student.StartDate</span>
-                <span>@_pctCompleted[student.UserId]%</span>
-                <div class="progress-container">
-                    <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
+            <!-- Praktikperiode (Start og slut) -->
+            <div id="datoknapper">
+                <div class="datoknap">
+                    <label for="startDateFilter">Startdato</label>
+                    <input type="date" id="startDateFilter"/>
+                </div>
+                <div class="datoknap">
+                    <label for="endDateFilter">Slutdato</label>
+                    <input type="date" id="endDateFilter"/>
                 </div>
             </div>
+
+            <!-- Uddannelse -->
+            <select id="educationFilter">
+                <option value="">Alle uddannelser</option>
+                @foreach (var edu in educationList)
+                {
+                    <option value="@edu">@edu</option>
+                }
+            </select>
+
+            <!-- Ture -->
+            <select id="tripFilter">
+                <option value="">Alle ture</option>
+                @foreach (var Trip in TripList)
+                {
+                    <option value="@Trip">@Trip</option>
+                }
+            </select>
+            @if (CurrentUser?.Role == "KitchenManager")
+            {
+                <div id="EgneEleverContainer">
+                    @if (OwnStudentsBool == false)
+                    {
+                        <p class="EgneStuderendeFilter">Alle elever</p>
+                    }
+                    else
+                    {
+                        <p class="EgneStuderendeFilter">Egne elever</p>
+                    }
+                    <label class="switch">
+                        <input type="checkbox" @bind="OwnStudentsBool">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            }
+    
+        <!-- FILTERSLUT -->
+        <!-- STUDENT LIST -->
+        @if (_allStudents == null)
+        {
+            <p>Indlæser...</p>
         }
-    }
-</div>
+        else
+        {
+            foreach (var student in _sortedStudents)
+            {
+                <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
+                    <span class="student-name">@student.UserName</span>
+                    <span>@student.StartDate</span>
+                    <span>@_pctCompleted[student.UserId]%</span>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
+                    </div>
+                </div>
+            }
+        }
+            </div>
+    </div>
+}
 
 @code{
-    User? _currentUser;
+    User? CurrentUser; //Fjernet User? spørgsmålstegnet da man vel kun kan være på siden hvis man er logget ind
     List<User>? _allStudents;
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
     int _currentShownStudent;
     bool ShowModal = false;
+    private bool _OwnStudentsBool;
+    private bool loaded = false;
 
     List<string> hotelList = new() { "Comwell Aarhus", "Comwell Kolding", "Comwell H.C. Andersen Odense" };
     List<string> educationList = new() { "Kok", "Tjener", "Receptionist", "Cater" };
@@ -85,14 +113,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _allStudents = await _userservice.GetAllStudentsAsync();
+        CurrentUser = await _userservice.GetUserLoggedInAsync();
+        if (CurrentUser == null)
+        {
+            nav.NavigateTo("/login", true);
+            return;
+        }
+
+       // _allStudents = await _userservice.GetAllStudentsAsync(); //De her 5 kommenteret students linjer får Umut fejl ved, ved ikke hvorfor.
         _sortedStudents = _allStudents;
         _pctCompleted = new Dictionary<int, double>();
-        foreach (var student in _allStudents)
-        {
-            _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
-        }
+
+       // foreach (var student in _allStudents)
+        //{
+          //  _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
+        //} //Det hertil 
+
+        loaded = true;
     }
+
 
     private void ShowStudentPlan(int studentId)
     {
@@ -104,4 +143,15 @@
     {
         ShowModal = false;
     }
+    
+    private bool OwnStudentsBool
+    {
+        get => _OwnStudentsBool;
+        set
+        {
+            _OwnStudentsBool = value;
+            Console.WriteLine($"OwnStudentsBool er nu: {_OwnStudentsBool}");
+        }
+    }
+
 }
