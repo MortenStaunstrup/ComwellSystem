@@ -3,6 +3,8 @@
 @using ComwellWeb.Services.Interfaces
 @inject IUserService userService
 @inject NavigationManager nav     
+@using Core
+
 <form @onsubmit="HandleSubmit">
 <div class="login-container">
     <div class="login-box">
@@ -32,7 +34,14 @@
         if (user != null && !string.IsNullOrEmpty(user.UserEmail))
         {
             // Login gik godt = naviger til forsiden
-            nav.NavigateTo("/MyProfile", forceLoad: true);
+            if (user.Role == "Student")
+            {
+            nav.NavigateTo("/StudentHome", forceLoad: true);
+            }
+            else if (user.Role == "HR" || user.Role == "KitchenManager")
+            {
+                nav.NavigateTo("/studentlist", forceLoad: true);
+            }
         }
         else
         {
