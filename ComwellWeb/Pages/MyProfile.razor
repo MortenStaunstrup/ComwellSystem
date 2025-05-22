@@ -1,8 +1,10 @@
 @page "/MyProfile"
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Components.Forms
 @using Core
 @inject IUserService userService
 @inject NavigationManager nav
+@inject ILocalStorageService localStorage
 
 
 @if (CurrentUser == null)
@@ -77,10 +79,6 @@ private bool showSuccess = false;
     private async Task SaveChanges()
     {
             await userService.UpdateUser(CurrentUser);
-            var loggedInUser = await userService.Login(CurrentUser.UserEmail, CurrentUser.UserPassword);
-            if (loggedInUser != null)
-            {
-                CurrentUser = loggedInUser;
 
                 // Vis besked
                 showSuccess = true;
@@ -90,7 +88,9 @@ private bool showSuccess = false;
                 await Task.Delay(3000);
                 showSuccess = false;
                 StateHasChanged();
-            }
+
+                await userService.Logout();
+                localStorage.SetItemAsync("user", CurrentUser);
     }
     
     private async Task Logout()

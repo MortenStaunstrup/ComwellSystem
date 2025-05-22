@@ -71,6 +71,7 @@ namespace ComwellWeb.Services
         // Opdater bruger i API (uden returnering)
         public async Task UpdateUser(User user)
         {
+            user.UserPassword = "placeholder";
             await _httpClient.PutAsJsonAsync($"{BaseURL}/update", user);
         }
 

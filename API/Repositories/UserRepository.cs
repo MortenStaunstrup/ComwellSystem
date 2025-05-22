@@ -127,8 +127,12 @@ public class UserRepository : IUserRepository
     }
     public async Task UpdateUserAsync(User user)
     {
+        var dbUser = await GetUserByUserId(user.UserId);
+        dbUser.UserPhone = user.UserPhone;
+        dbUser.UserEmail = user.UserEmail;
+        dbUser.UserName = user.UserName;
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
-        await _collection.ReplaceOneAsync(filter, user);
+        await _collection.ReplaceOneAsync(filter, dbUser);
     }
 
 

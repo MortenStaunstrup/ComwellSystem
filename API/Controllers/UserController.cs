@@ -29,7 +29,9 @@ public class UsersController : ControllerBase
         {
             UserId = user.UserId,
             UserEmail = user.UserEmail,
-            Role = user.Role
+            Role = user.Role,
+            UserPhone = user.UserPhone,
+            UserName = user.UserName
         });
     }
 
@@ -82,9 +84,11 @@ public class UsersController : ControllerBase
     {
         return await _repo.GetAllKitchenManagersAsync();
     }
+    
     [HttpPut("update")]
     public async Task<IActionResult> UpdateUser([FromBody] User updatedUser)
     {
+        Console.WriteLine("Updating User :Controller");
         if (updatedUser == null)
             return BadRequest("Bruger er null");
 
