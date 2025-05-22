@@ -22,6 +22,12 @@ public class SubGoal
     [Required]
     public DateOnly SubGoalDueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
     
+    public int GoalCategoryId { get; set; }
+    
+    public bool IsCompleted => SubGoalStatus;
+    
+    
+    
 }
 
 
