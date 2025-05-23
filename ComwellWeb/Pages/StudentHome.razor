@@ -23,7 +23,6 @@
                 <div class="assignment-card">
                     <h4 class="assignment-title">@goal.SubGoalName</h4>
                     <p class="assignment-description">@goal.SubGoalDescription</p>
-                    <p>@goal.SubGoalDueDate.ToString("dd-MM-yyyy") (@(goal.SubGoalDueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber) days left)</p>
                 </div>
             }
         </div>

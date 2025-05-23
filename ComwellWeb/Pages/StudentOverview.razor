@@ -21,7 +21,6 @@
             @foreach (var subGoal in studentSubGoals)
             {
                 <tr>
-                    <td>@subGoal.SubGoalDueDate.ToString("dd/MM/yyyy")</td>
                     <td>@subGoal.SubGoalName</td>
                     <td>@subGoal.SubGoalType</td>
                     <td>@subGoal.SubGoalDescription</td>
@@ -48,7 +47,6 @@ else
     {
         student = await UserService.GetUserByUserId(UserId);
         studentSubGoals = student.StudentPlan;
-        studentSubGoals.Sort((x, y) => x.SubGoalDueDate.CompareTo(y.SubGoalDueDate));
     }
     
 }

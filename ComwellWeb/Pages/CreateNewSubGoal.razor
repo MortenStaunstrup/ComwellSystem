@@ -29,20 +29,6 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <InputDate @bind-Value="_model.SubGoalDueDate" class="form-control" placeholder="dd-mm-åååå" />
-                        </div>
-
-                        <div class="mb-3">
-                            <InputSelect @bind-Value="_model.SubGoalCategory" class="form-control">
-                                <option value="">Vælg kategori</option>
-                                @foreach (var category in _categories)
-                                {
-                                    <option value="@category">@category</option>
-                                }
-                            </InputSelect>
-                        </div>
-                        
-                        <div class="mb-3">
                             <InputSelect @bind-Value="_model.SubGoalType" @onchange="OnSubGoalTypeChange" class="form-control">
                                 <option value="">Vælg type</option>
                                 @foreach (var type in _types)

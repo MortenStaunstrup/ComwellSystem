@@ -11,9 +11,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 1,
             Comments = null,
-            SubGoalCategory = "Køkken kompetence",
             SubGoalDescription = "Du skal lære at snitte en fisk",
-            SubGoalDueDate = new DateOnly(2025, 05, 30),
             SubGoalName = "Filering af fisk",
             SubGoalStatus = false,
         },
@@ -21,9 +19,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 2,
             Comments = null,
-            SubGoalCategory = "Kursus",
             SubGoalDescription = "Learn to bake sourdough bread",
-            SubGoalDueDate = new DateOnly(2024, 12, 15),
             SubGoalName = "Sourdough Mastery",
             SubGoalStatus = false,
         },
@@ -31,9 +27,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 3,
             Comments = null,
-            SubGoalCategory = "Faglig mål",
             SubGoalDescription = "Master the art of sushi making",
-            SubGoalDueDate = new DateOnly(2024, 11, 20),
             SubGoalName = "Sushi Rolling",
             SubGoalStatus = true,
         },
@@ -41,9 +35,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 4,
             Comments = null,
-            SubGoalCategory = "Køkken kompetence",
             SubGoalDescription = "Learn to make croissants from scratch",
-            SubGoalDueDate = new DateOnly(2025, 01, 10),
             SubGoalName = "Croissant Perfection",
             SubGoalStatus = false,
         },
@@ -51,9 +43,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 5,
             Comments = null,
-            SubGoalCategory = "Kursus",
             SubGoalDescription = "Craft the perfect chocolate chip cookies",
-            SubGoalDueDate = new DateOnly(2024, 10, 05),
             SubGoalName = "Cookie Crafting",
             SubGoalStatus = true,
         },
@@ -61,9 +51,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 6,
             Comments = null,
-            SubGoalCategory = "Faglig mål",
             SubGoalDescription = "Make homemade pasta from scratch",
-            SubGoalDueDate = new DateOnly(2024, 09, 18),
             SubGoalName = "Pasta Creation",
             SubGoalStatus = false,
         },
@@ -71,9 +59,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 7,
             Comments = null,
-            SubGoalCategory = "Køkken kompetence",
             SubGoalDescription = "Experiment with plant-based cooking",
-            SubGoalDueDate = new DateOnly(2025, 03, 12),
             SubGoalName = "Vegan Ventures",
             SubGoalStatus = false,
         },
@@ -81,9 +67,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 8,
             Comments = null,
-            SubGoalCategory = "Kursus",
             SubGoalDescription = "Plan and execute a 3-course meal",
-            SubGoalDueDate = new DateOnly(2024, 08, 22),
             SubGoalName = "Three-Course Challenge",
             SubGoalStatus = true,
         },
@@ -91,9 +75,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 9,
             Comments = null,
-            SubGoalCategory = "Faglig mål",
             SubGoalDescription = "Learn to make kimchi",
-            SubGoalDueDate = new DateOnly(2025, 04, 05),
             SubGoalName = "Kimchi Craft",
             SubGoalStatus = false,
         },
@@ -101,9 +83,7 @@ public class SubGoalServiceClient : ISubGoalService
         {
             SubGoalId = 10,
             Comments = null,
-            SubGoalCategory = "Køkken kompetence",
             SubGoalDescription = "Pair wines with different dishes",
-            SubGoalDueDate = new DateOnly(2024, 07, 30),
             SubGoalName = "Wine Pairing",
             SubGoalStatus = false,
         }
