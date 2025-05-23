@@ -66,11 +66,44 @@ public class UserRepository : IUserRepository
     
     public async Task<User?> Login(string email, string password)
     {
-        var filterEmail = Builders<User>.Filter.Eq("UserEmail", email);
-        var filterPassword = Builders<User>.Filter.Eq("UserPassword", password);
-        var filterAnd = Builders<User>.Filter.And(filterEmail, filterPassword);
-        return await _collection.Find(filterAnd).FirstOrDefaultAsync();
+        try
+        {
+            Console.WriteLine($"Login attempt with email: {email}");
+
+            var emailFilter = Builders<User>.Filter.Regex("UserEmail", new BsonRegularExpression(email, "i"));
+            var usersWithEmail = await _collection.Find(emailFilter).ToListAsync();
+            Console.WriteLine($"Found {usersWithEmail.Count} users with matching email.");
+
+            foreach (var u in usersWithEmail)
+            {
+                Console.WriteLine($"User: {u.UserEmail}, Password: {u.UserPassword}, Role: {u.Role}");
+            }
+
+            var passwordFilter = Builders<User>.Filter.Eq("UserPassword", password);
+            var combinedFilter = Builders<User>.Filter.And(emailFilter, passwordFilter);
+
+            var user = await _collection.Find(combinedFilter).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                Console.WriteLine("Login failed: No user matched both email and password.");
+            }
+            else
+            {
+                Console.WriteLine($"Login success: UserId={user.UserId}, Role={user.Role}");
+            }
+
+            return user;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception during login: {ex.Message}");
+            return null;
+        }
     }
+
+
+
 
     public async Task<User> GetUserByLoginAsync(int userId)
     {
