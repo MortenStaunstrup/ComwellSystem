@@ -21,8 +21,22 @@ else
                         <ValidationSummary />
 
                         <div class="mb-3">
-                            <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="Titel.." />
+                            <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..." />
                         </div>
+                        @foreach (var middleGoal in _model.MiddleGoals)
+                        {
+                            <div>
+                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
+                            </div>
+                            @foreach (var miniGoal in middleGoal.MiniGoals)
+                            {
+                                <div>
+                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
+                                </div>
+                            }
+                            <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
+                        }
+                        <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
                         
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
@@ -89,6 +103,16 @@ else
         "Standard", "Extra"
     };
 
+    private void AddMiddleGoal()
+    {
+        _model.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
+    }
+
+    private void AddMiniGoal(MiddleGoal middleGoal)
+    {
+        middleGoal.MiniGoals.Add(new MiniGoal());
+    }
+    
     protected override async Task OnInitializedAsync()
     {
         _currentUser = new User()
@@ -112,7 +136,7 @@ else
             NavMan.NavigateTo("/");
         }
 
-        _model = new SubGoal();
+        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
         EditContext = new EditContext(_model);
         currentMaxId = await SubGoalService.MaxSubGoalId();
         _myStudents = new List<User>()
@@ -182,7 +206,7 @@ else
     
     private async void ResetModels()
     {
-        _model = new SubGoal();
+        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
         EditContext = new EditContext(_model);
         _addedStudents = new List<User>();
         StateHasChanged();
@@ -195,5 +219,6 @@ else
         _model.SubGoalType = e.Value.ToString();
         StateHasChanged();
     }
+
 
 }
