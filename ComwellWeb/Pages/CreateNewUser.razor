@@ -5,72 +5,81 @@
 @inject NavigationManager NavigationManager
 @inject IUserService _userService
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6 FormOverordnet">
-            <div class="card shadow p-4 mb-4">
-                <h3 class="text-center mb-4">Opret Bruger</h3>
-                <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
-                    <DataAnnotationsValidator/>
-                    <ValidationSummary/>
-                    @if (!string.IsNullOrEmpty(statusMessage))
-                    {
-                        <p class="mt-3 alert alert-info">@statusMessage</p>
-                    }
-                    
-                    <div class="mb-3">
-                        <label for="userName">Navn:</label>
-                        <InputText id="userName" class="form-control" @bind-Value="_model.UserName"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="email">Mail:</label>
-                        <InputText id="email" class="form-control" @bind-Value="_model.UserEmail"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="phone">Telefonnummer:</label>
-                        <InputText id="phone" class="form-control" @bind-Value="_model.UserPhone"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password">Adgangskode:</label>
-                        <InputText id="password" type="password" class="form-control" @bind-Value="_model.UserPassword"/>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="role">Rolle:</label>
-                        <InputSelect id="role" class="form-control" @bind-Value="_model.Role" @onchange="OnRoleChange">
-                            <option value="">-- Vælg rolle --</option>
-                            <option value="Student">Elev</option>
-                            <option value="KitchenManager">Køkkenleder</option>
-                            <option value="HR">HR</option>
-                        </InputSelect>
-                    </div>
-                    <div class="mb-3">
-                        @if (_kitchenManagers != null)
+@if (_currentUser == null)
+{
+    <p>Authenticating...</p>
+}
+else
+{
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 FormOverordnet">
+                <div class="card shadow p-4 mb-4">
+                    <h3 class="text-center mb-4">Opret Bruger</h3>
+                    <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
+                        <DataAnnotationsValidator/>
+                        <ValidationSummary/>
+                        @if (!string.IsNullOrEmpty(statusMessage))
                         {
-                            @if (_model.Role == "Student")
-                            {
-                                <KitchenManagerDropdown @ref="dropdown" _kitchenManagers="_kitchenManagers" _kitchenManager="assignedKitchenManager" KitchenManagerChanged="@(user => assignedKitchenManager = user)"></KitchenManagerDropdown>
-                            }
+                            <p class="mt-3 alert alert-info">@statusMessage</p>
                         }
-                    </div>
+                        
+                        <div class="mb-3">
+                            <label for="userName">Navn:</label>
+                            <InputText id="userName" class="form-control" @bind-Value="_model.UserName"/>
+                        </div>
 
-                    <div class="mb-3">
-                        <label>Start Dato:</label>
-                        <InputDate @bind-Value="@_model.StartDate"></InputDate>
-                    </div>
+                        <div class="mb-3">
+                            <label for="email">Mail:</label>
+                            <InputText id="email" class="form-control" @bind-Value="_model.UserEmail"/>
+                        </div>
 
-                    <button class="btn btn-primary" type="submit">Opret</button>
-                </EditForm>
-                
+                        <div class="mb-3">
+                            <label for="phone">Telefonnummer:</label>
+                            <InputText id="phone" class="form-control" @bind-Value="_model.UserPhone"/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password">Adgangskode:</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="_model.UserPassword"/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role">Rolle:</label>
+                            <InputSelect id="role" class="form-control" @bind-Value="_model.Role" @onchange="OnRoleChange">
+                                <option value="">-- Vælg rolle --</option>
+                                <option value="Student">Elev</option>
+                                <option value="KitchenManager">Køkkenleder</option>
+                                <option value="HR">HR</option>
+                            </InputSelect>
+                        </div>
+                        <div class="mb-3">
+                            @if (_kitchenManagers != null)
+                            {
+                                @if (_model.Role == "Student")
+                                {
+                                    <KitchenManagerDropdown @ref="dropdown" _kitchenManagers="_kitchenManagers" _kitchenManager="assignedKitchenManager" KitchenManagerChanged="@(user => assignedKitchenManager = user)"></KitchenManagerDropdown>
+                                }
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Start Dato:</label>
+                            <InputDate @bind-Value="@_model.StartDate"></InputDate>
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">Opret</button>
+                    </EditForm>
+                    
+                </div>
             </div>
         </div>
     </div>
-</div>
+}
+
 
 @code {
+    private User? _currentUser;
     private User _model;
     private EditContext EditContext;
     private DateTime? StartDate;
@@ -84,6 +93,9 @@
     {
         _model = new User();
         EditContext = new EditContext(_model);
+        _currentUser = await _userService.GetUserLoggedInAsync();
+        if(_currentUser == null || _currentUser.Role != "HR")
+            NavigationManager.NavigateTo("/login");
         int maxId = await _userService.GetMaxUserId();
         _model.UserId = maxId + 1;
         _kitchenManagers = await _userService.GetAllKitchenManagersAsync();

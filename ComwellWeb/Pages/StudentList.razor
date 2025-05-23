@@ -118,6 +118,9 @@ else
         {
             nav.NavigateTo("/login", true);
             return;
+        } else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
+        {
+            nav.NavigateTo("/login");
         }
 
        // _allStudents = await _userservice.GetAllStudentsAsync(); //De her 5 kommenteret students linjer får Umut fejl ved, ved ikke hvorfor.
