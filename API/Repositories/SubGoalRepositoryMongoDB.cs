@@ -19,7 +19,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
     public SubGoalRepositoryMongoDB()
     {
-        _connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+        _connectionString = "mongodb+srv://mortenstnielsen:hlEgCKJrN89edDQt@clusterfree.a2y2b.mongodb.net/";
         if (string.IsNullOrEmpty(_connectionString))
         {
             throw new InvalidOperationException("No connection string configured");
