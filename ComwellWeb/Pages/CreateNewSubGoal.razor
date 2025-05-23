@@ -23,20 +23,20 @@ else
                         <div class="mb-3">
                             <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..." />
                         </div>
-                        <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
                         @foreach (var middleGoal in _model.MiddleGoals)
                         {
                             <div>
                                 <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
                             </div>
-                            <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                             @foreach (var miniGoal in middleGoal.MiniGoals)
                             {
                                 <div>
                                     <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
                                 </div>
                             }
+                            <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                         }
+                        <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
                         
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
@@ -182,7 +182,7 @@ else
             if (_model.SubGoalType == "Standard")
             {
                 SubGoalService.CreateSubGoal(_model);
-                // Todo insert logik her til elever
+                SubGoalService.InsertSubgoalAll(_model);
             }
             else
             {
