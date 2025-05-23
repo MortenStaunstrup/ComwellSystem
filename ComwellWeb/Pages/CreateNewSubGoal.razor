@@ -4,6 +4,7 @@
 @using ComwellWeb.Komponents
 @inject NavigationManager NavMan
 @inject ISubGoalService SubGoalService
+@inject IUserService UserService
 
 @if (_currentUser == null)
 {
@@ -82,7 +83,7 @@ else
 }
 
 @code {
-    User _currentUser;
+    User? _currentUser;
     List<User>? _myStudents;
     List<User> _addedStudents = new List<User>();
     
@@ -103,6 +104,22 @@ else
         "Standard", "Extra"
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = await UserService.GetUserLoggedInAsync();
+        
+        //Todo måske HR også skal kunne komme ind???
+        if (_currentUser.Role != "KitchenManager")
+        {
+            NavMan.NavigateTo("/");
+        }
+
+        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
+        EditContext = new EditContext(_model);
+        currentMaxId = await SubGoalService.MaxSubGoalId();
+        if (_currentUser != null)
+            _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId);
+    }
     private void AddMiddleGoal()
     {
         _model.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
@@ -113,66 +130,6 @@ else
         middleGoal.MiniGoals.Add(new MiniGoal());
     }
     
-    protected override async Task OnInitializedAsync()
-    {
-        _currentUser = new User()
-        {
-            UserId = 23,
-            UserName = "Kenneth Hansen",
-            UserEmail = "KH@Comwell.dk",
-            UserPassword = "mitpass",
-            UserPhone = "22177992",
-            Role = "KitchenManager",
-            Messages = null,
-            //Notifications = null,
-            Picture = null,
-            StudentPlan = null,
-            UserIdResponsible = null,
-            StartDate = null
-        };
-
-        if (_currentUser.Role != "KitchenManager")
-        {
-            NavMan.NavigateTo("/");
-        }
-
-        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
-        EditContext = new EditContext(_model);
-        currentMaxId = await SubGoalService.MaxSubGoalId();
-        _myStudents = new List<User>()
-        {
-            new User()
-            {
-                UserId = 1,
-                UserName = "tis",
-                UserEmail = "MF@Comwell.dk",
-                UserPassword = "hejhej",
-                UserPhone = "238240289",
-                Role = "Student",
-                Messages = null,
-                //Notifications = null,
-                Picture = null,
-                StudentPlan = null,
-                UserIdResponsible = 23,
-                StartDate = new DateOnly(2022, 6, 16)
-            },
-            new User()
-            {
-                UserId = 2,
-                UserName = "lars",
-                UserEmail = "Egg@Comwell.dk",
-                UserPassword = "bilsd",
-                UserPhone = "95283984",
-                Role = "Student",
-                Messages = null,
-                //Notifications = null,
-                Picture = null,
-                StudentPlan = null,
-                UserIdResponsible = 23,
-                StartDate = new DateOnly(2022, 6, 16)
-            }
-        };
-    }
 
     private async void HandleSubmit()
     {

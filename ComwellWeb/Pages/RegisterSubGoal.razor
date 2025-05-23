@@ -3,9 +3,17 @@
 @using Core;
 @page "/RegisterSubGoal"
 @inject ISubGoalService SubGoalService
+@inject IUserService UserService
 
+@if (_currentUser == null)
+{
+    <p>Authenticating...</p>
+} else if (_currentUser.Role != "Student")
+{
+    <p>Kun elever kan ansøge om ekstra delmål</p>
+}
 
-    @if (_offeredSubGoals == null)
+@if (_offeredSubGoals == null)
     {
         <p>Ingen extra delmål eksisterer, eller du har dem allerede</p>
     }
@@ -30,26 +38,22 @@
 @code {
 // Offered subgoals bliver alle extra opgaver som andre elever har fået. Hvis en elev synes det er interessant kan han byde ind på den også
 // Hvis han allerede har den, fremgår den ikke
-    private List<SubGoal> _offeredSubGoals;
+    private List<SubGoal>? _offeredSubGoals;
     private Dictionary<int, int> ownGoalsDict = new Dictionary<int, int>();
     
 private SubGoal? SelectedSubGoal;
 private bool ShowModal = false;
 public bool VejenDerTil = true;
-private User _currentUser;
+private User? _currentUser;
 
 protected override async Task OnInitializedAsync()
 {
-    //Todo tilføj initialisering af bruger (elev)
-    _currentUser = new User()
-    {
-        UserId = 1,
-        UserName = "Martin",
-        UserIdResponsible = 23,
-        UserEmail = "afsdf@aga.com",
-        Role = "Student"
-    };
+    _currentUser = await UserService.GetUserLoggedInAsync();
     _offeredSubGoals = await SubGoalService.GetOfferedSubGoalsAsync();
+    
+    // Alle eleves egne 'Extra' delmål bliver hentet og sat i dictionary
+    // Hvis eleven allerede har et 'Extra' delmål, fremgår den ikke i de 'Extra' delmål som eleven kan ansøge om
+    // Todo Kunne måske bruge hashset istedet for dictionary??
     var _ownOfferedSubGoals = await SubGoalService.GetOfferedSubGoalsByStudentIdAsync(_currentUser.UserId);
     if (_ownOfferedSubGoals != null)
     {

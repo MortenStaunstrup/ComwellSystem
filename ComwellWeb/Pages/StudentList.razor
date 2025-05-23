@@ -124,6 +124,9 @@ else
         {
             nav.NavigateTo("/login", true);
             return;
+        } else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
+        {
+            nav.NavigateTo("/login");
         }
 
         _allStudents = await _userservice.GetAllStudentsAsync();
