@@ -6,28 +6,21 @@ namespace Core;
 
 public class SubGoal
 {
-    [Required]
-    [BsonElement("_id")]
-    public int SubGoalId { get; set; }
+    [Required] [BsonElement("_id")] public int SubGoalId { get; set; }
     public Comment[]? Comments { get; set; } = new Comment[0];
+
     [Required(ErrorMessage = "En opgave skal have et navn")]
     public string SubGoalName { get; set; }
+
     public string? SubGoalDescription { get; set; }
-    [Required(ErrorMessage = "En opgave skal have en kategori")]
-    public string SubGoalCategory { get; set; }
+    
     [Required(ErrorMessage = "En opgave skal have en type")]
     public string SubGoalType { get; set; }
-    [Required]
-    public bool SubGoalStatus { get; set; }
-    [Required]
-    public DateOnly SubGoalDueDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+    [Required] public bool SubGoalStatus { get; set; }
     
-    public int GoalCategoryId { get; set; }
-    
-    public bool IsCompleted => SubGoalStatus;
-    
-    
-    
+    public List<MiddleGoal> MiddleGoals { get; set; }
+
 }
 
 

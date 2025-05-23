@@ -62,38 +62,8 @@ public class UserRepository : IUserRepository
 
     public async void InsertAllStandardSubGoalsInStudent(User user)
     {
-        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
-        var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
-
-        var userFilter = Builders<User>.Filter.Eq(x => x.UserId, user.UserId);
-            
-        var userYear = user.StartDate.HasValue ? user.StartDate.Value.Year : 0;
-        var earliestSubGoalYear = await GetEarliestYearForStandardSubGoals();
-        foreach (var subGoal in standardSubGoals)
-        {
-            // Calculate how many years have passed since the earliest standard subgoal year
-            var yearsPassedSinceEarliestSubGoal = subGoal.SubGoalDueDate.Year - earliestSubGoalYear;
-
-            // Set the new due date year based on the user's start year and how many years passed since the earliest
-            var newDueDateYear = userYear + yearsPassedSinceEarliestSubGoal;
-
-            // Update the subgoal's due date
-            subGoal.SubGoalDueDate = new DateOnly(newDueDateYear, subGoal.SubGoalDueDate.Month, subGoal.SubGoalDueDate.Day);
-
-            // Update user's student plan
-            var userUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
-            await _collection.UpdateOneAsync(userFilter, userUpdate);
-        }
     }
-
-    public async Task<int> GetEarliestYearForStandardSubGoals()
-    {
-        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalType, "Standard");
-        var sort = Builders<SubGoal>.Sort.Ascending(x => x.SubGoalDueDate);
-        var result = await _subGoalCollection.Find(filter).Sort(sort).Limit(1).FirstOrDefaultAsync();
-        return result.SubGoalDueDate.Year;
-    }
-
+    
     public async Task<User?> Login(string email, string password)
     {
         var filterEmail = Builders<User>.Filter.Eq("UserEmail", email);

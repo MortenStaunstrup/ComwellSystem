@@ -15,13 +15,8 @@ else
         {
             <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
                 
-                <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
                 <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
                 <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
-
-                <p class="delmål-dato">
-                    Deadline: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy") (@(subgoal.SubGoalDueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber) days left)
-                </p>
             </div>
         }
     </div>
@@ -40,13 +35,8 @@ else
         {
             <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
                 
-                <div class="delmål-type">Type: @subgoal.SubGoalCategory</div>
                 <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
                 <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
-
-                <p class="delmål-dato">
-                    Deadline: @subgoal.SubGoalDueDate.ToString("dd-MM-yyyy") (@(subgoal.SubGoalDueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber) days left)
-                </p>
             </div>
         }
     </div>

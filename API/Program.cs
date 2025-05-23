@@ -10,6 +10,10 @@ builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ICommentRepository, CommentRepositoryMongoDB>();
 
+
+// Add services to the container.
+
+builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("policy",
@@ -20,10 +24,6 @@ builder.Services.AddCors(options =>
             policy.AllowAnyMethod();
         });
 });
-
-// Add services to the container.
-
-builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -37,9 +37,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
 app.UseCors("policy");
+
+app.UseAuthorization();
 
 app.MapControllers();
 

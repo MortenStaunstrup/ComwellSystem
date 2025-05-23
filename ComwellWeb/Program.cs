@@ -23,4 +23,5 @@ builder.Services.AddSingleton<ICommentService, CommentServiceServer>();
 
 
 
+
 await builder.Build().RunAsync();

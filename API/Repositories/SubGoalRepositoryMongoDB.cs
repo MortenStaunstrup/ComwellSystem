@@ -49,8 +49,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         var subgoals = user.StudentPlan
             .Where(subgoal => subgoal.SubGoalStatus == false)
             .ToList();
-
-        subgoals.Sort((x, y) => x.SubGoalDueDate.CompareTo(y.SubGoalDueDate));
+        
         
         Console.WriteLine($"Returning unfinished subgoals for student {studentId}");
         return subgoals;
@@ -74,8 +73,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         var subgoals = user.StudentPlan
             .Where(subgoal => subgoal.SubGoalStatus == true)
             .ToList();
-
-        subgoals.Sort((x, y) => x.SubGoalDueDate.CompareTo(y.SubGoalDueDate));
         
         Console.WriteLine($"Returning finished subgoals for student {studentId}");
         return subgoals;
