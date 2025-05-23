@@ -6,6 +6,7 @@
 @inject HttpClient Http
 @inject IUserService _userservice
 @inject NavigationManager nav
+@inject IUserService _userService
 
 @if (!loaded)
 {
@@ -26,7 +27,7 @@ else
                 }
             </select>
 
-            <!-- Praktikperiode (Start og slut) -->
+            <!-- Praktikperiode -->
             <div id="datoknapper">
                 <div class="datoknap">
                     <label for="startDateFilter">Startdato</label>
@@ -55,6 +56,7 @@ else
                     <option value="@Trip">@Trip</option>
                 }
             </select>
+
             @if (CurrentUser?.Role == "KitchenManager")
             {
                 <div id="EgneEleverContainer">
@@ -72,33 +74,37 @@ else
                     </label>
                 </div>
             }
-    
+        </div>
         <!-- FILTERSLUT -->
+
         <!-- STUDENT LIST -->
-        @if (_allStudents == null)
-        {
-            <p>Indlæser...</p>
-        }
-        else
-        {
-            foreach (var student in _sortedStudents)
+        <div class="student-list-container">
+            @if (_allStudents == null)
             {
-                <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
-                    <span class="student-name">@student.UserName</span>
-                    <span>@student.StartDate</span>
-                    <span>@_pctCompleted[student.UserId]%</span>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
-                    </div>
-                </div>
+                <p>Indlæser...</p>
             }
-        }
-            </div>
+            else
+            {
+                @foreach (var student in _sortedStudents)
+                {
+                    <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
+                        <span class="student-name">@student.UserName</span>
+                        <span>@student.StartDate</span>
+                        <span>@_pctCompleted[student.UserId]%</span>
+                        <div class="progress-container @( _pctCompleted[student.UserId] == 100 ? "full" : "" )">
+                            <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
+                        </div>
+                    </div>
+                }
+
+            }
+        </div>
+
     </div>
 }
 
-@code{
-    User? CurrentUser; //Fjernet User? spørgsmålstegnet da man vel kun kan være på siden hvis man er logget ind
+@code {
+    User? CurrentUser;
     List<User>? _allStudents;
     List<User>? _sortedStudents;
     Dictionary<int, double>? _pctCompleted;
@@ -120,18 +126,17 @@ else
             return;
         }
 
-       // _allStudents = await _userservice.GetAllStudentsAsync(); //De her 5 kommenteret students linjer får Umut fejl ved, ved ikke hvorfor.
+        _allStudents = await _userservice.GetAllStudentsAsync();
         _sortedStudents = _allStudents;
         _pctCompleted = new Dictionary<int, double>();
 
-       // foreach (var student in _allStudents)
-        //{
-          //  _pctCompleted[student.UserId] = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
-        //} //Det hertil 
+        foreach (var student in _allStudents)
+        {
+            _pctCompleted[student.UserId] = Math.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
+        }
 
         loaded = true;
     }
-
 
     private void ShowStudentPlan(int studentId)
     {
@@ -143,7 +148,7 @@ else
     {
         ShowModal = false;
     }
-    
+
     private bool OwnStudentsBool
     {
         get => _OwnStudentsBool;
@@ -153,5 +158,4 @@ else
             Console.WriteLine($"OwnStudentsBool er nu: {_OwnStudentsBool}");
         }
     }
-
 }
