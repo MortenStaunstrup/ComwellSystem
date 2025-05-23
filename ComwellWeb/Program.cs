@@ -14,7 +14,7 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddSingleton(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+    BaseAddress = new Uri("http://localhost:5116/api/")
 });
 
 builder.Services.AddSingleton<ISubGoalService, SubGoalServiceServer>();

@@ -22,18 +22,3 @@ public class SubGoal
     public List<MiddleGoal> MiddleGoals { get; set; }
 
 }
-
-
-// Egen validering, for at sikre at duedate ikke bliver sat før dags dato
-public class Deadline : ValidationAttribute
-{
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
-    {
-        if (value != null && value is DateOnly deadline)
-        {
-            if(deadline >= DateOnly.FromDateTime(DateTime.Now))
-                return ValidationResult.Success;
-        }
-        return new ValidationResult("Deadline kan ikke være før i dag");
-    }
-}

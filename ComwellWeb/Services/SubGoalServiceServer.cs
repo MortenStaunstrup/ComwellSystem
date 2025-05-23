@@ -18,7 +18,7 @@ public class SubGoalServiceServer : ISubGoalService
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         Console.WriteLine($"Getting student {studentId} unfinished subgoals: service");
-        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/get/{studentId}");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"subgoals/get/{studentId}");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Subgoals either null or empty list, returning null: service");
@@ -31,7 +31,7 @@ public class SubGoalServiceServer : ISubGoalService
     public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         Console.WriteLine($"Getting student {studentId} finished subgoals: service");
-        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/getcompleted/{studentId}");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"subgoals/getcompleted/{studentId}");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Subgoals either null or empty list, returning null: service");
@@ -44,7 +44,7 @@ public class SubGoalServiceServer : ISubGoalService
     public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
     {
         Console.WriteLine($"Getting student {studentId} offered subgoals: service");
-        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/getstudentextras/{studentId}");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"subgoals/getstudentextras/{studentId}");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Subgoals either null or empty list, returning null: service");
@@ -56,7 +56,7 @@ public class SubGoalServiceServer : ISubGoalService
 
     public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
     {
-        var result = await _client.GetFromJsonAsync<double>($"{BaseURL}/getpct/{studentId}");
+        var result = await _client.GetFromJsonAsync<double>($"subgoals/getpct/{studentId}");
         return result;
     }
     
@@ -64,7 +64,7 @@ public class SubGoalServiceServer : ISubGoalService
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         Console.WriteLine("Getting offered subgoals: service");
-        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"{BaseURL}/getofferedsubgoals");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>($"subgoals/getofferedsubgoals");
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("Offered subgoals either null or empty list, returning null: service");
@@ -77,19 +77,19 @@ public class SubGoalServiceServer : ISubGoalService
     public async void CreateSubGoal(SubGoal subGoal)
     {
         Console.WriteLine("Creating subgoal: service");
-        await _client.PostAsJsonAsync($"{BaseURL}/create", subGoal);
+        await _client.PostAsJsonAsync($"subgoals/create", subGoal);
     }
 
     public async Task<int> MaxSubGoalId()
     {
         Console.WriteLine("Getting max subgoalsId: service");
-        return await _client.GetFromJsonAsync<int>($"{BaseURL}/getmaxid");
+        return await _client.GetFromJsonAsync<int>($"subgoals/getmaxid");
     }
 
     public async void InsertSubgoalAll(SubGoal subgoal)
     {
         Console.WriteLine("Inserting subgoal ALL: service");
-        await _client.PostAsJsonAsync($"{BaseURL}/insertall", subgoal);
+        await _client.PostAsJsonAsync($"subgoals/insertall", subgoal);
     }
 
     public async void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds)
@@ -100,7 +100,7 @@ public class SubGoalServiceServer : ISubGoalService
             SubGoal = subgoal
         };
         Console.WriteLine("Inserting subgoal SPECIFIC: service");
-        await _client.PostAsJsonAsync($"{BaseURL}/insertspecific", request);
+        await _client.PostAsJsonAsync($"subgoals/insertspecific", request);
     }
     
 
