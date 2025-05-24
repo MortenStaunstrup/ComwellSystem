@@ -1,0 +1,130 @@
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject ISubGoalService SubGoalService
+@inject NavigationManager NavMan
+@if (_Goal == null || Visible == false)
+{
+    
+}
+else
+{
+    <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
+        <div class="modal-content" @onclick:stopPropagation>
+            <button class="close-button" @onclick="Close">X</button>
+            <h3 class="text-center mb-4">Rediger Delmål</h3>
+            <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <InputText @bind-Value="_Goal.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..." />
+                </div>
+                @foreach (var middleGoal in _Goal.MiddleGoals)
+                {
+                    <div>
+                        <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
+                        <button type="button" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
+                    </div>
+                    @foreach (var miniGoal in middleGoal.MiniGoals)
+                    {
+                        <div class="nameButtonMiniCombo">
+                            <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
+                            <button type="button" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
+                        </div>
+                    }
+                    <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
+                }
+                <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
+                            
+                <div class="mb-3">
+                    <p>@_Goal.SubGoalType</p>
+                </div>
+                            
+                <div class="mb-3">
+                    <InputTextArea @bind-Value="_Goal.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">Accepter Ændringer</button>
+                </div>
+                <p style="color: red">Elever der har dette delmål og har gennemført ét eller flere punkter får deres fremskridt på delmålet slettet!</p>
+            </EditForm>
+            <p style="color: red">@_errorMessage</p>
+        </div>
+    </div>
+}
+
+
+@code {
+    
+    [Parameter] public User? _currentUser { get; set; }
+    [Parameter] public SubGoal? _Goal { get; set; }
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback OnCloseRequested { get; set; }
+    EditContext EditContext;
+    string _errorMessage;
+    
+    private Task Close() => OnCloseRequested.InvokeAsync();
+    private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        EditContext = new EditContext(_Goal);
+    }
+
+    private void HandleSubmit()
+    {
+        if (EditContext.Validate())
+        {
+            // Logik til at tjekke om alle subgoals har noget text
+            if (_Goal.MiddleGoals != null)
+            {
+                foreach (var middleGoal in _Goal.MiddleGoals)
+                {
+                    if (string.IsNullOrWhiteSpace(middleGoal.Name))
+                    {
+                        _errorMessage = "Ét eller flere mellemdelmål har ikke noget navn";
+                        StateHasChanged();
+                        return;
+                    }
+                    foreach (var minigoal in middleGoal.MiniGoals)
+                    {
+                        if (string.IsNullOrWhiteSpace(minigoal.Name))
+                        {
+                            _errorMessage = "Ét eller flere minidelmål har ikke noget navn";
+                            StateHasChanged();
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            SubGoalService.UpdateSubGoalDetails(_Goal);
+            Thread.Sleep(1500);
+            NavMan.NavigateTo("/editsubgoals", true);
+        }
+    }
+
+    private void AddMiddleGoal()
+    {
+        _Goal.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
+        StateHasChanged();
+    }
+
+    private void AddMiniGoal(MiddleGoal middleGoal)
+    {
+        middleGoal.MiniGoals.Add(new MiniGoal());
+        StateHasChanged();
+    }
+    
+    private void DeleteMiddleGoal(MiddleGoal middleGoal)
+    {
+        _Goal.MiddleGoals.Remove(middleGoal);
+    }
+
+    private void DeleteMiniGoal(MiddleGoal middleGoal, MiniGoal miniGoal)
+    {
+        _Goal.MiddleGoals.Find(x => x.Name == middleGoal.Name).MiniGoals.Remove(miniGoal);
+    }
+    
+}

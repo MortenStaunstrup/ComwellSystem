@@ -1,0 +1,83 @@
+@page "/EditSubGoals"
+@using System.Runtime.Serialization
+@using ComwellWeb.Services.Interfaces
+@using Core
+@using ComwellWeb.Komponents.Modal
+@inject ISubGoalService SubGoalService
+@inject IUserService UserService
+@inject NavigationManager NavMan
+
+<h1>Alle Delmål</h1>
+
+@if (_currentUser == null)
+{
+    <p>Authenticating...</p>
+} else if (_allSubGoals == null)
+{
+    <p>Getting all subgoals</p>
+}
+else
+{
+    foreach (var goal in _allSubGoals)
+    {
+        <div>
+            @goal.SubGoalId
+            @goal.SubGoalName
+            @goal.SubGoalType
+        </div>
+        if(goal.MiddleGoals != null)
+            foreach (var middleGoal in goal.MiddleGoals)
+            {
+                <div>
+                    @middleGoal.Name
+                </div>
+                if(middleGoal.MiniGoals != null)
+                    foreach (var miniGoal in middleGoal.MiniGoals)
+                    {
+                        <div>
+                            @miniGoal.Name
+                        </div>
+                    }
+            }
+        
+        <button @onclick="() => EditSubGoal(goal)">Rediger</button>
+        <button @onclick="() => DeleteSubGoal(goal)">Slet (Slettes for alle, kan ikke fortrydes)</button>
+    }
+    @if (goalToEdit != null)
+    {
+        <SubGoalEditModal @ref="_modal" _currentUser="_currentUser" _Goal="goalToEdit" Visible="ShowModal" OnCloseRequested="CloseModal"></SubGoalEditModal>
+    }
+}
+@code {
+    
+    User? _currentUser;
+    List<SubGoal>? _allSubGoals;
+    SubGoalEditModal? _modal { get; set; }
+    SubGoal? goalToEdit;
+    bool ShowModal = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = await UserService.GetUserLoggedInAsync();
+        if(_currentUser == null || (_currentUser.Role != "HR" && _currentUser.Role != "KitchenManager"))
+            NavMan.NavigateTo("/login");
+        _allSubGoals = await SubGoalService.GetAllSubGoals();
+    }
+
+    private void EditSubGoal(SubGoal goal)
+    {
+        goalToEdit = goal;
+        ShowModal = true;
+    }
+
+    private void DeleteSubGoal(SubGoal goal)
+    {
+        SubGoalService.DeleteSubGoalBySubGoalId(goal.SubGoalId);
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+    }
+
+}

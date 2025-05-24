@@ -28,11 +28,13 @@ else
                         {
                             <div>
                                 <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
+                                <button type="button" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
                             </div>
                             @foreach (var miniGoal in middleGoal.MiniGoals)
                             {
-                                <div>
+                                <div class="nameButtonMiniCombo">
                                     <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
+                                    <button type="button" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
                                 </div>
                             }
                             <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
@@ -120,22 +122,48 @@ else
         if (_currentUser != null)
             _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId);
     }
+    
     private void AddMiddleGoal()
     {
         _model.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
+        StateHasChanged();
     }
 
     private void AddMiniGoal(MiddleGoal middleGoal)
     {
         middleGoal.MiniGoals.Add(new MiniGoal());
+        StateHasChanged();
     }
     
-
-    private async void HandleSubmit()
+    private void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
         if (EditContext.Validate())
         {
+            // Logik til at tjekke om alle subgoals har noget text
+            if (_model.MiddleGoals != null)
+            {
+                foreach (var middleGoal in _model.MiddleGoals)
+                {
+                    if (string.IsNullOrWhiteSpace(middleGoal.Name))
+                    {
+                        _errorMessage = "Ét eller flere mellemdelmål har ikke noget navn";
+                        StateHasChanged();
+                        return;
+                    }
+                    foreach (var minigoal in middleGoal.MiniGoals)
+                    {
+                        if (string.IsNullOrWhiteSpace(minigoal.Name))
+                        {
+                            _errorMessage = "Ét eller flere minidelmål har ikke noget navn";
+                            StateHasChanged();
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // Hvis type == Standard Så sæt subgoal ind i alle elever
             if (_model.SubGoalType == "Standard")
             {
                 SubGoalService.CreateSubGoal(_model);
@@ -149,6 +177,7 @@ else
                     StateHasChanged();
                     return;
                 }
+                // Alle elever som er blevet tilføjet, loop over og find deres id
                 var studentIds = new List<int>();
                 foreach (var student in _addedStudents)
                 {
@@ -171,11 +200,22 @@ else
         currentMaxId = await SubGoalService.MaxSubGoalId();
     }
 
+    
     private void OnSubGoalTypeChange(ChangeEventArgs e)
     {
         _model.SubGoalType = e.Value.ToString();
         StateHasChanged();
     }
 
+
+    private void DeleteMiddleGoal(MiddleGoal middleGoal)
+    {
+        _model.MiddleGoals.Remove(middleGoal);
+    }
+
+    private void DeleteMiniGoal(MiddleGoal middleGoal, MiniGoal miniGoal)
+    {
+        _model.MiddleGoals.Find(x => x.Name == middleGoal.Name).MiniGoals.Remove(miniGoal);
+    }
 
 }

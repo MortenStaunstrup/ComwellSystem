@@ -19,6 +19,6 @@ public class SubGoal
 
     [Required] public bool SubGoalStatus { get; set; }
     
-    public List<MiddleGoal> MiddleGoals { get; set; }
+    public List<MiddleGoal>? MiddleGoals { get; set; }
 
 }

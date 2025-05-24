@@ -71,3 +71,8 @@ h3 {
     position: relative;
     top: -40px;
 }
+
+/* Til inputfelt og sletknap for middle og mini goals */
+.nameButtonMiniCombo{
+    margin-left: 35px;
+}
