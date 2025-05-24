@@ -6,9 +6,7 @@
 @inject ISubGoalService SubGoalService
 @inject IUserService UserService
 @inject NavigationManager NavMan
-
 <h1>Alle Delmål</h1>
-
 @if (_currentUser == null)
 {
     <p>Authenticating...</p>
@@ -20,28 +18,34 @@ else
 {
     foreach (var goal in _allSubGoals)
     {
-        <div>
-            @goal.SubGoalId
-            @goal.SubGoalName
-            @goal.SubGoalType
-        </div>
-        if(goal.MiddleGoals != null)
-            foreach (var middleGoal in goal.MiddleGoals)
+        <div class="subgoalcontainer">
+            <div class="basic">
+                id: @goal.SubGoalId
+                Navn: @goal.SubGoalName
+                Type: @goal.SubGoalType
+            </div>
+            @if (goal.MiddleGoals != null)
             {
-                <div>
-                    @middleGoal.Name
-                </div>
-                if(middleGoal.MiniGoals != null)
-                    foreach (var miniGoal in middleGoal.MiniGoals)
+                <div class="middleGoal">
+                    @foreach (var middleGoal in goal.MiddleGoals)
                     {
-                        <div>
-                            @miniGoal.Name
-                        </div>
+                        @middleGoal.Name
+                        if (middleGoal.MiniGoals != null)
+                        {
+                            <div class="miniGoal">
+                                @foreach (var miniGoal in middleGoal.MiniGoals)
+                                {
+                                    @miniGoal.Name
+                                }
+                            </div>
+                        }
                     }
+                </div>
             }
-        
-        <button @onclick="() => EditSubGoal(goal)">Rediger</button>
-        <button @onclick="() => DeleteSubGoal(goal)">Slet (Slettes for alle, kan ikke fortrydes)</button>
+
+            <button @onclick="() => EditSubGoal(goal)">Rediger</button>
+            <button @onclick="() => DeleteSubGoal(goal)">Slet (Slettes for alle, kan ikke fortrydes)</button>
+        </div>
     }
     @if (goalToEdit != null)
     {
