@@ -9,7 +9,7 @@
 
 <h3>Dine notifikationer</h3>
 
-@if (_notifications == null)
+@if (_notifications == null) //Der kommer faktisk fejl hvis der ikke er notifikationer. Det skal fikses
 {
     <p>Indlæser...</p>
 }
@@ -29,7 +29,7 @@ else
             }
             else
             {
-                <span>✅ Bekræftet</span>
+                <span>Bekræftet</span>
             }
         </div>
     }
@@ -37,21 +37,21 @@ else
 
 @code {
     private List<Notification>? _notifications;
-    private int userId;
+    private int currentUserId; //lederen
 
     protected override async Task OnInitializedAsync()
     {
-        var user = await LocalStorage.GetItemAsync<User>("user");
+        var user = await LocalStorage.GetItemAsync<User>("user"); //lederens Id
 
         if (user == null || user.UserId == 0)
         {
-            Console.WriteLine("DEBUG: Bruger ikke fundet eller userId er 0");
+            Console.WriteLine("Bruger ikke fundet eller userId er 0");
             return;
         }
 
-        userId = user.UserId;
+        currentUserId = user.UserId;
 
-        _notifications = await NotificationService.GetNotificationsByUserIdAsync(userId);
+        _notifications = await NotificationService.GetNotificationsByUserIdAsync(currentUserId);
     }
 
     private async Task ConfirmNotificationAsync(Notification notification)
@@ -59,16 +59,26 @@ else
         if (notification == null)
             return;
 
-        // 1. Opdater MiniGoal-status i databasen
-        await UserService.ConfirmMiniGoalAsync(userId, notification.MiniGoalName);
+        if (notification.UserId == null || notification.UserId == 0) //Elevens Id
+        {
+            Console.WriteLine( "Notifikationens UserId mangler");
+            return;
+        }
 
-        // 2. (Valgfrit) Fjern notifikationen fra listen via backend
-        await NotificationService.ConfirmNotifiedSubGoalAsync(userId, notification.NotificationId);
-
-        // 3. Lokalt opdater UI
+        if (string.IsNullOrWhiteSpace(notification.MiniGoalName))
+        {
+            Console.WriteLine("MiniGoalName mangler");
+            return;
+        }
+        
+        await NotificationService.ConfirmNotifiedSubGoalAsync(
+            notification.UserId.Value, //Elevens Id
+            notification.NotificationId, 
+            notification.MiniGoalName
+        );
+        
         notification.IsConfirmed = true;
-
-        // 4. (Valgfrit) StateHasChanged hvis nødvendigt
         StateHasChanged();
     }
+
 }
