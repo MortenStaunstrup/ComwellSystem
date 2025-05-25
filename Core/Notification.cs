@@ -4,7 +4,6 @@ public class Notification
 {
     public int NotificationId { get; set; } // PK
     public int? UserId { get; set; } // FK
-    
     public int? SenderId { get; set; } // FK
     public string MiniGoalName { get; set; } // FK
     
@@ -12,6 +11,7 @@ public class Notification
     
     public DateTime TimeStamp { get; set; }
     
+    public bool IsConfirmed { get; set; }
 }
 
 public class LastestNoti

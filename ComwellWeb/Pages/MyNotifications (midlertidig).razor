@@ -1,0 +1,74 @@
+﻿@page "/noti"
+
+@using Blazored.LocalStorage
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject INotificationService NotificationService
+@inject IUserService UserService
+@inject ILocalStorageService LocalStorage
+
+<h3>Dine notifikationer</h3>
+
+@if (_notifications == null)
+{
+    <p>Indlæser...</p>
+}
+else if (!_notifications.Any())
+{
+    <p>Ingen notifikationer.</p>
+}
+else
+{
+    @foreach (var notification in _notifications)
+    {
+        <div class="notification">
+            <p>@notification.NotificationContent</p>
+            @if (!notification.IsConfirmed)
+            {
+                <button @onclick="() => ConfirmNotificationAsync(notification)">Bekræft</button>
+            }
+            else
+            {
+                <span>✅ Bekræftet</span>
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<Notification>? _notifications;
+    private int userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await LocalStorage.GetItemAsync<User>("user");
+
+        if (user == null || user.UserId == 0)
+        {
+            Console.WriteLine("DEBUG: Bruger ikke fundet eller userId er 0");
+            return;
+        }
+
+        userId = user.UserId;
+
+        _notifications = await NotificationService.GetNotificationsByUserIdAsync(userId);
+    }
+
+    private async Task ConfirmNotificationAsync(Notification notification)
+    {
+        if (notification == null)
+            return;
+
+        // 1. Opdater MiniGoal-status i databasen
+        await UserService.ConfirmMiniGoalAsync(userId, notification.MiniGoalName);
+
+        // 2. (Valgfrit) Fjern notifikationen fra listen via backend
+        await NotificationService.ConfirmNotifiedSubGoalAsync(userId, notification.NotificationId);
+
+        // 3. Lokalt opdater UI
+        notification.IsConfirmed = true;
+
+        // 4. (Valgfrit) StateHasChanged hvis nødvendigt
+        StateHasChanged();
+    }
+}

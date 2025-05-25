@@ -13,7 +13,7 @@ public interface INotificationRepository
     
     
     // Subgoals
-    Task ConfirmNotifiedSubgoalAsync(int notificationId);
+    Task ConfirmMiniGoalAsync(int? userId, string miniGoalName);
     
     
     // Id

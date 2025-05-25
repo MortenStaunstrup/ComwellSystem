@@ -1,5 +1,6 @@
 ﻿using API.Repositories.Interface;
 using Core;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace API.Repositories
@@ -64,23 +65,24 @@ namespace API.Repositories
         }
         
         // Subgoals
-        public async Task ConfirmNotifiedSubgoalAsync(int notificationId)
+        public async Task ConfirmMiniGoalAsync(int? userId, string miniGoalName)
         {
-            var filter = Builders<User>.Filter.ElemMatch(u => u.Notifications, n => n.NotificationId == notificationId);
-            var user = await _userCollection.Find(filter).FirstOrDefaultAsync();
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
 
-            if (user == null)
-                throw new Exception("Notification not found");
+            var update = Builders<User>.Update.Set("StudentPlan.$[].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true);
 
-            var notification = user.Notifications.First(n => n.NotificationId == notificationId);
+            var arrayFilters = new List<ArrayFilterDefinition>
+            {
+                new JsonArrayFilterDefinition<BsonDocument>("{ 'mini.Name': '" + miniGoalName + "' }"),
+                new JsonArrayFilterDefinition<BsonDocument>("{ 'middle.MiniGoals': { $elemMatch: { Name: '" + miniGoalName + "' } } }")
+            };
 
-            // Opdater minigoal i user via IUserRepository (du skal tilføje metoden der)
-            await _userRepository.ConfirmMiniGoalAsync(notification.UserId, notification.MiniGoalName);
+            var options = new UpdateOptions { ArrayFilters = arrayFilters };
 
-            // Fjern notifikationen fra embedded listen
-            var update = Builders<User>.Update.PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
-            await _userCollection.UpdateOneAsync(u => u.UserId == notification.UserId, update);
+            await _userRepository.ConfirmMiniGoalAsync(userId, miniGoalName);
+
         }
+
         
         // Id
         public async Task<int> GetMaxNotificationIdAsync()

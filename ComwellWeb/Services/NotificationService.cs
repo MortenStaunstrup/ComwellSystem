@@ -37,12 +37,12 @@ public class NotificationService : INotificationService
 
 
     // Subgoals
-    // Ændret metode med userId parameter
     public async Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId)
     {
         var response = await _httpClient.PostAsync($"{BaseURL}/confirm/{userId}/{notificationId}", null);
         response.EnsureSuccessStatusCode();
     }
+
 
     
     // Id

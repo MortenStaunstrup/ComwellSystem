@@ -59,7 +59,6 @@ namespace API.Controllers
             return Ok(notifications);
         }
 
-        // Bekræfter mini goal ud fra notificationId (embedded notifications i user)
         [HttpPost("confirm/{userId}/{notificationId}")]
         public async Task<IActionResult> ConfirmSubGoalNotificationAsync(int userId, int notificationId)
         {
@@ -71,17 +70,16 @@ namespace API.Controllers
             if (notification == null)
                 return NotFound("Notification not found");
 
-            // Antager notification indeholder MiniGoalName - eller send det med payload
-            string miniGoalName = notification.NotificationContent; // eller tilpas
-
+            string miniGoalName = notification.MiniGoalName;
+            
             await _userRepository.ConfirmMiniGoalAsync(userId, miniGoalName);
-
-            // Fjern bekræftet notifikation (valgfrit)
+            
             user.Notifications.Remove(notification);
             await _userRepository.UpdateUserAsync(user);
 
             return Ok("Notification confirmed and mini goal updated");
         }
+
         [HttpGet("maxid")]
         public async Task<ActionResult<int>> GetMaxNotificationIdAsync()
         {
