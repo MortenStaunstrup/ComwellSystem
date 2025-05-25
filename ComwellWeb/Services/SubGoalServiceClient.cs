@@ -140,7 +140,7 @@ public class SubGoalServiceClient : ISubGoalService
         Console.WriteLine("Completing subgoal in services");
     }
 
-    public void DeleteSubGoalBySubGoalId(int studentId, int subGoalId)
+    public void DeleteSubGoalBySubGoalId(int subGoalId)
     {
         subGoals.RemoveAll(x => x.SubGoalId == subGoalId);
         Console.WriteLine("Deleting subgoal in services");
@@ -158,6 +158,11 @@ public class SubGoalServiceClient : ISubGoalService
     }
 
     public Task<int> MaxSubGoalId()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<SubGoal>?> GetAllSubGoals()
     {
         throw new NotImplementedException();
     }

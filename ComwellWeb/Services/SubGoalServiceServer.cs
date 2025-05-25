@@ -8,11 +8,17 @@ namespace ComwellWeb.Services;
 public class SubGoalServiceServer : ISubGoalService
 {
     private HttpClient _client;
-    private readonly string BaseURL = "http://localhost:5116/api/subgoals";
 
     public SubGoalServiceServer(HttpClient client)
     {
         _client = client;
+    }
+
+    public async Task<List<SubGoal>?> GetAllSubGoals()
+    {
+        Console.WriteLine("Getting all subgoals: service");
+        var result = await _client.GetFromJsonAsync<List<SubGoal>?>("subgoals");
+        return result;
     }
     
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
@@ -106,24 +112,22 @@ public class SubGoalServiceServer : ISubGoalService
 
     public void UpdateSubGoalDetails(SubGoal subGoal)
     {
-        
+        Console.WriteLine("Updating subgoal: service");
+        _client.PutAsJsonAsync("subgoals/update", subGoal);
     }
 
     public async void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {
         Console.WriteLine($"Completing subgoal {subGoalId} for student {studentId}");
-        await _client.PostAsJsonAsync($"{BaseURL}/complete/{studentId}/{subGoalId}", true);
+        await _client.PostAsJsonAsync($"subgoals/complete/{studentId}/{subGoalId}", true);
     }
 
-    public void DeleteSubGoalBySubGoalId(int studentId, int subGoalId)
+    public void DeleteSubGoalBySubGoalId(int subGoalId)
     {
-        
+        Console.WriteLine($"Deleting subgoal {subGoalId}: service"); 
+        _client.DeleteAsync($"subgoals/delete/{subGoalId}");
     }
-
-    public void DeleteTemplateByTemplateId(int templateId)
-    {
-        
-    }
+    
 }
 
 public class SubGoalRequest

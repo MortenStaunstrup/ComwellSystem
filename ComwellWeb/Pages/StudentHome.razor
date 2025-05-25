@@ -5,36 +5,47 @@
 @using ComwellWeb.Services.Interfaces
 @using Core
 
-<div class="dashboard-container">
-    <div class="left-section">
-        <h2>Velkommen, @_currentUser?.UserName</h2> 
-        <div class="progress-and-name">
-            <h3>Din Procces</h3>
-            <div class="progress-container">
-                <div class="progress-bar" style="width: @(_pctCompleted ?? 0)%;"></div>
+@if (_currentUser == null)
+{
+    <p>Authenticating...</p>
+} else if (_currentUser.Role != "Student")
+{
+    <p>Kun elever har en StudentHome</p>
+}
+else
+{
+    <div class="dashboard-container">
+        <div class="left-section">
+            <h2>Velkommen, @_currentUser?.UserName</h2> 
+            <div class="progress-and-name">
+                <h3>Din Procces</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: @(_pctCompleted ?? 0)%;"></div>
+                </div>
+            </div>
+
+            <h2>Kommende opgaver inden skolestart</h2>
+            <div class="assignments-container">
+                @if(_unfinishedGoals != null)
+                @foreach (var goal in _unfinishedGoals)
+                {
+                    <div class="assignment-card">
+                        <h4 class="assignment-title">@goal.SubGoalName</h4>
+                        <p class="assignment-description">@goal.SubGoalDescription</p>
+                    </div>
+                }
             </div>
         </div>
 
-        <h2>Kommende opgaver inden skolestart</h2>
-        <div class="assignments-container">
-            @if(_unfinishedGoals != null)
-            @foreach (var goal in _unfinishedGoals)
-            {
-                <div class="assignment-card">
-                    <h4 class="assignment-title">@goal.SubGoalName</h4>
-                    <p class="assignment-description">@goal.SubGoalDescription</p>
-                </div>
-            }
+        <div class="right-section">
+            <h2>Quiz dig selv</h2>
+            <div class="quiz-box clickable" @onclick="NavigateToQuiz">
+                <p>Vi kunne lave en lille quiz/test her</p>
+            </div>
         </div>
     </div>
+}
 
-    <div class="right-section">
-        <h2>Quiz dig selv</h2>
-        <div class="quiz-box clickable" @onclick="NavigateToQuiz">
-            <p>Vi kunne lave en lille quiz/test her</p>
-        </div>
-    </div>
-</div>
 
 @code {
     User? _currentUser;

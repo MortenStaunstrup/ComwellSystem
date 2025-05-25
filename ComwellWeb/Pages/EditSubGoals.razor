@@ -1,0 +1,137 @@
+@page "/EditSubGoals"
+@using System.Runtime.Serialization
+@using ComwellWeb.Services.Interfaces
+@using Core
+@using ComwellWeb.Komponents.Modal
+@inject ISubGoalService SubGoalService
+@inject IUserService UserService
+@inject NavigationManager NavMan
+<h1>Alle Delmål</h1>
+@if (_currentUser == null)
+{
+    <p>Authenticating...</p>
+} else if (_allSubGoals == null)
+{
+    <p>Getting all subgoals</p>
+}
+else
+{
+    @if (status)
+    {
+        <div class="alert alert-primary" role="alert">
+            Sletning success <button @onclick="CloseSuccess">Close</button>
+        </div>
+    }
+    if (statusFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Sletning fejlede <button @onclick="CloseError">Close</button>
+        </div>
+    }
+    foreach (var goal in _allSubGoals)
+    {
+        <div class="subgoalcontainer">
+            <div class="basic">
+                id: @goal.SubGoalId
+                Navn: @goal.SubGoalName
+                Type: @goal.SubGoalType
+            </div>
+            @if (goal.MiddleGoals != null)
+            {
+                <div class="middleGoal">
+                    @foreach (var middleGoal in goal.MiddleGoals)
+                    {
+                        @middleGoal.Name
+                        if (middleGoal.MiniGoals != null)
+                        {
+                            <div class="miniGoal">
+                                @foreach (var miniGoal in middleGoal.MiniGoals)
+                                {
+                                    @miniGoal.Name
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+
+            <button @onclick="() => EditSubGoal(goal)">Rediger</button>
+            <button @onclick="() => DeleteSubGoal(goal)">Slet (Slettes for alle, kan ikke fortrydes)</button>
+        </div>
+    }
+    @if (goalToEdit != null)
+    {
+        <SubGoalEditModal @ref="_modal" _currentUser="_currentUser" _Goal="goalToEdit" Visible="ShowModal" OnCloseRequested="CloseModal"></SubGoalEditModal>
+    }
+}
+@code {
+    
+    User? _currentUser;
+    List<SubGoal>? _allSubGoals;
+    SubGoalEditModal? _modal { get; set; }
+    SubGoal? goalToEdit;
+    bool ShowModal = false;
+    bool status = false;
+    bool statusFailed = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = await UserService.GetUserLoggedInAsync();
+        if(_currentUser == null || _currentUser.Role != "HR")
+            NavMan.NavigateTo("/login");
+        _allSubGoals = await SubGoalService.GetAllSubGoals();
+    }
+
+    private void EditSubGoal(SubGoal goal)
+    {
+        goalToEdit = goal;
+        ShowModal = true;
+    }
+
+    private void DeleteSubGoal(SubGoal goal)
+    {
+        try
+        {
+            SubGoalService.DeleteSubGoalBySubGoalId(goal.SubGoalId);
+            _allSubGoals.Remove(goal);
+            ShowSuccessMessage();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            ShowErrorMessage();
+            throw;
+        }
+        StateHasChanged();
+    }
+
+    private void ShowErrorMessage()
+    {
+        statusFailed = true;
+        StateHasChanged();
+    }
+
+    private void CloseError()
+    {
+        statusFailed = false;
+        StateHasChanged();
+    }
+
+    private void ShowSuccessMessage()
+    {
+        status = true;
+        StateHasChanged();
+    }
+
+    private void CloseSuccess()
+    {
+        status = false;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+    }
+
+}

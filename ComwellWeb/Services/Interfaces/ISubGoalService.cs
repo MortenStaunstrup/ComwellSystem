@@ -4,6 +4,7 @@ namespace ComwellWeb.Services.Interfaces;
 
 public interface ISubGoalService
 {
+    Task<List<SubGoal>?> GetAllSubGoals();
     Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId); // Find listen af alle elevens ikke færdiggjorte subgoals, også kaldes 'Student Plan'
     Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId);
     Task<List<SubGoal>?> GetOfferedSubGoalsAsync();
@@ -21,5 +22,5 @@ public interface ISubGoalService
     void CompleteSubGoalBySubGoalId(int studentId, int subGoalId); // Kryds subgoal af som værende done
     
     
-    void DeleteSubGoalBySubGoalId(int studentId, int subGoalId); // Slet subgoal for elev
+    void DeleteSubGoalBySubGoalId(int subGoalId); // Slet subgoal for elev
 }
