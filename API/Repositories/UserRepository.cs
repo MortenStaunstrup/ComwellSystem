@@ -163,26 +163,4 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
-    
-    public async Task ConfirmMiniGoalAsync(int? userId, string miniGoalName)
-    {
-        var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
-
-        var update = Builders<User>.Update.Set(
-            "StudentPlan.$[].MiddleGoals.$[].MiniGoals.$[mini].Status", true);
-
-        var arrayFilters = new List<ArrayFilterDefinition>
-        {
-            new JsonArrayFilterDefinition<BsonDocument>(
-                $"{{ 'mini.Name': '{miniGoalName}' }}")
-        };
-
-        var options = new UpdateOptions { ArrayFilters = arrayFilters };
-
-        await _collection.UpdateOneAsync(filter, update, options);
-    }
-
-
-
-
 }

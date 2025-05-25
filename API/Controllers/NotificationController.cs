@@ -1,6 +1,8 @@
 ﻿using API.Repositories.Interface;
 using Core;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace API.Controllers
 {
@@ -59,23 +61,28 @@ namespace API.Controllers
             return Ok(notifications);
         }
 
-        [HttpPost("confirm/{userId}/{notificationId}")]
-        public async Task<IActionResult> ConfirmSubGoalNotificationAsync(int userId, int notificationId)
+        [HttpPost("confirm/{userId}/{notificationId}/{miniGoalName}")]
+        public async Task<IActionResult> ConfirmSubGoalNotificationAsync(int userId, int notificationId, string miniGoalName)
         {
-            var user = await _userRepository.GetUserByUserId(userId);
-            if (user == null)
-                return NotFound("User not found");
+            var leader = await _userRepository.GetUserByUserId(userId); // stadig lederen
+            if (leader == null) return NotFound("Leader not found");
 
-            var notification = user.Notifications.FirstOrDefault(n => n.NotificationId == notificationId);
+            var notification = leader.Notifications
+                .FirstOrDefault(n => n.NotificationId == notificationId && n.MiniGoalName == miniGoalName);
+
             if (notification == null)
-                return NotFound("Notification not found");
+                return NotFound("Notification not found or mismatched MiniGoalName");
 
-            string miniGoalName = notification.MiniGoalName;
+            var studentId = notification.SenderId ?? 0;
+            if (studentId == 0)
+                return BadRequest("Missing sender/student ID");
             
-            await _userRepository.ConfirmMiniGoalAsync(userId, miniGoalName);
-            
-            user.Notifications.Remove(notification);
-            await _userRepository.UpdateUserAsync(user);
+            var updateResult = await _notificationRepository.UpdateMiniGoalAndRemoveNotificationAsync(
+                studentId, miniGoalName, notificationId);
+
+
+            if (updateResult.ModifiedCount == 0)
+                return BadRequest("MiniGoal not found or notification could not be removed");
 
             return Ok("Notification confirmed and mini goal updated");
         }

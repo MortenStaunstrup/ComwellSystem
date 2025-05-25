@@ -103,18 +103,5 @@ namespace ComwellWeb.Services
         {
             return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/kitchenmanagers");
         }
-        public async Task ConfirmMiniGoalAsync(int userId, string miniGoalName)
-        {
-            var content = new
-            {
-                UserId = userId,
-                MiniGoalName = miniGoalName
-            };
-
-            var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/confirm-mini-goal", content);
-
-            response.EnsureSuccessStatusCode();
-        }
-
     }
 }

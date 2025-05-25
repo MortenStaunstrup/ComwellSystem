@@ -1,4 +1,5 @@
 ﻿using Core;
+using MongoDB.Driver;
 
 // Interface til repository, som snakker med databasen
 public interface IUserRepository
@@ -19,6 +20,4 @@ public interface IUserRepository
     Task<int> GetMaxUserId();  // Hent den højeste bruger-id i databasen
  
     Task UpdateUserAsync(User user);
-    
-    Task ConfirmMiniGoalAsync(int? userId, string miniGoalName);
 }

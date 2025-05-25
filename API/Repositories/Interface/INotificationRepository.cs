@@ -1,4 +1,5 @@
 ﻿using Core;
+using MongoDB.Driver;
 
 namespace API.Repositories.Interface;
 
@@ -13,7 +14,7 @@ public interface INotificationRepository
     
     
     // Subgoals
-    Task ConfirmMiniGoalAsync(int? userId, string miniGoalName);
+    Task <UpdateResult>UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId);
     
     
     // Id

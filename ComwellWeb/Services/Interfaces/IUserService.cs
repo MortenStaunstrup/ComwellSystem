@@ -23,6 +23,4 @@ public interface IUserService
     
     Task UpdateUser(User user);
 
-    Task ConfirmMiniGoalAsync(int userId, string miniGoalName);
-
 }

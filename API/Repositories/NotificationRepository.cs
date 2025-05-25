@@ -54,6 +54,31 @@ namespace API.Repositories
             }
             
         }
+        // Subgoals
+        public async Task<UpdateResult> UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+
+            var update = Builders<User>.Update
+                .Set("StudentPlan.$[].MiddleGoals.$[].MiniGoals.$[mini].Status", true)
+                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+
+            var arrayFilters = new List<ArrayFilterDefinition>
+            {
+                new JsonArrayFilterDefinition<BsonDocument>("{ 'mini.Name': '" + miniGoalName + "' }")
+            };
+
+            var options = new UpdateOptions { ArrayFilters = arrayFilters };
+            
+            Console.WriteLine("MongoDB update command:");
+            Console.WriteLine($"UserId: {userId}");
+            Console.WriteLine($"MiniGoalName: {miniGoalName}");
+            Console.WriteLine($"NotificationId: {notificationId}");
+
+            
+            
+            return await _userCollection.UpdateOneAsync(filter, update, options);
+        }
 
 
 
@@ -64,24 +89,7 @@ namespace API.Repositories
             return user?.Notifications.OrderByDescending(n => n.TimeStamp).ToList() ?? new List<Notification>();
         }
         
-        // Subgoals
-        public async Task ConfirmMiniGoalAsync(int? userId, string miniGoalName)
-        {
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
 
-            var update = Builders<User>.Update.Set("StudentPlan.$[].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true);
-
-            var arrayFilters = new List<ArrayFilterDefinition>
-            {
-                new JsonArrayFilterDefinition<BsonDocument>("{ 'mini.Name': '" + miniGoalName + "' }"),
-                new JsonArrayFilterDefinition<BsonDocument>("{ 'middle.MiniGoals': { $elemMatch: { Name: '" + miniGoalName + "' } } }")
-            };
-
-            var options = new UpdateOptions { ArrayFilters = arrayFilters };
-
-            await _userRepository.ConfirmMiniGoalAsync(userId, miniGoalName);
-
-        }
 
         
         // Id
