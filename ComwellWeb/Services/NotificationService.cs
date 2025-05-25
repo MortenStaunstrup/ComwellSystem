@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class NotificationService : INotificationService
 {
     private readonly HttpClient _httpClient;
-    private string BaseURL = "http://localhost:5116/api/notification"; 
+    private string BaseURL = "http://localhost:5116/api/Notification"; 
 
     public NotificationService(HttpClient httpClient)
     {
@@ -37,11 +37,14 @@ public class NotificationService : INotificationService
 
 
     // Subgoals
-    public async Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId)
+    public async Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId, string miniGoalName)
     {
-        var response = await _httpClient.PostAsync($"{BaseURL}/confirm/{userId}/{notificationId}", null);
+        var url = $"{BaseURL}/confirm/{userId}/{notificationId}/{miniGoalName}";
+        var response = await _httpClient.PostAsync(url, null);
         response.EnsureSuccessStatusCode();
     }
+
+
 
 
     

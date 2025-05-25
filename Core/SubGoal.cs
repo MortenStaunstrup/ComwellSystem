@@ -6,7 +6,9 @@ namespace Core;
 
 public class SubGoal
 {
-    [Required] [BsonElement("_id")] public int SubGoalId { get; set; }
+    [Required] [BsonElement("_id")] 
+    public int SubGoalId { get; set; }
+    
     public Comment[]? Comments { get; set; } = new Comment[0];
 
     [Required(ErrorMessage = "En opgave skal have et navn")]

@@ -9,7 +9,7 @@ public interface INotificationService
     Task<List<Notification>> GetNotificationsByUserIdAsync(int userId);
     
     // Subgoals
-    Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId);
+    Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId, string miniGoalName);
     
     // Id
     Task<int> GetMaxNotificationIdAsync();
