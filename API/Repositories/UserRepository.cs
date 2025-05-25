@@ -62,7 +62,33 @@ public class UserRepository : IUserRepository
 
     public async void InsertAllStandardSubGoalsInStudent(User user)
     {
+        try
+        {
+            //henter alle subgoals i collection der er standard, og sætter dem ind i elevens plan
+            var filter = Builders<SubGoal>.Filter.Eq(sg => sg.SubGoalType, "Standard");
+            var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
+
+            if (standardSubGoals == null || !standardSubGoals.Any())
+            {
+                Console.WriteLine("Ingen standard SubGoals fundet.");
+                return;
+            }
+            
+            user.StudentPlan.AddRange(standardSubGoals); //tilføjer til studentplan listen på én gang
+            
+            var userFilter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
+            var update = Builders<User>.Update.Set(u => u.StudentPlan, user.StudentPlan);
+
+            await _collection.UpdateOneAsync(userFilter, update);
+
+            Console.WriteLine($"Standard SubGoals tilføjet til bruger {user.UserId}.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fejl i InsertAllStandardSubGoalsInStudent: {ex.Message}");
+        }
     }
+
     
     public async Task<User?> Login(string email, string password)
     {

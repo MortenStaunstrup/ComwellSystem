@@ -202,7 +202,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             await userCollection.UpdateManyAsync(filter, update);
         }
     }
-    
+
 
     public async void UpdateSubGoalDetails(SubGoal subGoal)
     {
@@ -224,7 +224,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         // todo problem: hvis man prøver at updater i users(students), hvordan beholder man deres status på delmålet og kun
         // ændrer navnet og strukturen?? idk
         // måske gør i c#??? ville måske virke hvis det var i én elev man updateret delmålet så nej
-    }
+    }*/
 
     public async void CompleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
