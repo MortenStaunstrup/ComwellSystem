@@ -12,6 +12,18 @@ else
         <div class="modal-content" @onclick:stopPropagation>
             <button class="close-button" @onclick="Close">X</button>
             <h3 class="text-center mb-4">Rediger Delmål</h3>
+            @if (status)
+            {
+                <div class="alert alert-primary" role="alert">
+                    Redigering success <button @onclick="CloseSuccess">Close</button>
+                </div>
+            }
+            @if (statusFailed)
+            {
+                <div class="alert alert-danger" role="alert">
+                    Redigering fejlede <button @onclick="CloseError">Close</button>
+                </div>
+            }
             <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
@@ -63,6 +75,8 @@ else
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     EditContext EditContext;
     string _errorMessage;
+    bool statusFailed = false;
+    bool status = false;
     
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
@@ -98,11 +112,43 @@ else
                     }
                 }
             }
-            
-            SubGoalService.UpdateSubGoalDetails(_Goal);
-            Thread.Sleep(1500);
-            NavMan.NavigateTo("/editsubgoals", true);
+
+            try
+            {
+                SubGoalService.UpdateSubGoalDetails(_Goal);
+                ShowSuccessMessage();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                ShowErrorMessage();
+                throw;
+            }
         }
+    }
+    
+    private void ShowErrorMessage()
+    {
+        statusFailed = true;
+        StateHasChanged();
+    }
+    
+    private void CloseError()
+    {
+        statusFailed = false;
+        StateHasChanged();
+    }
+
+    private void ShowSuccessMessage()
+    {
+        status = true;
+        StateHasChanged();
+    }
+    
+    private void CloseSuccess()
+    {
+        status = false;
+        StateHasChanged();
     }
 
     private void AddMiddleGoal()

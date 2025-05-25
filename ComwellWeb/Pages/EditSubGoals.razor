@@ -16,6 +16,18 @@
 }
 else
 {
+    @if (status)
+    {
+        <div class="alert alert-primary" role="alert">
+            Sletning success <button @onclick="CloseSuccess">Close</button>
+        </div>
+    }
+    if (statusFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Sletning fejlede <button @onclick="CloseError">Close</button>
+        </div>
+    }
     foreach (var goal in _allSubGoals)
     {
         <div class="subgoalcontainer">
@@ -59,6 +71,8 @@ else
     SubGoalEditModal? _modal { get; set; }
     SubGoal? goalToEdit;
     bool ShowModal = false;
+    bool status = false;
+    bool statusFailed = false;
     
     protected override async Task OnInitializedAsync()
     {
@@ -76,7 +90,43 @@ else
 
     private void DeleteSubGoal(SubGoal goal)
     {
-        SubGoalService.DeleteSubGoalBySubGoalId(goal.SubGoalId);
+        try
+        {
+            SubGoalService.DeleteSubGoalBySubGoalId(goal.SubGoalId);
+            _allSubGoals.Remove(goal);
+            ShowSuccessMessage();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            ShowErrorMessage();
+            throw;
+        }
+        StateHasChanged();
+    }
+
+    private void ShowErrorMessage()
+    {
+        statusFailed = true;
+        StateHasChanged();
+    }
+
+    private void CloseError()
+    {
+        statusFailed = false;
+        StateHasChanged();
+    }
+
+    private void ShowSuccessMessage()
+    {
+        status = true;
+        StateHasChanged();
+    }
+
+    private void CloseSuccess()
+    {
+        status = false;
+        StateHasChanged();
     }
 
     private void CloseModal()
