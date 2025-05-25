@@ -17,6 +17,19 @@ public class SubGoalController : ControllerBase
     }
 
     [HttpGet]
+    public async Task<List<SubGoal>?> GetAllSubGoals()
+    {
+        Console.WriteLine("Getting all subgoals: controller");
+        var result = await repository.GetAllSubGoals();
+        if (result == null || result.Count == 0)
+        {
+            Console.WriteLine("No subgoals found, returning empty list");
+            return new List<SubGoal>();
+        }
+        return result;
+    }
+    
+    [HttpGet]
     [Route("get/{studentId:int}")]
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
@@ -121,6 +134,7 @@ public class SubGoalController : ControllerBase
     public void UpdateSubGoalDetails(SubGoal subGoal)
     {
         Console.WriteLine("Updating subgoal: controller");
+        repository.UpdateSubGoalDetails(subGoal);
     }
     
 
@@ -136,14 +150,8 @@ public class SubGoalController : ControllerBase
     [Route("delete/{subGoalId:int}")]
     public void DeleteSubGoalBySubGoalId(int subGoalId)
     {
+        repository.DeleteSubGoalBySubGoalId(subGoalId);
         Console.WriteLine("Deleting subgoal: controller");
-    }
-
-    [HttpDelete]
-    [Route("deletetemplate/{templateId:int}")]
-    public void DeleteTemplateByTemplateId(int templateId)
-    {
-        Console.WriteLine("Deleting template: controller");
     }
     
 }

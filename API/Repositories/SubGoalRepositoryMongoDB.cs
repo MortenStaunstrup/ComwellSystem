@@ -80,25 +80,32 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return subgoals;
     }
 
+    public async Task<List<SubGoal>?> GetAllSubGoals()
+    {
+        var filter = Builders<SubGoal>.Filter.Empty;
+        return await subCollection.Find(filter).ToListAsync();
+    }
+
     public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq("_id", studentId);
 
+        // 'Unwind' laver et dokument af hvert element i arrayet
         var aggregation = await userCollection.Aggregate()
             .Match(studentFilter)
             .Unwind(u => u.StudentPlan)
             .Group(new BsonDocument
             {
-                { "_id", "$StudentPlan.SubGoalStatus" }, // Correct access to the subgoal status
-                { "Count", new BsonDocument("$sum", 1) }
+                { "_id", "$StudentPlan.SubGoalStatus" },
+                { "Count", new BsonDocument("$sum", 1) } // Gruper SubGoalStatus og et 1 tal.
             })
             .ToListAsync();
-
-        // Initialize counters
+        
         int totalCount = 0;
         int completedCount = 0;
 
-        // Calculate completed and total count
+        // For hvert resultat i aggregeringen, tæl total værdien op.
+        // Hvis bool er sandt, tæl completed værdien op
         foreach (var result in aggregation)
         {
             bool status = result["_id"].AsBoolean;
@@ -197,9 +204,26 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     }
     
 
-    public void UpdateSubGoalDetails(SubGoal subGoal)
+    public async void UpdateSubGoalDetails(SubGoal subGoal)
     {
+        // updater i subgoals collection
+        var filterSubGoal = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoal.SubGoalId);
+        subCollection.ReplaceOne(filterSubGoal, subGoal);
         
+        // updater i users
+        var filterUserSubGoal = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId);
+        var studentFilter = Builders<User>.Filter.Eq("Role", "Student");
+        var combined = Builders<User>.Filter.And(filterUserSubGoal, studentFilter);
+        var pushUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
+        var pullUpdate = Builders<User>.Update.PullFilter(u => u.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId);
+        
+        // Først pull den gamle version ud, derefter push den nye
+        await userCollection.UpdateManyAsync(combined, pullUpdate);
+        await userCollection.UpdateManyAsync(studentFilter, pushUpdate);
+        
+        // todo problem: hvis man prøver at updater i users(students), hvordan beholder man deres status på delmålet og kun
+        // ændrer navnet og strukturen?? idk
+        // måske gør i c#??? ville måske virke hvis det var i én elev man updateret delmålet så nej
     }
 
     public async void CompleteSubGoalBySubGoalId(int subGoalId, int studentId)
@@ -213,9 +237,16 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
     }
 
-    public void DeleteSubGoalBySubGoalId(int subGoalId, int studentId)
+    public async void DeleteSubGoalBySubGoalId(int subGoalId)
     {
+        // sletter i subgoal collection
+        var filter = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoalId);
+        await subCollection.DeleteOneAsync(filter);
         
+        // sletter i user collection
+        var userFilter = Builders<User>.Filter.Eq("Role", "Student");
+        var userUpdate = Builders<User>.Update.PullFilter(u => u.StudentPlan, g => g.SubGoalId == subGoalId);
+        await userCollection.UpdateManyAsync(userFilter, userUpdate);
     }
     
 }
