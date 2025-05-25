@@ -206,6 +206,32 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
     public async void UpdateSubGoalDetails(SubGoal subGoal)
     {
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq("Role", "Student"),
+            Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId)
+        );
+
+        var update = Builders<User>.Update
+            .Set("StudentPlan.$[elem].SubGoalName", subGoal.SubGoalName)
+            .Set("StudentPlan.$[elem].SubGoalDescription", subGoal.SubGoalDescription)
+            .Set("StudentPlan.$[elem].SubGoalType", subGoal.SubGoalType)
+            .Set("StudentPlan.$[elem].MiddleGoals", subGoal.MiddleGoals);
+
+        var arrayFilters = new List<ArrayFilterDefinition>
+        {
+            new JsonArrayFilterDefinition<User>("{ 'elem.SubGoalId': " + subGoal.SubGoalId + " }")
+        };
+
+        var updateOptions = new UpdateOptions { ArrayFilters = arrayFilters };
+
+        await userCollection.UpdateManyAsync(filter, update, updateOptions);
+
+    }
+    
+    
+   
+    /* public async void UpdateSubGoalDetails(SubGoal subGoal)
+    {
         // updater i subgoals collection
         var filterSubGoal = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoal.SubGoalId);
         subCollection.ReplaceOne(filterSubGoal, subGoal);
