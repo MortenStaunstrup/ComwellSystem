@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
         return await _collection.Find(new BsonDocument()).ToListAsync();
     }
 
-    public async Task<User?> GetUserByUserId(int userId)
+    public async Task<User?> GetUserByUserId(int? userId)
     {
         Console.WriteLine($"Returning user: {userId}: repo");
         var filter = Builders<User>.Filter.Eq("_id", userId);
@@ -137,6 +137,26 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
+    
+    public async Task ConfirmMiniGoalAsync(int? userId, string miniGoalName)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+
+        var update = Builders<User>.Update.Set(
+            "StudentPlan.$[].MiddleGoals.$[].MiniGoals.$[mini].Status", true);
+
+        var arrayFilters = new List<ArrayFilterDefinition>
+        {
+            new JsonArrayFilterDefinition<BsonDocument>(
+                $"{{ 'mini.Name': '{miniGoalName}' }}")
+        };
+
+        var options = new UpdateOptions { ArrayFilters = arrayFilters };
+
+        await _collection.UpdateOneAsync(filter, update, options);
+    }
+
+
 
 
 }

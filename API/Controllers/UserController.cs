@@ -25,14 +25,10 @@ public class UsersController : ControllerBase
             return Unauthorized();  // Hvis ikke, send et eller andet svar. Lige nu sender den 404. Burde nok bare sende en fejlbesked. Rettes.
         }
 
-        return Ok(new User
+        user.UserPassword = ""; //mere simpelt end at skrive alle ting den skal tage med
+        return Ok(user);
         {
-            UserId = user.UserId,
-            UserEmail = user.UserEmail,
-            Role = user.Role,
-            UserPhone = user.UserPhone,
-            UserName = user.UserName
-        });
+        }
     }
 
     [HttpPost("Opret")]  // Endpoint til at oprette ny bruger

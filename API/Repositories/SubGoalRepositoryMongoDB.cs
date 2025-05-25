@@ -15,6 +15,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     private IMongoDatabase database;
     private IMongoCollection<SubGoal> subCollection;
     private IMongoCollection<User> userCollection;
+    private IMongoCollection<Notification> notiCollection;
     private GridFSBucket bucket;
 
     public SubGoalRepositoryMongoDB()
@@ -28,6 +29,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         database = client.GetDatabase("Comwell");
         subCollection = database.GetCollection<SubGoal>("SubGoals");
         userCollection = database.GetCollection<User>("Users");
+        notiCollection = database.GetCollection<Notification>("Notifications");
         bucket = new GridFSBucket(database, new GridFSBucketOptions{ BucketName = "Comwell files" });
     }
     

@@ -5,7 +5,6 @@ using ComwellWeb.Services;
 using ComwellWeb.Services.Interfaces;
 using Blazored.LocalStorage;
 
-
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
@@ -17,9 +16,10 @@ builder.Services.AddSingleton(sp => new HttpClient
     BaseAddress = new Uri("http://localhost:5116/api/")
 });
 
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<ISubGoalService, SubGoalServiceServer>();
-builder.Services.AddScoped<IUserService, UserService>(); //undtagelsesvist brug af scoped
 builder.Services.AddSingleton<ICommentService, CommentServiceServer>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 

@@ -1,5 +1,6 @@
 using API.Repositories;
 using API.Repositories.Interface;
+using Core;
 using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,8 @@ Env.Load();
 builder.Services.AddSingleton<ISubGoalRepository, SubGoalRepositoryMongoDB>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ICommentRepository, CommentRepositoryMongoDB>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
 
 
 // Add services to the container.
