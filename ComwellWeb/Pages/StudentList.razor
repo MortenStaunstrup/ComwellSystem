@@ -31,11 +31,11 @@ else
             <div id="datoknapper">
                 <div class="datoknap">
                     <label for="startDateFilter">Startdato</label>
-                    <input type="date" id="startDateFilter"/>
+                    <input type="date" id="startDateFilter" @bind="startDate" @bind:event="onchange" />
                 </div>
                 <div class="datoknap">
                     <label for="endDateFilter">Slutdato</label>
-                    <input type="date" id="endDateFilter"/>
+                    <input type="date" id="endDateFilter" @bind="endDate" @bind:event="onchange" />
                 </div>
             </div>
 
@@ -75,9 +75,7 @@ else
                 </div>
             }
         </div>
-        <!-- FILTERSLUT -->
-
-        <!-- STUDENT LIST -->
+        
         <div class="student-list-container">
             @if (_allStudents == null)
             {
@@ -89,7 +87,7 @@ else
                 {
                     <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
                         <span class="student-name">@student.UserName</span>
-                        <span>@student.StartDate</span>
+                        <span>@(student.StartDate?.ToString("dd-MM-yyyy") ?? "N/A")</span>
                         <span>@_pctCompleted[student.UserId]%</span>
                         <div class="progress-container @(_pctCompleted[student.UserId] == 100 ? "full" : "")">
                             <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
@@ -97,19 +95,21 @@ else
                     </div>
                     @if (_currentShownStudent == student.UserId)
                     {
-                        <div cb="mt-3">
+                        <div class="mt-3">
                             <a class="btn btn-sm btn-primary" href="@($"/mygoals/{student.UserId}")">Gå til mål</a>
                         </div>
                     }
                 }
             }
-        </div> </div>
+        </div> 
+    </div>
+}
 
 @code {
     User? CurrentUser;
     List<User>? _allStudents;
     List<User>? _sortedStudents;
-    Dictionary<int, double>? _pctCompleted;
+    Dictionary<int, double> _pctCompleted = new();
     int _currentShownStudent;
     bool ShowModal = false;
     private bool _OwnStudentsBool;
@@ -119,6 +119,35 @@ else
     List<string> educationList = new() { "Kok", "Tjener", "Receptionist", "Cater" };
     List<string> TripList = new() { "Italiten", "ÅrhusGåGade", "Juleturen" };
 
+    private DateOnly? _startDate;
+    private DateOnly? _endDate;
+
+    public DateOnly? startDate
+    {
+        get => _startDate;
+        set
+        {
+            if (_startDate != value)
+            {
+                _startDate = value;
+                FilterStudentsByDate();
+            }
+        }
+    }
+
+    public DateOnly? endDate
+    {
+        get => _endDate;
+        set
+        {
+            if (_endDate != value)
+            {
+                _endDate = value;
+                FilterStudentsByDate();
+            }
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await _userservice.GetUserLoggedInAsync();
@@ -126,18 +155,20 @@ else
         {
             nav.NavigateTo("/login", true);
             return;
-        } else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
+        }
+        else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
         {
             nav.NavigateTo("/login");
+            return;
         }
 
         _allStudents = await _userservice.GetAllStudentsAsync();
         _sortedStudents = _allStudents;
-        _pctCompleted = new Dictionary<int, double>();
 
         foreach (var student in _allStudents)
         {
-            _pctCompleted[student.UserId] = Math.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId));
+            double pct = await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId);
+            _pctCompleted[student.UserId] = Math.Truncate(pct);
         }
 
         loaded = true;
@@ -162,7 +193,28 @@ else
         {
             _OwnStudentsBool = value;
             Console.WriteLine($"OwnStudentsBool er nu: {_OwnStudentsBool}");
+           
         }
     }
-}
+
+    private void FilterStudentsByDate()
+    {
+        if (_allStudents == null)
+            return;
+
+        _sortedStudents = _allStudents.Where(student =>
+        {
+            if (!student.StartDate.HasValue)
+                return false;
+            
+            bool matchStart = !startDate.HasValue || student.StartDate.Value == startDate.Value;
+
+           
+            bool matchEnd = !endDate.HasValue || student.StartDate.Value == endDate.Value;
+
+            return matchStart && matchEnd;
+        }).ToList();
+
+        StateHasChanged();
+    }
 }
