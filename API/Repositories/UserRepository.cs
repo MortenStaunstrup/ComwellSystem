@@ -223,6 +223,7 @@ public class UserRepository : IUserRepository
         else
         {
             dbUser.PictureId = await _bucket.UploadFromBytesAsync(user.UserName,Convert.FromBase64String(user.Picture));
+            dbUser.Picture = null;
         }
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
