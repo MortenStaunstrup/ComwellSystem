@@ -62,9 +62,6 @@ namespace ComwellWeb.Services
 
             //Todo fejl her, når du har oprettet én elev, og prøver at oprette én mere uden at reloade siden
             var createdUser = await response.Content.ReadFromJsonAsync<User>();
-            if (createdUser != null)
-                await _localStorage.SetItemAsync("user", createdUser);
-
             return createdUser;
         }
 
