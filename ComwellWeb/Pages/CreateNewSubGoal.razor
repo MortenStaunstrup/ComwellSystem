@@ -27,19 +27,20 @@ else
                         @foreach (var middleGoal in _model.MiddleGoals)
                         {
                             <div>
-                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
-                                <button type="button" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
+                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..." />
+                                <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
                             </div>
                             @foreach (var miniGoal in middleGoal.MiniGoals)
                             {
                                 <div class="nameButtonMiniCombo">
-                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
-                                    <button type="button" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
+                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..." />
+                                    <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
                                 </div>
                             }
-                            <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
+                            <button type="button" class="btn btn-sm btn-success my-1" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                         }
-                        <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
+                        <button type="button" class="btn btn-sm btn-success my-2" @onclick="AddMiddleGoal">Add Middle Goal</button>
+
                         
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
