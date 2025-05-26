@@ -17,7 +17,8 @@ else
         <h1 id="UserName">@CurrentUser.UserName</h1>
         <div id="altindhold">
             <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
-            <InputFile OnChange="HandleSelected" accept="image/*"/>
+            <InputFile OnChange="HandleImageUpload" accept=".jpg,.jpeg,.png,.webp"/>
+            <button @onclick="RemoveProfilePicture">Fjern profilbillede</button>
 
             <div id="infobox">
                 <div class="infobox-indhold">
@@ -50,6 +51,7 @@ else
     private string defaultPicture = "/Pictures/NoProfilePicture.png";
 string message;
 private bool showSuccess = false;
+byte[] pictureBytes;
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,17 +64,27 @@ private bool showSuccess = false;
             return;
         }
 
-        profilePicture = CurrentUser.Picture ?? defaultPicture;
+        profilePicture = CurrentUser.Picture != null ? $"data:image/gif;base64,{CurrentUser.Picture}" : defaultPicture;
     }
 
-    private async Task HandleSelected(InputFileChangeEventArgs e)
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        var buffer = new byte[file.Size];
-        await file.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10).ReadAsync(buffer);
+        if (file != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(memoryStream);
+            pictureBytes = memoryStream.ToArray();
+            CurrentUser.Picture = Convert.ToBase64String(pictureBytes);
+            profilePicture = $"data:image/gif;base64,{CurrentUser.Picture}";
+        }
+    }
 
-        CurrentUser.Picture = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
-        profilePicture = CurrentUser.Picture;
+    private void RemoveProfilePicture()
+    {
+        CurrentUser.Picture = null;
+        profilePicture = defaultPicture;
+        StateHasChanged();
     }
 
 
@@ -80,6 +92,9 @@ private bool showSuccess = false;
     {
             await userService.UpdateUser(CurrentUser);
 
+
+                await userService.Logout();
+                localStorage.SetItemAsync("user", CurrentUser);
                 // Vis besked
                 showSuccess = true;
                 StateHasChanged();
@@ -88,9 +103,6 @@ private bool showSuccess = false;
                 await Task.Delay(3000);
                 showSuccess = false;
                 StateHasChanged();
-
-                await userService.Logout();
-                localStorage.SetItemAsync("user", CurrentUser);
     }
     
     private async Task Logout()

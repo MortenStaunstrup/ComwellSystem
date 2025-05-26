@@ -24,6 +24,14 @@ else
                             <p class="mt-3 alert alert-info">@statusMessage</p>
                         }
                         
+                        <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
+                        
+                        <div>
+                            <label for="pic">Billede</label>
+                            <InputFile id="pic" OnChange="HandleImageUpload" accept=".jpg,.jpeg,.png,.webp"></InputFile>
+                            <button type="button" @onclick="RemoveProfilePicture">Fjern profilbillede</button>
+                        </div>
+                        
                         <div class="mb-3">
                             <label for="userName">Navn:</label>
                             <InputText id="userName" class="form-control" @bind-Value="_model.UserName"/>
@@ -82,12 +90,13 @@ else
     private User? _currentUser;
     private User _model;
     private EditContext EditContext;
-    private DateTime? StartDate;
     private string statusMessage = "";
     private List<User>? _kitchenManagers;
     private User? assignedKitchenManager = new User();
-
     KitchenManagerDropdown? dropdown { get; set; }
+
+    byte[] pictureBytes;
+    private string profilePicture = "/Pictures/NoProfilePicture.png";
 
     
     protected override async Task OnInitializedAsync()
@@ -104,11 +113,7 @@ else
 
     private async Task HandleSubmit()
     {
-        if (StartDate.HasValue)
-        {
-            _model.StartDate = DateOnly.FromDateTime(StartDate.Value);
-        }
-
+        
         if (_model.Role == "Student" && assignedKitchenManager.UserId == 0)
         {
             statusMessage = "En elev skal have en køkken chef tildelt";
@@ -129,11 +134,33 @@ else
             {
                 statusMessage = $"Bruger oprettet: {result.UserName} ({result.Role})";
                 _model = new();
-                StartDate = null;
                 int nextId = await _userService.GetMaxUserId();
                 _model.UserId = nextId + 1;
+                profilePicture = "/Pictures/NoProfilePicture.png";
+                pictureBytes = null;
             }
         }
+    }
+    
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(memoryStream);
+            pictureBytes = memoryStream.ToArray();
+            _model.Picture = Convert.ToBase64String(pictureBytes);
+            profilePicture = $"data:image/gif;base64,{_model.Picture}";
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveProfilePicture()
+    {
+        _model.Picture = null;
+        profilePicture = "/Pictures/NoProfilePicture.png";
+        StateHasChanged();
     }
     
     private void OnRoleChange(ChangeEventArgs e)
