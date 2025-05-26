@@ -1,10 +1,14 @@
-﻿<link rel="stylesheet" href="app.css">
+﻿@using Core
+@inject IUserService UserService
+@inject IJSRuntime JS
+
+<link rel="stylesheet" href="app.css">
 <div class="NavBar">
     <div class="BtnsDiv">
         <div class="BtnDiv" onclick="location.href='/StudentHome'">
             <a class="NavAnker">Home</a>
         </div>
-        <div class="BtnDiv" onclick="location.href='/MyGoals'">
+        <div class="BtnDiv" @onclick="@(() => NavigateToMyGoals())">
             <a class="NavAnker">Udd. Plan</a>
         </div>
         <div class="BtnDiv" onclick="location.href='/RegisterSubGoal'">
@@ -15,3 +19,13 @@
         </div>
     </div>
 </div>
+
+@code {
+    [Parameter] public int StudentId { get; set; }
+    [Inject] NavigationManager NavManager { get; set; }
+
+    private void NavigateToMyGoals()
+    {
+        NavManager.NavigateTo($"/MyGoals/{StudentId}");
+    }
+}

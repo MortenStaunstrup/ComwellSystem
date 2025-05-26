@@ -19,7 +19,7 @@ else
                 }
                 else if (CurrentUser?.Role == "Student")
                 {
-                    <StudentNavBar />
+                    <StudentNavBar StudentId="@CurrentUser.UserId" />
                 }
                 else if (CurrentUser?.Role == "KitchenManager")
                 {

@@ -2,10 +2,16 @@
 
 public class Notification
 {
-    public int NotificationId { get; set; }
-    public int NotificationUserId { get; set; }
+    public int NotificationId { get; set; } // PK
+    public int? UserId { get; set; } // FK
+    public int? SenderId { get; set; } // FK
+    public string MiniGoalName { get; set; } // FK
+    
     public string NotificationContent { get; set; }
-    public DateTime NotificationDate { get; set; }
+    
+    public DateTime TimeStamp { get; set; }
+    
+    public bool IsConfirmed { get; set; }
 }
 
 public class LastestNoti
@@ -15,7 +21,7 @@ public class LastestNoti
     public LastestNoti(List<Notification> allNotifications)
     {
         Notifications30 = allNotifications
-            .Where(n => (DateTime.Now - n.NotificationDate).TotalDays <= 30)
+            .Where(n => (DateTime.Now - n.TimeStamp).TotalDays <= 30)
             .ToList();
     }
 }

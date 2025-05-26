@@ -1,0 +1,84 @@
+﻿@page "/noti"
+
+@using Blazored.LocalStorage
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject INotificationService NotificationService
+@inject IUserService UserService
+@inject ILocalStorageService LocalStorage
+
+<h3>Dine notifikationer</h3>
+
+@if (_notifications == null) //Der kommer faktisk fejl hvis der ikke er notifikationer. Det skal fikses
+{
+    <p>Indlæser...</p>
+}
+else if (!_notifications.Any())
+{
+    <p>Ingen notifikationer.</p>
+}
+else
+{
+    @foreach (var notification in _notifications)
+    {
+        <div class="notification">
+            <p>@notification.NotificationContent</p>
+            @if (!notification.IsConfirmed)
+            {
+                <button @onclick="() => ConfirmNotificationAsync(notification)">Bekræft</button>
+            }
+            else
+            {
+                <span>Bekræftet</span>
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<Notification>? _notifications;
+    private int currentUserId; //lederen
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await LocalStorage.GetItemAsync<User>("user"); //lederens Id
+
+        if (user == null || user.UserId == 0)
+        {
+            Console.WriteLine("Bruger ikke fundet eller userId er 0");
+            return;
+        }
+
+        currentUserId = user.UserId;
+
+        _notifications = await NotificationService.GetNotificationsByUserIdAsync(currentUserId);
+    }
+
+    private async Task ConfirmNotificationAsync(Notification notification)
+    {
+        if (notification == null)
+            return;
+
+        if (notification.UserId == null || notification.UserId == 0) //Elevens Id
+        {
+            Console.WriteLine( "Notifikationens UserId mangler");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(notification.MiniGoalName))
+        {
+            Console.WriteLine("MiniGoalName mangler");
+            return;
+        }
+        
+        await NotificationService.ConfirmNotifiedSubGoalAsync(
+            notification.UserId.Value, //Elevens Id
+            notification.NotificationId, 
+            notification.MiniGoalName
+        );
+        
+        notification.IsConfirmed = true;
+        StateHasChanged();
+    }
+
+}

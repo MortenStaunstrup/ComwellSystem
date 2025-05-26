@@ -91,17 +91,19 @@ else
                         <span class="student-name">@student.UserName</span>
                         <span>@student.StartDate</span>
                         <span>@_pctCompleted[student.UserId]%</span>
-                        <div class="progress-container @( _pctCompleted[student.UserId] == 100 ? "full" : "" )">
+                        <div class="progress-container @(_pctCompleted[student.UserId] == 100 ? "full" : "")">
                             <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
                         </div>
                     </div>
+                    @if (_currentShownStudent == student.UserId)
+                    {
+                        <div cb="mt-3">
+                            <a class="btn btn-sm btn-primary" href="@($"/mygoals/{student.UserId}")">Gå til mål</a>
+                        </div>
+                    }
                 }
-
             }
-        </div>
-
-    </div>
-}
+        </div> </div>
 
 @code {
     User? CurrentUser;
@@ -145,6 +147,7 @@ else
     {
         _currentShownStudent = studentId;
         ShowModal = true;
+        StateHasChanged();
     }
 
     private void CloseModal()
@@ -161,4 +164,5 @@ else
             Console.WriteLine($"OwnStudentsBool er nu: {_OwnStudentsBool}");
         }
     }
+}
 }

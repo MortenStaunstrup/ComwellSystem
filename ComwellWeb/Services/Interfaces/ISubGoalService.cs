@@ -18,7 +18,7 @@ public interface ISubGoalService
     void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds); // Indsæt subgoal til specifikke elever
     
     
-    void UpdateSubGoalDetails(SubGoal subGoal);   // Updater detaljer om subgoal for elev
+    Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal);   // Updater detaljer om subgoal for elev
     void CompleteSubGoalBySubGoalId(int studentId, int subGoalId); // Kryds subgoal af som værende done
     
     

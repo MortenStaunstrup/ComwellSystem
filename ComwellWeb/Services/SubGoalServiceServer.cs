@@ -110,11 +110,24 @@ public class SubGoalServiceServer : ISubGoalService
     }
     
 
-    public void UpdateSubGoalDetails(SubGoal subGoal)
+    public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal) //har gjort til async for at finde fejlen
     {
         Console.WriteLine("Updating subgoal: service");
-        _client.PutAsJsonAsync("subgoals/update", subGoal);
+
+        var response = await _client.PutAsJsonAsync("subgoals/update", subGoal);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var updatedSubGoal = await response.Content.ReadFromJsonAsync<SubGoal>();
+            return updatedSubGoal;
+        }
+        else
+        {
+            Console.WriteLine($"Update failed with status: {response.StatusCode}");
+            return null;
+        }
     }
+
 
     public async void CompleteSubGoalBySubGoalId(int studentId, int subGoalId)
     {

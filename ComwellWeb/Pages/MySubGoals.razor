@@ -1,80 +1,398 @@
-@using ComwellWeb.Komponents.Modal
+@page "/mygoals/{studentId:int}"
+
+@using System.Text.Json
 @using ComwellWeb.Services.Interfaces
-@using Core;
-@page "/MyGoals"
-@inject NavigationManager NavMan
-@inject ISubGoalService SubGoalService
+@using Core
+@inject IJSRuntime JS
 @inject IUserService UserService
+@inject ICommentService CommentService
+@inject INotificationService NotificationService
+@inject ISubGoalService SubGoalService
+
+<div class="mysubgoals-root">
+    <div class="dashboard-container">
+        <div class="left-section">
+            <h2>@PageTitle</h2>
+
+            <div class="progress-and-name">
+                <h3>Dine fremskridt</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: @GetPctCompleted()%;"></div>
+                </div>
+            </div>
+
+            <div class="filter-container">
+                <label for="statusFilter">Filtrer efter status:</label>
+                <select id="statusFilter" class="status-select" @onchange="OnFilterChanged">
+                    <option value="all">Alle</option>
+                    <option value="completed">Fuldførte</option>
+                    <option value="notcompleted">Ikke fuldførte</option>
+                </select>
+            </div>
+
+            @if (!FilteredPlan.Any())
+            {
+                <p>Ingen mål endnu.</p>
+            }
+            else
+            {
+                @if (selectedFilter == "all")
+                {
+                    <p>@FilteredPlan.Count delmål</p>
+                }
+                else if (selectedFilter == "completed")
+                {
+                    <p>@FilteredPlan.Count delmål færdige</p>
+                }
+                else
+                {
+                    <p>@FilteredPlan.Count delmål mangler</p>
+                }
+
+                <div class="assignments-container">
+                    @foreach (var sg in FilteredPlan)
+                    {
+                        <div class="assignment-card">
+                            <h4 class="assignment-title">@sg.SubGoalName</h4>
+                            <p class="assignment-description">@sg.SubGoalDescription</p>
+                            <button class="toggle-button" @onclick="() => ToggleExpand(sg.SubGoalId)">
+                                @(Expanded.Contains(sg.SubGoalId) ? "Vis mindre" : "Vis mere")
+                            </button>
+
+                            @if (Expanded.Contains(sg.SubGoalId))
+                            { <!--hvis status = true: "fuldført" og omvendt -->
+                                <div class="subgoal-details">
+                                    <p>Type: @sg.SubGoalType</p>
+                                    <p>Status: @(sg.SubGoalStatus ? "Fuldført" : "Ikke fuldført")</p> <!--ligesom if else-->
+                                        
+                                        <!--Mål-->
+                                        <div class="middle-goals">
+                                            @foreach (var mg in sg.MiddleGoals)
+                                            {
+                                                <div class="middle-goal">
+                                                    <strong>@mg.Name</strong> @(mg.Status ? "klaret" : "") <!--skal nok byttes ud med en sej emoji-->
+                                                    <ul>
+                                                        @foreach (var mm in mg.MiniGoals)
+                                                        {
+                                                            <li>
+                                                                <label>
+                                                                    <input type="checkbox"
+                                                                           checked="@mm.Status"
+                                                                           disabled="true" /> @mm.Name
+                                                                </label>
+                                                                <input type="checkbox"
+                                                                       @onchange="_ => ToggleSelectedMiniGoal(sg.SubGoalId, mm)"
+                                                                       checked="@(SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedList) && selectedList.Contains(mm))"
+                                                                       disabled="@(!IsStudent)" />
+
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            }
+                                        </div>
+                                        @if (IsStudent && SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedGoals) && selectedGoals.Any())
+                                        {
+                                            <button class="action-button"
+                                                    @onclick="() => CompleteSubGoal(sg, selectedGoals)"
+                                                    disabled="@_sending">
+                                                Afslut valgte minimål
+                                            </button>
+                                        }
+                                    <!--Kommentarer. Sensitiv over for role-->
+                                    <div class="comment-section-student">
+                                        <h6>Kommentarer</h6>
+
+                                        <button class="toggle-button" @onclick="() => ToggleCommentHistory(sg.SubGoalId)">
+                                            @(ExpandedComments.Contains(sg.SubGoalId) ? "Skjul kommentarer" : "Vis kommentarer")
+                                        </button>
+
+                                        @if (ExpandedComments.Contains(sg.SubGoalId))
+                                        {
+                                            @foreach (var comment in CommentMap.GetValueOrDefault(sg.SubGoalId, new List<Comment>()))
+                                            {
+                                                <div class="comment">
+                                                    <span class="date">@comment.CommentDate.ToString("dd-MM-yyyy HH:mm")</span>
+                                                    <strong>@comment.CommentSenderName</strong>
+                                                    <p>@comment.CommentContent</p>
+                                                </div>
+                                            }
+                                        }
 
 
-@if (MySubGoalsList == null)
+                                        @if (CurrentUser.Role == "Student" && IsStudent)
+                                        {
+                                            <input placeholder="Skriv kommentar" value="@NewComment[sg.SubGoalId]"
+                                                   @oninput="e => NewComment[sg.SubGoalId] = e.Value?.ToString()" />
+                                            <button @onclick="() => SendComment(sg.SubGoalId)">
+                                                Send
+                                            </button>
+                                        }
+
+                                        @if (IsKitchenManager)
+                                        {
+                                            <input class="comment-input"
+                                                   placeholder="Lærer-kommentar"
+                                                   value="@KitchenmanagerNewComment[sg.SubGoalId]"
+                                                   @oninput="(e) => KitchenmanagerNewComment[sg.SubGoalId] = e.Value?.ToString()" />
+
+                                            <button class="action-button"
+                                                    @onclick="() => SendKitchenManagerComment(sg.SubGoalId)">
+                                                Tilføj lærer-kommentar
+                                            </button>
+                                        }
+                                        </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+    </div>
+</div>
+
+@if (CurrentUser != null && UserModel != null) //usermodel er den elev's page man er inde på
 {
-    <p>Loading your subgoals</p>
+    if (CurrentUser.Role == "KitchenManager")
+    {
+        <h2>@UserModel.UserName</h2>
+    }
+    else if (CurrentUser.UserId == UserModel.UserId)
+    {
+        
+    }
+    else
+    {
+        
+    }
 }
 else
 {
-    <h1>Manglende Delmål</h1>
-    <div class="kort-container">
-        @foreach (var subgoal in MySubGoalsList)
-        {
-            <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
-                
-                <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
-                <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
-            </div>
-        }
-    </div>
-
+    <h2>Indlæser...</h2>
 }
 
-@if (_completedSubGoals == null)
-{
-    
-}
-else
-{
-    <h1>Færdiggjorte Delmål</h1>
-    <div class="kort-container">
-        @foreach (var subgoal in _completedSubGoals)
-        {
-            <div class="delmål-kort" @onclick="@(() => OpenModal(subgoal))">
-                
-                <h4 class="delmål-titel">@subgoal.SubGoalName</h4>
-                <p class="delmål-beskrivelse">@subgoal.SubGoalDescription</p>
-            </div>
-        }
-    </div>
-}
-
-<SubGoalDescriptionModal @ref="modal" CurrentUser="_currentUser" Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil"/>
 @code {
-    private List<SubGoal>? MySubGoalsList;
-    private List<SubGoal>? _completedSubGoals;
-    private User? _currentUser;
+    private User? user;
+    private User CurrentUser = null!;
+    private User UserModel;
+    private bool IsReadOnlyViewer = true;
+    private int ViewerUserId;
+   // private bool HasAccess;
+    private string PageTitle;
+    private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new();
+    private List<SubGoal> FullPlan = new();
+    private List<SubGoal> FilteredPlan = new();
+    private Dictionary<int, List<Comment>> CommentMap = new();
+    private Dictionary<int, string> NewComment = new();
+    private Dictionary<int, string> Errors = new();
+    private Dictionary<int, string> KitchenmanagerNewComment = new();
+    private HashSet<int> Expanded = new();
+    private bool IsReadOnly;
+    private bool _sending = false;
+    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
+    private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
+    private bool IsViewingStudent => CurrentUser.Role == "KitchenManager" && UserModel?.Role == "Student";
+    //public bool IsMarkedByStudent { get; set; }
 
-    SubGoalDescriptionModal? modal { get; set; }
-private SubGoal? SelectedSubGoal;
-private bool ShowModal = false;
-public bool VejenDerTil = false;
 
-protected override async Task OnInitializedAsync()
-{
-    _currentUser = await UserService.GetUserLoggedInAsync();
-    if(_currentUser == null)
-        NavMan.NavigateTo("/login");
-    MySubGoalsList = await SubGoalService.GetNotCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
-    _completedSubGoals = await SubGoalService.GetCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
-}
 
-private async void OpenModal(SubGoal goal)
-{
-    SelectedSubGoal = goal;
-    ShowModal = true;
-    VejenDerTil = false;
-}
 
-private void CloseModal()
-{
-    ShowModal = false;
-}
+
+    [Parameter] public int? studentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userJson = await JS.InvokeAsync<string>("localStorage.getItem", "user");
+        CurrentUser = JsonSerializer.Deserialize<User>(userJson!);
+
+        var viewId = studentId ?? CurrentUser.UserId;
+        IsReadOnly = viewId != CurrentUser.UserId;
+        UserModel = await UserService.GetUserByUserId(viewId);
+      //  HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
+        PageTitle = CurrentUser.Role == "KitchenManager" ? UserModel.UserName : "Elevplan";
+
+        FullPlan = UserModel.StudentPlan;
+        ApplyFilter();
+
+        foreach (var sg in FullPlan)
+        {
+            var comments = await CommentService.GetCommentsBySubGoalId(sg.SubGoalId, viewId);
+            CommentMap[sg.SubGoalId] = comments?.ToList() ?? new List<Comment>();
+
+            // Opdater kommentarernes navn
+            foreach (var comment in CommentMap[sg.SubGoalId])
+            {
+                if (string.IsNullOrEmpty(comment.CommentSenderName))
+                {
+                    var user = await UserService.GetUserByUserId(comment.CommentSenderId);
+                    comment.CommentSenderName = user?.UserName ?? "Ukendt bruger";
+                }
+            }
+
+            NewComment[sg.SubGoalId] = "";
+            KitchenmanagerNewComment[sg.SubGoalId] = "";
+            Errors[sg.SubGoalId] = "";
+        }
+    }
+
+
+    private void ApplyFilter()
+    {
+        FilteredPlan = selectedFilter switch
+        {
+            "completed" => FullPlan.Where(s => s.SubGoalStatus).ToList(),
+            "notcompleted" => FullPlan.Where(s => !s.SubGoalStatus).ToList(),
+            _ => FullPlan.ToList()
+        };
+    }
+
+    private string selectedFilter = "all";
+
+    private void OnFilterChanged(ChangeEventArgs e)
+    {
+        selectedFilter = e.Value?.ToString()?.ToLower() ?? "all";
+        ApplyFilter();
+    }
+
+    private void ToggleExpand(int id)
+    {
+        if (!Expanded.Add(id)) Expanded.Remove(id);
+    }
+
+    private async Task SendComment(int SubGoalId)
+    {
+        if (string.IsNullOrWhiteSpace(NewComment[SubGoalId]))
+        {
+            Errors[SubGoalId] = "Kommentaren må ikke være tom.";
+            return;
+        }
+
+        var newC = new Comment
+        {
+            CommentDate = DateTime.Now,
+            CommentSubGoalId = SubGoalId,
+            CommentContent = NewComment[SubGoalId],
+            CommentSenderId = CurrentUser.UserId,
+            CommentSenderName = CurrentUser.UserName,
+            StudentId = studentId ?? CurrentUser.UserId
+        };
+
+        try
+        {
+            CommentService.AddComment(newC);
+            CommentMap[SubGoalId].Add(newC);
+            KitchenmanagerNewComment[SubGoalId] = "";
+            Errors[SubGoalId] = "";
+            NewComment[SubGoalId] = "";
+        }
+        catch (Exception ex)
+        {
+            Errors[SubGoalId] = ex.Message;
+        }
+    }
+
+    private void ToggleSelectedMiniGoal(int SubGoalId, MiniGoal mm)
+    {
+        if (!SelectedMiniGoals.ContainsKey(SubGoalId))
+            SelectedMiniGoals[SubGoalId] = new List<MiniGoal>();
+
+        var selected = SelectedMiniGoals[SubGoalId];
+        if (selected.Contains(mm))
+            selected.Remove(mm);
+        else
+            selected.Add(mm);
+    }
+
+    private async Task CompleteSubGoal(SubGoal sg, List<MiniGoal> selectedGoals)
+    {
+        if (_sending) return;
+        _sending = true;
+
+        try
+        {
+            var responsibleId = UserModel.UserIdResponsible;
+            if (responsibleId == null)
+            {
+                Errors[sg.SubGoalId] = "Ingen ansvarlig bruger fundet.";
+                return;
+            }
+
+            var newId = await NotificationService.GetMaxNotificationIdAsync();
+
+            foreach (var mm in selectedGoals)
+            {
+                var noti = new Notification
+                {
+                    NotificationId = ++newId,
+                    UserId = responsibleId, //userId betyder lederen her
+                    SenderId = CurrentUser.UserId,
+                    MiniGoalName = mm.Name,
+                    NotificationContent = $"{CurrentUser.UserName} har færdiggjort et minimål: '{mm.Name}'",
+                    TimeStamp = DateTime.Now
+                };
+
+                await NotificationService.SendNotificationAsync(noti);
+                mm.Status = true;
+            }
+
+            sg.SubGoalStatus = true;
+            SelectedMiniGoals[sg.SubGoalId].Clear();
+        }
+        catch (Exception ex)
+        {
+            Errors[sg.SubGoalId] = $"Fejl ved afslutning af delmål: {ex.Message}";
+        }
+        finally
+        {
+            _sending = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetPctCompleted()
+    {
+        if (FullPlan == null || !FullPlan.Any()) return "0";
+        var pct = 100.0 * FullPlan.Count(s => s.SubGoalStatus) / FullPlan.Count;
+        return Math.Truncate(pct).ToString("F0");
+    }
+
+    private async Task SendKitchenManagerComment(int subGoalId)
+    {
+        if (string.IsNullOrWhiteSpace(KitchenmanagerNewComment[subGoalId]))
+        {
+            Errors[subGoalId] = "Kommentaren må ikke være tom!";
+            return;
+        }
+
+        var newComment = new Comment
+        {
+            CommentDate = DateTime.Now,
+            CommentSubGoalId = subGoalId,
+            CommentContent = KitchenmanagerNewComment[subGoalId],
+            CommentSenderName = CurrentUser.UserName,
+            CommentSenderId = CurrentUser.UserId,
+            StudentId = studentId ?? CurrentUser.UserId
+        };
+
+        try
+        {
+            CommentService.AddComment(newComment);
+            CommentMap[subGoalId].Add(newComment);
+            KitchenmanagerNewComment[subGoalId] = "";
+            Errors[subGoalId] = "";
+        }
+        catch (Exception ex)
+        {
+            Errors[subGoalId] = $"Fejl ved kommentar: {ex.Message}";
+        }
+    }
+    private HashSet<int> ExpandedComments = new();
+
+    private void ToggleCommentHistory(int subGoalId)
+    {
+        if (!ExpandedComments.Add(subGoalId))
+            ExpandedComments.Remove(subGoalId);
+    }
 }

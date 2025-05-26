@@ -131,11 +131,21 @@ public class SubGoalController : ControllerBase
 
     [HttpPut]
     [Route("update")]
-    public void UpdateSubGoalDetails(SubGoal subGoal)
+    public async Task<string> UpdateSubGoalDetails([FromBody] SubGoal subGoal)
     {
-        Console.WriteLine("Updating subgoal: controller");
-        repository.UpdateSubGoalDetails(subGoal);
+        try
+        {
+            Console.WriteLine("Updating subgoal: controller");
+            await repository.UpdateSubGoalDetails(subGoal);
+            return "Update successful";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return "Update failed";
+        }
     }
+
     
 
     [HttpPut]

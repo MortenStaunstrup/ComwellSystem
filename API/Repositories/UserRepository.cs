@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
         return await _collection.Find(new BsonDocument()).ToListAsync();
     }
 
-    public async Task<User?> GetUserByUserId(int userId)
+    public async Task<User?> GetUserByUserId(int? userId)
     {
         Console.WriteLine($"Returning user: {userId}: repo");
         var filter = Builders<User>.Filter.Eq("_id", userId);
@@ -88,6 +88,7 @@ public class UserRepository : IUserRepository
             Console.WriteLine($"Fejl i InsertAllStandardSubGoalsInStudent: {ex.Message}");
         }
     }
+
     
     public async Task<User?> Login(string email, string password)
     {
@@ -162,6 +163,4 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
-
-
 }
