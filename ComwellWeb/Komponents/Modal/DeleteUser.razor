@@ -1,0 +1,42 @@
+﻿@using Core
+@inject IUserService UserService
+@inject IUserService _userService
+@if (Visible && UserToDelete != null)
+{
+    <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
+        <div class="modal-content" @onclick:stopPropagation>
+            <button class="close-button" @onclick="Close">X</button>
+
+            <h3>Bekræft sletning</h3>
+            <p>
+                Er du sikker på, at du vil slette <strong>@UserToDelete.UserName</strong>'s profil fra systemet?
+            </p>
+
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" @onclick="Close">Annullér</button>
+                <button class="btn btn-danger" @onclick="Slet">Slet bruger</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public User? UserToDelete { get; set; }
+    [Parameter] public EventCallback OnCloseRequested { get; set; }
+    [Parameter] public EventCallback<int> OnUserDeleted { get; set; }
+
+
+    private Task Close() => OnCloseRequested.InvokeAsync();
+    private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
+    private async void Slet()
+    {
+        if (UserToDelete != null)
+        {
+            await _userService.DeleteUserAsync(UserToDelete.UserId);
+            await OnUserDeleted.InvokeAsync(UserToDelete.UserId); // sender ID videre
+            await OnCloseRequested.InvokeAsync();
+        }
+    }
+
+}

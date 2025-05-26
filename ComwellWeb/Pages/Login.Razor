@@ -2,19 +2,19 @@
 @page "/login"
 @using ComwellWeb.Services.Interfaces
 @inject IUserService userService
-@inject NavigationManager nav     
+@inject NavigationManager nav 
 @using Core
 
 <form @onsubmit="HandleSubmit">
-<div class="login-container">
-    <div class="login-box">
-        <h2>Log ind</h2>
-        <input @bind="email" placeholder="Email" class="login-input" />
-        <input @bind="password" type="password" placeholder="Adgangskode" class="login-input" />
-        <p class="login-message">@message</p>
-        <button @onclick="TryLogin"  class="login-button">Log ind</button>
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Log ind</h2>
+            <input @bind="email" placeholder="Email" class="login-input" />
+            <input @bind="password" type="password" placeholder="Adgangskode" class="login-input" />
+            <p class="login-message">@message</p>
+            <button @onclick="TryLogin"  class="login-button">Log ind</button>
+        </div>
     </div>
-</div>
 </form>
 
 @code {
@@ -31,14 +31,14 @@
     {
         var user = await userService.Login(email, password);  // Prøv at logge ind via service
  
-        if (user != null && !string.IsNullOrEmpty(user.UserEmail))
+        if (user != null)
         {
             // Login gik godt = naviger til forsiden
             if (user.Role == "Student")
             {
-            nav.NavigateTo("/StudentHome", forceLoad: true);
+                nav.NavigateTo("/StudentHome", forceLoad: true);
             }
-            else if (user.Role == "HR" || user.Role == "KitchenManager")
+            else if (user.Role == "HR" || user.Role == "KitchenManager" || user.Role == "Admin")
             {
                 nav.NavigateTo("/studentlist", forceLoad: true);
             }
@@ -48,5 +48,20 @@
             message = "Wrong Username or Password";  // Fejlbesked hvis login fejler
         }
     }
-    
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await userService.GetUserLoggedInAsync();
+        if (user != null)
+        {
+            if (user.Role == "Student")
+            {
+                nav.NavigateTo("/StudentHome", forceLoad: true);
+            }
+            else if (user.Role == "HR" || user.Role == "KitchenManager" || user.Role == "Admin")
+            {
+                nav.NavigateTo("/studentlist", forceLoad: true);
+            }
+        }
+    }
+
 }

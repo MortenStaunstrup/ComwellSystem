@@ -91,4 +91,16 @@ public class UsersController : ControllerBase
         await _repo.UpdateUserAsync(updatedUser);
         return Ok();
     }
+    [HttpDelete("{userId:int}")]
+    public async Task<IActionResult> DeleteUser(int userId)
+    {
+        var existingUser = await _repo.GetUserByUserId(userId);
+        if (existingUser == null)
+        {
+            return NotFound();
+        }
+
+        await _repo.DeleteUserAsync(userId);
+        return NoContent();
+    }
 }

@@ -100,5 +100,10 @@ namespace ComwellWeb.Services
         {
             return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/kitchenmanagers");
         }
+        public async Task DeleteUserAsync(int userId)
+        {
+            await _httpClient.DeleteAsync($"{BaseURL}/{userId}");
+        }
+
     }
 }

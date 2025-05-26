@@ -18,8 +18,10 @@ else
         <div id="altindhold">
             <img src="@profilePicture" class="profile-picture" alt="Profil billede"/>
             <InputFile OnChange="HandleImageUpload" accept=".jpg,.jpeg,.png,.webp"/>
-            <button @onclick="RemoveProfilePicture">Fjern profilbillede</button>
-
+            @if (CurrentUser.Picture != null)
+            {
+                <button class="btn btn-danger" @onclick="RemoveProfilePicture">Fjern profilbillede</button>
+            }
             <div id="infobox">
                 <div class="infobox-indhold">
                     <input class="Infobox-Input" type="text" @bind="CurrentUser.UserName">
