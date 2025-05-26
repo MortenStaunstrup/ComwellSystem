@@ -16,7 +16,6 @@ else
 {
     <div class="studentlist-wrapper">
 
-        <!-- FILTERSTART -->
         <div class="filter-container">
             <!-- Lokation / Hoteller -->
             <select id="hotelFilter">
@@ -26,8 +25,7 @@ else
                     <option value="@hotel">@hotel</option>
                 }
             </select>
-
-            <!-- Praktikperiode -->
+            
             <div id="datoknapper">
                 <div class="datoknap">
                     <label for="startDateFilter">Startdato</label>
@@ -39,7 +37,7 @@ else
                 </div>
             </div>
 
-            <!-- Uddannelse -->
+          
             <select id="educationFilter">
                 <option value="">Alle uddannelser</option>
                 @foreach (var edu in educationList)
