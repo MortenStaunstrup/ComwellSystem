@@ -3,6 +3,7 @@
 @using ComwellWeb.Services.Interfaces
 @using Core;
 @inject ICommentService CommentService
+@inject INotificationService NotificationService
 
 @if (Visible && Goal != null)
 {
@@ -14,7 +15,7 @@
 
             @if (VejenDerTil)
             {
-                <button class="btn btn-primary" @onclick="() => NotifyResponsibleCookApplication(Goal.SubGoalId)">Ansøg</button>
+                <button class="btn btn-primary" @onclick="async () => await NotifyResponsibleCookApplication(Goal.SubGoalId)">Ansøg</button>
             }
             else
             {
@@ -39,31 +40,29 @@
                 <InputText class="input" type="text" placeholder="Skriv din kommentar her.." @bind-Value="writtenComment"/>
                 <div id="buttons">
                     <button class="btn-primary" @onclick="SendComment">Send kommentar</button>
-                    <button class="btn-primary" @onclick="() => NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
+                    <button class="btn-primary" @onclick="async () => await NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
                 </div>
             }
+
+            <p style="color:red;">@errorMessage</p>
         </div>
     </div>
 }
+
 @code {
-    //Todo datetime stamp for kommentar er 2 timer bagud idk why
     [Parameter] public bool VejenDerTil { get; set; }
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
-    
     private string writtenComment;
     private List<Comment>? _comments;
-
     private string errorMessage;
-    
+
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
-    // Når student går ind på mySubGoals, klikker på et subgoal. Så bliver comments loaded.
-    // Fordi parameteren 'Goal' bliver sat når man klikker på et subgoal
     protected override async Task OnParametersSetAsync()
     {
         if (!VejenDerTil && Goal != null)
@@ -72,14 +71,42 @@
         }
     }
 
-    private async void NotifyResponsibleCook(int subGoalId)
+    private async Task NotifyResponsibleCook(int subGoalId)
     {
-        // TODO: Notifikation til ansvarlig for færdiggørelse
+        errorMessage = "✅ Færdiggørelse-funktion kaldt, men ikke implementeret endnu.";
+        StateHasChanged();
     }
 
-    private async void NotifyResponsibleCookApplication(int subGoalId)
+    private async Task NotifyResponsibleCookApplication(int subGoalId)
     {
-        // TODO: Notifikation om interesse
+        try
+        {
+            if (Goal == null || CurrentUser?.UserIdResponsible == null)
+            {
+                errorMessage = "❌ Fejl i ansøgning.";
+            }
+            else
+            {
+                var notification = new Notification
+                {
+                    UserId = CurrentUser.UserIdResponsible.Value,
+                    SenderId = CurrentUser.UserId,
+                    MiniGoalName = Goal.SubGoalName,
+                    NotificationContent = $"Bruger {CurrentUser.UserName} har ansøgt om delmålet '{Goal.SubGoalName}'",
+                    TimeStamp = DateTime.Now,
+                    IsConfirmed = false
+                };
+
+                await NotificationService.SendNotificationAsync(notification);
+                errorMessage = "✅ Ansøgning sendt!";
+            }
+        }
+        catch
+        {
+            errorMessage = "❌ Fejl i ansøgning.";
+        }
+
+        StateHasChanged();
     }
 
     public async Task InitializeComments()
@@ -111,7 +138,6 @@
         }
     }
 
-    // Check til kommentar der bliver sendt
     private void SendComment()
     {
         if (string.IsNullOrWhiteSpace(writtenComment))
@@ -162,12 +188,9 @@
             StateHasChanged();
             return;
         }
-        
 
         writtenComment = string.Empty;
         errorMessage = string.Empty;
         StateHasChanged();
     }
-    }
-
 }
