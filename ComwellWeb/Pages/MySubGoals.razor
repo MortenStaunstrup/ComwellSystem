@@ -1,4 +1,5 @@
-@page "/MyGoals"
+@page "/mygoals/{studentId:int}"
+
 @using System.Text.Json
 @using ComwellWeb.Services.Interfaces
 @using Core
@@ -14,7 +15,7 @@
             <h2>@PageTitle</h2>
 
             <div class="progress-and-name">
-                <h3>Din Procces</h3>
+                <h3>Dine fremskridt</h3>
                 <div class="progress-container">
                     <div class="progress-bar" style="width: @GetPctCompleted()%;"></div>
                 </div>
@@ -31,7 +32,7 @@
 
             @if (!FilteredPlan.Any())
             {
-                <p>Ingen mål matcher filteret.</p>
+                <p>Ingen mål endnu.</p>
             }
             else
             {
@@ -55,71 +56,92 @@
                             <h4 class="assignment-title">@sg.SubGoalName</h4>
                             <p class="assignment-description">@sg.SubGoalDescription</p>
                             <button class="toggle-button" @onclick="() => ToggleExpand(sg.SubGoalId)">
-                                @(Expanded.Contains(sg.SubGoalId) ? "▼ Vis mindre" : "▶ Vis mere")
+                                @(Expanded.Contains(sg.SubGoalId) ? "Vis mindre" : "Vis mere")
                             </button>
 
                             @if (Expanded.Contains(sg.SubGoalId))
-                            {
+                            { <!--hvis status = true: "fuldført" og omvendt -->
                                 <div class="subgoal-details">
                                     <p>Type: @sg.SubGoalType</p>
-                                    <p>Status: @(sg.SubGoalStatus ? "Fuldført" : "Ikke fuldført")</p>
-
-                                    <!-- Kommentarer -->
-                                    <div class="comment-section">
-                                        <h6>Kommentarer</h6>
-                                        @foreach (var comment in CommentMap.GetValueOrDefault(sg.SubGoalId, new List<Comment>()))
-                                        {
-                                            <div class="comment">
-                                                <span class="date">@comment.CommentDate.ToString("dd-MM-yyyy HH:mm")</span>
-                                                <p>@comment.CommentContent</p>
-                                            </div>
-                                        }
-
-                                        <input placeholder="Skriv kommentar" value="@NewComment[sg.SubGoalId]"
-                                               @oninput="e => NewComment[sg.SubGoalId] = e.Value?.ToString()" />
-                                        <button @onclick="() => SendComment(sg.SubGoalId)" disabled="@IsReadOnly">
-                                            Send
-                                        </button>
-                                    </div>
-
-                                    <!-- Mellemmål og minimål -->
-                                    <div class="middle-goals">
-                                        @foreach (var mg in sg.MiddleGoals)
-                                        {
-                                            <div class="middle-goal">
-                                                <strong>@mg.Name</strong> (@(mg.Status ? "✔️" : ""))
-
-                                                <ul>
-                                                    @foreach (var mm in mg.MiniGoals)
-                                                    {
-                                                        <li>
-                                                            <label>
+                                    <p>Status: @(sg.SubGoalStatus ? "Fuldført" : "Ikke fuldført")</p> <!--ligesom if else-->
+                                        
+                                        <!--Mål-->
+                                        <div class="middle-goals">
+                                            @foreach (var mg in sg.MiddleGoals)
+                                            {
+                                                <div class="middle-goal">
+                                                    <strong>@mg.Name</strong> @(mg.Status ? "klaret" : "") <!--skal nok byttes ud med en sej emoji-->
+                                                    <ul>
+                                                        @foreach (var mm in mg.MiniGoals)
+                                                        {
+                                                            <li>
+                                                                <label>
+                                                                    <input type="checkbox"
+                                                                           checked="@mm.Status"
+                                                                           disabled="true" /> @mm.Name
+                                                                </label>
                                                                 <input type="checkbox"
-                                                                       @onchange="_ => ToggleMiniGoalStatus(sg.SubGoalId, mg, mm)"
-                                                                       checked="@mm.Status"
-                                                                       disabled="@IsReadOnly" />
-                                                                @mm.Name
-                                                            </label>
+                                                                       @onchange="_ => ToggleSelectedMiniGoal(sg.SubGoalId, mm)"
+                                                                       checked="@(SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedList) && selectedList.Contains(mm))"
+                                                                       disabled="@(!IsStudent)" />
 
-                                                            <input type="checkbox"
-                                                                   @onchange="_ => ToggleSelectedMiniGoal(sg.SubGoalId, mm)"
-                                                                   checked="@(SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedList) && selectedList.Contains(mm))"
-                                                                   disabled="@IsReadOnly" /> Vælg
-                                                        </li>
-                                                    }
-                                                </ul>
-                                            </div>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            }
+                                        </div>
+                                        @if (IsStudent && SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedGoals) && selectedGoals.Any())
+                                        {
+                                            <button class="action-button"
+                                                    @onclick="() => CompleteSubGoal(sg, selectedGoals)"
+                                                    disabled="@_sending">
+                                                Afslut valgte minimål
+                                            </button>
                                         }
-                                    </div>
+                                    <!--Kommentarer. Sensitiv over for role-->
+                                    <div class="comment-section-student">
+                                        <h6>Kommentarer</h6>
 
-                                    @if (SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedGoals) && selectedGoals.Any())
-                                    {
-                                        <button class="action-button"
-                                                @onclick="() => CompleteSubGoal(sg, selectedGoals)"
-                                                disabled="@(_sending || IsReadOnly)">
-                                            Afslut valgte minimål
+                                        <button class="toggle-button" @onclick="() => ToggleCommentHistory(sg.SubGoalId)">
+                                            @(ExpandedComments.Contains(sg.SubGoalId) ? "Skjul kommentarer" : "Vis kommentarer")
                                         </button>
-                                    }
+
+                                        @if (ExpandedComments.Contains(sg.SubGoalId))
+                                        {
+                                            @foreach (var comment in CommentMap.GetValueOrDefault(sg.SubGoalId, new List<Comment>()))
+                                            {
+                                                <div class="comment">
+                                                    <span class="date">@comment.CommentDate.ToString("dd-MM-yyyy HH:mm")</span>
+                                                    <strong>@comment.CommentSenderName</strong>
+                                                    <p>@comment.CommentContent</p>
+                                                </div>
+                                            }
+                                        }
+
+
+                                        @if (CurrentUser.Role == "Student" && IsStudent)
+                                        {
+                                            <input placeholder="Skriv kommentar" value="@NewComment[sg.SubGoalId]"
+                                                   @oninput="e => NewComment[sg.SubGoalId] = e.Value?.ToString()" />
+                                            <button @onclick="() => SendComment(sg.SubGoalId)">
+                                                Send
+                                            </button>
+                                        }
+
+                                        @if (IsKitchenManager)
+                                        {
+                                            <input class="comment-input"
+                                                   placeholder="Lærer-kommentar"
+                                                   value="@KitchenmanagerNewComment[sg.SubGoalId]"
+                                                   @oninput="(e) => KitchenmanagerNewComment[sg.SubGoalId] = e.Value?.ToString()" />
+
+                                            <button class="action-button"
+                                                    @onclick="() => SendKitchenManagerComment(sg.SubGoalId)">
+                                                Tilføj lærer-kommentar
+                                            </button>
+                                        }
+                                        </div>
                                 </div>
                             }
                         </div>
@@ -127,13 +149,37 @@
                 </div>
             }
         </div>
+        
     </div>
 </div>
 
+@if (CurrentUser != null && UserModel != null) //usermodel er den elev's page man er inde på
+{
+    if (CurrentUser.Role == "KitchenManager")
+    {
+        <h2>@UserModel.UserName</h2>
+    }
+    else if (CurrentUser.UserId == UserModel.UserId)
+    {
+        
+    }
+    else
+    {
+        
+    }
+}
+else
+{
+    <h2>Indlæser...</h2>
+}
+
 @code {
-    private User CurrentUser;
+    private User? user;
+    private User CurrentUser = null!;
     private User UserModel;
-    private bool HasAccess;
+    private bool IsReadOnlyViewer = true;
+    private int ViewerUserId;
+   // private bool HasAccess;
     private string PageTitle;
     private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new();
     private List<SubGoal> FullPlan = new();
@@ -141,9 +187,18 @@
     private Dictionary<int, List<Comment>> CommentMap = new();
     private Dictionary<int, string> NewComment = new();
     private Dictionary<int, string> Errors = new();
+    private Dictionary<int, string> KitchenmanagerNewComment = new();
     private HashSet<int> Expanded = new();
     private bool IsReadOnly;
     private bool _sending = false;
+    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
+    private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
+    private bool IsViewingStudent => CurrentUser.Role == "KitchenManager" && UserModel?.Role == "Student";
+    //public bool IsMarkedByStudent { get; set; }
+
+
+
+
 
     [Parameter] public int? studentId { get; set; }
 
@@ -155,7 +210,7 @@
         var viewId = studentId ?? CurrentUser.UserId;
         IsReadOnly = viewId != CurrentUser.UserId;
         UserModel = await UserService.GetUserByUserId(viewId);
-        HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
+      //  HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
         PageTitle = CurrentUser.Role == "KitchenManager" ? UserModel.UserName : "Elevplan";
 
         FullPlan = UserModel.StudentPlan;
@@ -165,10 +220,23 @@
         {
             var comments = await CommentService.GetCommentsBySubGoalId(sg.SubGoalId, viewId);
             CommentMap[sg.SubGoalId] = comments?.ToList() ?? new List<Comment>();
-            NewComment[sg.SubGoalId] = string.Empty;
-            Errors[sg.SubGoalId] = string.Empty;
+
+            // Opdater kommentarernes navn
+            foreach (var comment in CommentMap[sg.SubGoalId])
+            {
+                if (string.IsNullOrEmpty(comment.CommentSenderName))
+                {
+                    var user = await UserService.GetUserByUserId(comment.CommentSenderId);
+                    comment.CommentSenderName = user?.UserName ?? "Ukendt bruger";
+                }
+            }
+
+            NewComment[sg.SubGoalId] = "";
+            KitchenmanagerNewComment[sg.SubGoalId] = "";
+            Errors[sg.SubGoalId] = "";
         }
     }
+
 
     private void ApplyFilter()
     {
@@ -181,6 +249,7 @@
     }
 
     private string selectedFilter = "all";
+
     private void OnFilterChanged(ChangeEventArgs e)
     {
         selectedFilter = e.Value?.ToString()?.ToLower() ?? "all";
@@ -192,47 +261,44 @@
         if (!Expanded.Add(id)) Expanded.Remove(id);
     }
 
-    private async Task SendComment(int sgId)
+    private async Task SendComment(int SubGoalId)
     {
-        if (string.IsNullOrWhiteSpace(NewComment[sgId]))
+        if (string.IsNullOrWhiteSpace(NewComment[SubGoalId]))
         {
-            Errors[sgId] = "Kommentaren må ikke være tom.";
+            Errors[SubGoalId] = "Kommentaren må ikke være tom.";
             return;
         }
 
         var newC = new Comment
         {
             CommentDate = DateTime.Now,
-            CommentSubGoalId = sgId,
-            CommentContent = NewComment[sgId],
+            CommentSubGoalId = SubGoalId,
+            CommentContent = NewComment[SubGoalId],
             CommentSenderId = CurrentUser.UserId,
+            CommentSenderName = CurrentUser.UserName,
             StudentId = studentId ?? CurrentUser.UserId
         };
 
         try
         {
             CommentService.AddComment(newC);
-            CommentMap[sgId].Add(newC);
-            NewComment[sgId] = string.Empty;
+            CommentMap[SubGoalId].Add(newC);
+            KitchenmanagerNewComment[SubGoalId] = "";
+            Errors[SubGoalId] = "";
+            NewComment[SubGoalId] = "";
         }
         catch (Exception ex)
         {
-            Errors[sgId] = ex.Message;
+            Errors[SubGoalId] = ex.Message;
         }
     }
 
-    private void ToggleMiniGoalStatus(int sgId, MiddleGoal mg, MiniGoal mm)
+    private void ToggleSelectedMiniGoal(int SubGoalId, MiniGoal mm)
     {
-        mm.Status = !mm.Status;
-        // TODO: Opdater database
-    }
+        if (!SelectedMiniGoals.ContainsKey(SubGoalId))
+            SelectedMiniGoals[SubGoalId] = new List<MiniGoal>();
 
-    private void ToggleSelectedMiniGoal(int sgId, MiniGoal mm)
-    {
-        if (!SelectedMiniGoals.ContainsKey(sgId))
-            SelectedMiniGoals[sgId] = new List<MiniGoal>();
-
-        var selected = SelectedMiniGoals[sgId];
+        var selected = SelectedMiniGoals[SubGoalId];
         if (selected.Contains(mm))
             selected.Remove(mm);
         else
@@ -260,7 +326,7 @@
                 var noti = new Notification
                 {
                     NotificationId = ++newId,
-                    UserId = responsibleId,
+                    UserId = responsibleId, //userId betyder lederen her
                     SenderId = CurrentUser.UserId,
                     MiniGoalName = mm.Name,
                     NotificationContent = $"{CurrentUser.UserName} har færdiggjort et minimål: '{mm.Name}'",
@@ -290,5 +356,43 @@
         if (FullPlan == null || !FullPlan.Any()) return "0";
         var pct = 100.0 * FullPlan.Count(s => s.SubGoalStatus) / FullPlan.Count;
         return Math.Truncate(pct).ToString("F0");
+    }
+
+    private async Task SendKitchenManagerComment(int subGoalId)
+    {
+        if (string.IsNullOrWhiteSpace(KitchenmanagerNewComment[subGoalId]))
+        {
+            Errors[subGoalId] = "Kommentaren må ikke være tom!";
+            return;
+        }
+
+        var newComment = new Comment
+        {
+            CommentDate = DateTime.Now,
+            CommentSubGoalId = subGoalId,
+            CommentContent = KitchenmanagerNewComment[subGoalId],
+            CommentSenderName = CurrentUser.UserName,
+            CommentSenderId = CurrentUser.UserId,
+            StudentId = studentId ?? CurrentUser.UserId
+        };
+
+        try
+        {
+            CommentService.AddComment(newComment);
+            CommentMap[subGoalId].Add(newComment);
+            KitchenmanagerNewComment[subGoalId] = "";
+            Errors[subGoalId] = "";
+        }
+        catch (Exception ex)
+        {
+            Errors[subGoalId] = $"Fejl ved kommentar: {ex.Message}";
+        }
+    }
+    private HashSet<int> ExpandedComments = new();
+
+    private void ToggleCommentHistory(int subGoalId)
+    {
+        if (!ExpandedComments.Add(subGoalId))
+            ExpandedComments.Remove(subGoalId);
     }
 }

@@ -204,7 +204,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     }
 
 
-    public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
+    /*public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
     {
         // Studentplan update
         var filter = Builders<User>.Filter.And(
@@ -273,13 +273,71 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             await userCollection.ReplaceOneAsync(u => u.UserId == user.UserId, user);
         }
         return subGoal;
+    }*/
+
+     public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
+{
+    Console.WriteLine("Updating subgoal: repository");
+
+    // Find studerende, der har dette subgoal i deres plan
+    var filter = Builders<User>.Filter.And(
+        Builders<User>.Filter.Eq("Role", "Student"),
+        Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId)
+    );
+
+    var users = await userCollection.Find(filter).ToListAsync();
+
+    foreach (var user in users)
+    {
+        for (int i = 0; i < user.StudentPlan.Count; i++)
+        {
+            if (user.StudentPlan[i].SubGoalId == subGoal.SubGoalId)
+            {
+                // Opdater overordnet info
+                user.StudentPlan[i].SubGoalName = subGoal.SubGoalName;
+                user.StudentPlan[i].SubGoalDescription = subGoal.SubGoalDescription;
+                user.StudentPlan[i].SubGoalType = subGoal.SubGoalType;
+
+                var updatedMiddleGoals = new List<MiddleGoal>();
+
+                foreach (var newMiddle in subGoal.MiddleGoals)
+                {
+                    var existingMiddle = user.StudentPlan[i].MiddleGoals
+                        ?.FirstOrDefault(m => m.Name == newMiddle.Name);
+
+                    var updatedMiniGoals = new List<MiniGoal>();
+
+                    foreach (var newMini in newMiddle.MiniGoals)
+                    {
+                        var existingMini = existingMiddle?.MiniGoals
+                            ?.FirstOrDefault(m => m.Name == newMini.Name);
+
+                        // Lav merge af status og IsMarkedByStudent
+                        updatedMiniGoals.Add(new MiniGoal
+                        {
+                            Name = newMini.Name,
+                            Status = newMini.Status || existingMini?.Status == true,
+                        });
+                    }
+
+                    updatedMiddleGoals.Add(new MiddleGoal
+                    {
+                        Name = newMiddle.Name,
+                        MiniGoals = updatedMiniGoals
+                    });
+                }
+
+                user.StudentPlan[i].MiddleGoals = updatedMiddleGoals;
+            }
+        }
+
+        await userCollection.ReplaceOneAsync(u => u.UserId == user.UserId, user);
     }
 
-
-
+    return subGoal;
+}
     
     
-   
     /* public async void UpdateSubGoalDetails(SubGoal subGoal)
     {
         // updater i subgoals collection

@@ -12,4 +12,5 @@ public class Comment
     public int CommentSubGoalId { get; set; }
     public int StudentId { get; set; }
     public int CommentSenderId { get; set; }
+    public string CommentSenderName { get; set; }
 }
