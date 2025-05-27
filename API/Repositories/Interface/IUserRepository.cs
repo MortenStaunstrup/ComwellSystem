@@ -20,4 +20,6 @@ public interface IUserRepository
     Task<int> GetMaxUserId();  // Hent den højeste bruger-id i databasen
  
     Task UpdateUserAsync(User user);
+    Task DeleteUserAsync(int userId);
+
 }

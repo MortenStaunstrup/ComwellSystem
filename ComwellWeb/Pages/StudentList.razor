@@ -156,12 +156,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await _userservice.GetUserLoggedInAsync();
-        if (CurrentUser == null)
-        {
-            nav.NavigateTo("/login", true);
-            return;
-        }
-        else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
+        if (CurrentUser?.Role == "Student" || CurrentUser == null)
         {
             nav.NavigateTo("/login");
             return;

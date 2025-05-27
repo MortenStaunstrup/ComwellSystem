@@ -59,6 +59,10 @@ else
                                 <option value="Student">Elev</option>
                                 <option value="KitchenManager">Køkkenleder</option>
                                 <option value="HR">HR</option>
+                     @if (_currentUser.Role == "Admin")
+                                {
+                                    <option value="Admin">Admin</option>
+                                }
                             </InputSelect>
                         </div>
                         <div class="mb-3">
@@ -104,7 +108,7 @@ else
         _model = new User();
         EditContext = new EditContext(_model);
         _currentUser = await _userService.GetUserLoggedInAsync();
-        if(_currentUser == null || _currentUser.Role != "HR")
+        if(_currentUser == null)
             NavigationManager.NavigateTo("/login");
         int maxId = await _userService.GetMaxUserId();
         _model.UserId = maxId + 1;

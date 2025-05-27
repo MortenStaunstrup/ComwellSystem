@@ -228,4 +228,17 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
+    public async Task DeleteUserAsync(int userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+        
+        var user = await _collection.Find(filter).FirstOrDefaultAsync();
+        if (user?.PictureId != null)
+        {
+            await _bucket.DeleteAsync(user.PictureId);
+        }
+
+        await _collection.DeleteOneAsync(filter);
+    }
+
 }

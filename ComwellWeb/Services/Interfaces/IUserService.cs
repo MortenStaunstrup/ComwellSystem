@@ -23,4 +23,5 @@ public interface IUserService
     
     Task UpdateUser(User user);
 
+    Task DeleteUserAsync(int userId);
 }

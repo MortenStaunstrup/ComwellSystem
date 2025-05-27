@@ -115,7 +115,7 @@ else
     {
         _currentUser = await UserService.GetUserLoggedInAsync();
 
-        if (_currentUser.Role != "KitchenManager")
+        if (_currentUser.Role != "KitchenManager" && _currentUser.Role != "Admin")
         {
             NavMan.NavigateTo("/");
         }
