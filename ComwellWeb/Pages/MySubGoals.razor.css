@@ -28,6 +28,18 @@
     height: 18px;
     overflow: hidden;
 }
+.middle-goal-label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.middle-goal-separator {
+    border-bottom: 1px solid #ccc;
+    margin: 8px 0;
+}
+
 
 .mysubgoals-root .progress-bar {
     height: 18px;
