@@ -15,12 +15,12 @@ namespace API.Repositories
         private readonly MongoClient _client;
         private readonly IMongoCollection<User> _userCollection;
         
-        // Connection til database. Kunne også skrive den i launchSettings.json?
         public NotificationRepository(ISubGoalRepository subgoalRepository, IUserRepository userRepository)
         {
             _userRepository = userRepository;
             _subgoalRepository = subgoalRepository;
 
+            // Connection til database. Kunne også skrive den i launchSettings.json?
             _connectionString = "mongodb+srv://mortenstnielsen:hlEgCKJrN89edDQt@clusterfree.a2y2b.mongodb.net/";
             if (string.IsNullOrEmpty(_connectionString))
             {
@@ -33,7 +33,29 @@ namespace API.Repositories
         }
 
         // Create
-        public async Task SendNotificationAsync(Notification notification)
+        public async Task SendMiniGoalNotificationAsync(Notification notification)
+        {
+            notification.NotificationId = await GetMaxNotificationIdAsync() + 1;
+            notification.TimeStamp = DateTime.UtcNow;
+
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, notification.UserId);
+            var update = Builders<User>.Update.Push(u => u.Notifications, notification);
+
+            var result = await _userCollection.UpdateOneAsync(filter, update);
+
+            if (result.MatchedCount == 0)
+            {
+                throw new Exception($"Ingen bruger med UserId {notification.UserId} fundet");
+            }
+
+            if (result.ModifiedCount == 0)
+            {
+                throw new Exception($"Notification blev ikke tilføjet til bruger {notification.UserId}");
+            }
+            
+        }
+        
+        public async Task SendMiddleGoalNotificationAsync(Notification notification)
         {
             notification.NotificationId = await GetMaxNotificationIdAsync() + 1;
             notification.TimeStamp = DateTime.UtcNow;
@@ -79,6 +101,32 @@ namespace API.Repositories
             
             return await _userCollection.UpdateOneAsync(filter, update, options);
         }
+        
+        public async Task<UpdateResult> UpdateMiddleGoalAndRemoveNotificationAsync(int userId, string middleGoalName, int notificationId)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+
+            var update = Builders<User>.Update
+                .Set("StudentPlan.$[sub].MiddleGoals.$[middle].Status", true)
+                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+
+            var arrayFilters = new List<ArrayFilterDefinition>
+            {
+                new JsonArrayFilterDefinition<BsonDocument>("{ 'sub.MiddleGoals': { $exists: true } }"),
+                new JsonArrayFilterDefinition<BsonDocument>("{ 'middle.Name': '" + middleGoalName + "' }")
+            };
+
+            var options = new UpdateOptions { ArrayFilters = arrayFilters };
+            
+            Console.WriteLine("MongoDB update command:");
+            Console.WriteLine($"UserId: {userId}");
+            Console.WriteLine($"MiddleGoalName: {middleGoalName}");
+            Console.WriteLine($"NotificationId: {notificationId}");
+
+            
+            
+            return await _userCollection.UpdateOneAsync(filter, update, options);
+        }
 
 
 
@@ -98,6 +146,32 @@ namespace API.Repositories
             var users = await _userCollection.Find(_ => true).ToListAsync();
             return users.SelectMany(u => u.Notifications).Max(n => (int?)n.NotificationId) ?? 0;
         }
+        public async Task<bool> NotificationExistsForMiniGoalAsync(int userId, int senderId, string miniGoalName)
+        {
+            var user = await _userCollection.Find(u => u.UserId == userId).FirstOrDefaultAsync();
+
+            if (user == null || user.Notifications == null)
+                return false;
+
+            return user.Notifications.Any(n =>
+                n.SenderId == senderId &&
+                !n.IsConfirmed &&
+                n.MiniGoalName == miniGoalName);
+        }
+        
+        public async Task<bool> NotificationExistsForMiddleGoalAsync(int userId, int senderId, string middleGoalName)
+        {
+            var user = await _userCollection.Find(u => u.UserId == userId).FirstOrDefaultAsync();
+
+            if (user == null || user.Notifications == null)
+                return false;
+
+            return user.Notifications.Any(n =>
+                n.SenderId == senderId &&
+                !n.IsConfirmed &&
+                n.MiddleGoalName == middleGoalName);
+        }
+        
 
         
     }

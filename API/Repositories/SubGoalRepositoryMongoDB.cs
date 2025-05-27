@@ -311,8 +311,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
                     {
                         var existingMini = existingMiddle?.MiniGoals
                             ?.FirstOrDefault(m => m.Name == newMini.Name);
-
-                        // Lav merge af status og IsMarkedByStudent
+                        
                         updatedMiniGoals.Add(new MiniGoal
                         {
                             Name = newMini.Name,
