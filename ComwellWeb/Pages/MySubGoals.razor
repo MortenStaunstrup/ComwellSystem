@@ -1,35 +1,45 @@
-@page "/mygoals/{studentId:int}"
-
 @using System.Text.Json
+
 @using ComwellWeb.Services.Interfaces
 @using Core
+
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
 @inject IUserService UserService
 @inject ICommentService CommentService
 @inject INotificationService NotificationService
-@inject ISubGoalService SubGoalService
 
+@page "/mygoals/{studentId:int}"
+
+@* Rubrik over hvert delmål *@
 <div class="mysubgoals-root">
     <div class="dashboard-container">
         <div class="left-section">
             <h2>@PageTitle</h2>
 
+        
             <div class="progress-and-name">
                 <h3>Dine fremskridt</h3>
-                <div class="progress-container">
+                <div class="progress-container">            @*TODO skal fikses*@
                     <div class="progress-bar" style="width: @GetPctCompleted()%;"></div>
                 </div>
             </div>
 
+        
             <div class="filter-container">
-                <label for="statusFilter">Filtrer efter status:</label>
+                <label for="statusFilter">@* kan stå noget her, hvis der er brug for det *@</label>
                 <select id="statusFilter" class="status-select" @onchange="OnFilterChanged">
+                
+                    @* Bruger filtre i @code *@
                     <option value="all">Alle</option>
                     <option value="completed">Fuldførte</option>
                     <option value="notcompleted">Ikke fuldførte</option>
                 </select>
             </div>
-
+        
+        
+            @* Filter til delmål. Vis hhv. alle, færdige og ikke-færdige delmål *@
             @if (!FilteredPlan.Any())
             {
                 <p>Ingen mål endnu.</p>
@@ -48,6 +58,8 @@
                 {
                     <p>@FilteredPlan.Count delmål mangler</p>
                 }
+            
+                @* Containeren for hvert delmål *@
 
                 <div class="assignments-container">
                     @foreach (var sg in FilteredPlan)
@@ -58,51 +70,108 @@
                             <button class="toggle-button" @onclick="() => ToggleExpand(sg.SubGoalId)">
                                 @(Expanded.Contains(sg.SubGoalId) ? "Vis mindre" : "Vis mere")
                             </button>
-
+                        
                             @if (Expanded.Contains(sg.SubGoalId))
-                            { <!--hvis status = true: "fuldført" og omvendt -->
+                            {
+                                @* hvis status = true: "fuldført" og omvendt *@
                                 <div class="subgoal-details">
                                     <p>Type: @sg.SubGoalType</p>
-                                    <p>Status: @(sg.SubGoalStatus ? "Fuldført" : "Ikke fuldført")</p> <!--ligesom if else-->
-                                        
-                                        <!--Mål-->
-                                        <div class="middle-goals">
-                                            @foreach (var mg in sg.MiddleGoals)
-                                            {
-                                                <div class="middle-goal">
-                                                    <strong>@mg.Name</strong> @(mg.Status ? "klaret" : "") <!--skal nok byttes ud med en sej emoji-->
-                                                    <ul>
-                                                        @foreach (var mm in mg.MiniGoals)
-                                                        {
-                                                            <li>
-                                                                <label>
-                                                                    <input type="checkbox"
-                                                                           checked="@mm.Status"
-                                                                           disabled="true" /> @mm.Name
-                                                                </label>
-                                                                <input type="checkbox"
-                                                                       @onchange="_ => ToggleSelectedMiniGoal(sg.SubGoalId, mm)"
-                                                                       checked="@(SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedList) && selectedList.Contains(mm))"
-                                                                       disabled="@(!IsStudent)" />
+                                    <p>Status: @(sg.SubGoalStatus ? "Fuldført" : "Ikke fuldført")</p> @* ligesom if else: status afhænger af om subgoalstatus er fuldført eller ikke fuldført *@
 
-                                                            </li>
-                                                        }
-                                                    </ul>
-                                                </div>
+                                    @* Mål *@
+                                    <div class="middle-goal-separator"></div> @* adskiller midddle- og minigoals i css *@
+                                    @foreach (var md in sg.MiddleGoals)
+                                    {
+                                        bool hasMiniGoals = md.MiniGoals != null && md.MiniGoals.Any();
+                                        bool allMiniGoalsDone = hasMiniGoals && md.MiniGoals.All(mg => mg.Status);
+
+                                        <div class="middle-goal-wrapper">
+                                            <div class="middle-goal-header"
+                                                 style="cursor: @(hasMiniGoals ? "pointer" : "default")"
+                                                 @onclick="@(hasMiniGoals ? () => ToggleMiddleGoalExpand(sg.SubGoalId, md.Name) : null)"> @* hvis middlegoal har minigoals skal man kunne ekspandere *@
+                                            
+                                                @if (hasMiniGoals)
+                                                {
+                                                    <input type="checkbox" checked="@allMiniGoalsDone" disabled style="margin-right: 5px;" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="display:inline-block; width: 18px; margin-right: 5px;"></span> @* ekstra plads/mellemrum *@
+                                                }
+                                            
+                                                @if (hasMiniGoals)
+                                                {
+                                                    <span class="expand-icon">@((IsExpanded(sg.SubGoalId, md.Name)) ? "▼" : "▶")</span> @* hvis middlegoal har minigoals vis pil, ellers gem dem. *@
+                                                }
+                                                else
+                                                {
+                                                    <span class="expand-icon" style="visibility:hidden;">▶</span>
+                                                }
+
+                                                <label class="middle-goal-label">
+                                                    @* lav checkbox til middlegoal hvis den ikke har minigoals *@
+                                                    @if (!hasMiniGoals)
+                                                    {
+                                                        <input type="checkbox"
+                                                               checked="@md.Status"
+                                                               disabled/>
+                                                    }
+                                                    @md.Name
+                                                </label>
+                                            
+                                                @* afslut delmål knap til delmål. Kalder toggle i @code. *@
+                                                <input type="checkbox"
+                                                       @onchange="_ => ToggleSelectedMiddleGoal(sg.SubGoalId, md)"
+                                                       checked="@(SelectedMiddleGoals.TryGetValue(sg.SubGoalId, out var selectedMiddleList) && selectedMiddleList.Contains(md))"
+                                                       disabled="@(!IsStudent)" />
+                                            </div>
+        
+                                            @if (hasMiniGoals && IsExpanded(sg.SubGoalId, md.Name)) @* hvis middlegoal har minigoals: vis alle minigoals som tilhøre middlegoal. *@
+                                            {
+                                                <ul class="mini-goal-list">
+                                                    @foreach (var mm in md.MiniGoals) @* tilføjer checkbox med status kodet i for hvert minigoal *@
+                                                    {
+                                                        <li>
+                                                            <label>
+                                                                <input type="checkbox" checked="@mm.Status" disabled />
+                                                                @mm.Name
+                                                            </label>
+                                                            <input type="checkbox"
+                                                                   @onchange="_ => ToggleSelectedMiniGoal(sg.SubGoalId, mm)"
+                                                                   checked="@(SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedMiniList) && selectedMiniList.Contains(mm))"
+                                                                   disabled="@(!IsStudent)" />
+                                                        </li>
+                                                    }
+                                                </ul>
                                             }
                                         </div>
-                                        @if (IsStudent && SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedGoals) && selectedGoals.Any())
-                                        {
-                                            <button class="action-button"
-                                                    @onclick="() => CompleteSubGoal(sg, selectedGoals)"
-                                                    disabled="@_sending">
-                                                Afslut valgte minimål
-                                            </button>
-                                        }
-                                    <!--Kommentarer. Sensitiv over for role-->
+                                    }
+
+                                    @* kun vis knappen hvis det valgte middlegoal ikke har minigoals *@
+                                    @if (IsStudent && SelectedMiddleGoals.TryGetValue(sg.SubGoalId, out var selectedMiddleGoals) && selectedMiddleGoals.Any(md => md.MiniGoals == null || !md.MiniGoals.Any()))
+                                    {
+                                        @* kalder completemiddelgoal for alle valte minigoals *@
+                                        <button class="action-button"
+                                                @onclick="() => CompleteMiddleGoal(sg, selectedMiddleGoals)"
+                                                disabled="@_sending">
+                                            Afslut valgte delmål
+                                        </button>
+                                    }
+                                
+                                    @* ligesom før: vi en knap for aflutning af mål hvis tjekket af. (Isstudent er ligegyldig på den her nu, hvor lærere alligevel ikke kan tjekke af) *@
+                                    @if (IsStudent && SelectedMiniGoals.TryGetValue(sg.SubGoalId, out var selectedMiniGoals) && selectedMiniGoals.Any())
+                                    {
+                                        <button class="action-button"
+                                                @onclick="() => CompleteMiniGoal(sg, selectedMiniGoals)"
+                                                disabled="@_sending">
+                                            Afslut valgte minimål
+                                        </button>
+                                    }
+                                    @*Kommentarer. Sensitiv over for role*@
                                     <div class="comment-section-student">
                                         <h6>Kommentarer</h6>
-
+                                        
+                                        @* kalder toggelcommenthistory hvis man trykker på knappen *@
                                         <button class="toggle-button" @onclick="() => ToggleCommentHistory(sg.SubGoalId)">
                                             @(ExpandedComments.Contains(sg.SubGoalId) ? "Skjul kommentarer" : "Vis kommentarer")
                                         </button>
@@ -119,11 +188,10 @@
                                             }
                                         }
 
-
                                         @if (CurrentUser.Role == "Student" && IsStudent)
                                         {
                                             <input placeholder="Skriv kommentar" value="@NewComment[sg.SubGoalId]"
-                                                   @oninput="e => NewComment[sg.SubGoalId] = e.Value?.ToString()" />
+                                                   @oninput="e => NewComment[sg.SubGoalId] = e.Value?.ToString()"/>
                                             <button @onclick="() => SendComment(sg.SubGoalId)">
                                                 Send
                                             </button>
@@ -134,14 +202,14 @@
                                             <input class="comment-input"
                                                    placeholder="Lærer-kommentar"
                                                    value="@KitchenmanagerNewComment[sg.SubGoalId]"
-                                                   @oninput="(e) => KitchenmanagerNewComment[sg.SubGoalId] = e.Value?.ToString()" />
+                                                   @oninput="(e) => KitchenmanagerNewComment[sg.SubGoalId] = e.Value?.ToString()"/>
 
                                             <button class="action-button"
                                                     @onclick="() => SendKitchenManagerComment(sg.SubGoalId)">
                                                 Tilføj lærer-kommentar
                                             </button>
                                         }
-                                        </div>
+                                    </div>
                                 </div>
                             }
                         </div>
@@ -149,10 +217,10 @@
                 </div>
             }
         </div>
-        
     </div>
 </div>
 
+@* Skal skrive en besked på siden afhængigt af, hvilken rolle man har. Tænke noget "ingen adgang" eller noget. Den gør ikke noget lige nu. *@
 @if (CurrentUser != null && UserModel != null) //usermodel er den elev's page man er inde på
 {
     if (CurrentUser.Role == "KitchenManager")
@@ -174,41 +242,59 @@ else
 }
 
 @code {
+    
+    @* Parametre *@
+    @* vi bruger studentId fra parent-komponent, som bare bliver parent udfa hvilken variabel vi bruger. *@
+    [Parameter] public int? studentId { get; set; }
+    
     private User? user;
     private User CurrentUser = null!;
     private User UserModel;
     private bool IsReadOnlyViewer = true;
+    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
+    private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
     private int ViewerUserId;
-   // private bool HasAccess;
     private string PageTitle;
-    private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new();
+    private bool _sending = false;
+    
+    @* hash-sets *@
+    @* laver to obejkter som er i samlinger. Sikrer, at der ikke er dubletter. *@
+    private HashSet<string> expandedMiddleGoals = new HashSet<string>();
+    private HashSet<int> Expanded = new();
+    
+    @* Lister *@
     private List<SubGoal> FullPlan = new();
     private List<SubGoal> FilteredPlan = new();
+    
+    @* Dictionaries *@
+    private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new();
+    private Dictionary<int, List<MiddleGoal>> SelectedMiddleGoals = new();
     private Dictionary<int, List<Comment>> CommentMap = new();
     private Dictionary<int, string> NewComment = new();
     private Dictionary<int, string> Errors = new();
     private Dictionary<int, string> KitchenmanagerNewComment = new();
-    private HashSet<int> Expanded = new();
-    private bool IsReadOnly;
-    private bool _sending = false;
-    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
-    private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
-    private bool IsViewingStudent => CurrentUser.Role == "KitchenManager" && UserModel?.Role == "Student";
-    //public bool IsMarkedByStudent { get; set; }
-
-
-
-
-
-    [Parameter] public int? studentId { get; set; }
-
+    
+    @* Køre når siden er klar til at starte *@
     protected override async Task OnInitializedAsync()
     {
+        @** henter logged in user fra localstorage med JS for at give currentuser en værdi. **@
         var userJson = await JS.InvokeAsync<string>("localStorage.getItem", "user");
         CurrentUser = JsonSerializer.Deserialize<User>(userJson!);
-
+    
+        @* @* viewId bliver studentId, medmindre den er null – så bruges CurrentUser.UserId (lederen) *@
         var viewId = studentId ?? CurrentUser.UserId;
-        IsReadOnly = viewId != CurrentUser.UserId;
+        
+        @* IsReadOnlyViewer er hvis en elev ser på andens elevplan. Ved ikke om den skal være her.*@
+        IsReadOnlyViewer = viewId != CurrentUser.UserId;
+        
+        if (CurrentUser.Role == "Student" && viewId != CurrentUser.UserId)
+        {
+            NavigationManager.NavigateTo("/noaccess");
+            return;
+        }
+
+        
+        
         UserModel = await UserService.GetUserByUserId(viewId);
       //  HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
         PageTitle = CurrentUser.Role == "KitchenManager" ? UserModel.UserName : "Elevplan";
@@ -217,11 +303,11 @@ else
         ApplyFilter();
 
         foreach (var sg in FullPlan)
-        {
+        {   @* var regner selv typen ud. Fx. ved den, at comments er en list. *@
             var comments = await CommentService.GetCommentsBySubGoalId(sg.SubGoalId, viewId);
             CommentMap[sg.SubGoalId] = comments?.ToList() ?? new List<Comment>();
 
-            // Opdater kommentarernes navn
+            @* Opdater kommentarernes navn*@
             foreach (var comment in CommentMap[sg.SubGoalId])
             {
                 if (string.IsNullOrEmpty(comment.CommentSenderName))
@@ -304,8 +390,20 @@ else
         else
             selected.Add(mm);
     }
+    
+    private void ToggleSelectedMiddleGoal(int SubGoalId, MiddleGoal md)
+    {
+        if (!SelectedMiddleGoals.ContainsKey(SubGoalId))
+            SelectedMiddleGoals[SubGoalId] = new List<MiddleGoal>();
 
-    private async Task CompleteSubGoal(SubGoal sg, List<MiniGoal> selectedGoals)
+        var selected = SelectedMiddleGoals[SubGoalId];
+        if (selected.Contains(md))
+            selected.Remove(md);
+        else
+            selected.Add(md);
+    }
+
+    private async Task CompleteMiniGoal(SubGoal sg, List<MiniGoal> selectedMiniGoals)
     {
         if (_sending) return;
         _sending = true;
@@ -321,8 +419,17 @@ else
 
             var newId = await NotificationService.GetMaxNotificationIdAsync();
 
-            foreach (var mm in selectedGoals)
+            foreach (var mm in selectedMiniGoals)
             {
+                // Check om notifikation allerede findes
+                bool exists = await NotificationService.NotificationExistsForMiniGoalAsync(responsibleId.Value, CurrentUser.UserId, mm.Name);
+                
+                if (exists)
+                {
+                    Errors[sg.SubGoalId] = $"Notifikation for minimålet '{mm.Name}' er allerede sendt.";
+                    continue;
+                }
+                
                 var noti = new Notification
                 {
                     NotificationId = ++newId,
@@ -332,13 +439,73 @@ else
                     NotificationContent = $"{CurrentUser.UserName} har færdiggjort et minimål: '{mm.Name}'",
                     TimeStamp = DateTime.Now
                 };
-
-                await NotificationService.SendNotificationAsync(noti);
+                await NotificationService.SendMiniGoalNotificationAsync(noti);
                 mm.Status = true;
             }
+        }
+        catch (Exception ex)
+        {
+            Errors[sg.SubGoalId] = $"Fejl ved afslutning af delmål: {ex.Message}";
+        }
+        finally
+        {
+            _sending = false;
+            StateHasChanged();
+        }
+    }
 
-            sg.SubGoalStatus = true;
-            SelectedMiniGoals[sg.SubGoalId].Clear();
+
+
+    
+    private async Task CompleteMiddleGoal(SubGoal sg, List<MiddleGoal> selectedMiddleGoals)
+    {
+        if (_sending) return;
+        _sending = true;
+    
+        try
+        {
+            var responsibleId = UserModel.UserIdResponsible;
+            if (responsibleId == null)
+            {
+                Errors[sg.SubGoalId] = "Ingen ansvarlig bruger fundet.";
+                return;
+            }
+
+            var newId = await NotificationService.GetMaxNotificationIdAsync();
+
+            foreach (var md in selectedMiddleGoals)
+            {
+                // Check om notifikation allerede findes
+                bool exists = await NotificationService.NotificationExistsForMiddleGoalAsync(responsibleId.Value, CurrentUser.UserId, md.Name);
+
+
+                if (exists)
+                {
+                    Errors[sg.SubGoalId] = $"Notifikation for delmålet '{md.Name}' er allerede sendt.";
+                    continue;
+                }
+
+                var noti = new Notification
+                {
+                    NotificationId = ++newId,
+                    UserId = responsibleId,
+                    SenderId = CurrentUser.UserId,
+                    MiddleGoalName = md.Name,
+                    NotificationContent = $"{CurrentUser.UserName} har færdiggjort et delmål: '{md.Name}'",
+                    TimeStamp = DateTime.Now
+                };
+
+                await NotificationService.SendMiddleGoalNotificationAsync(noti);
+                md.Status = true;
+            }
+        
+            bool allDone = sg.MiddleGoals.All(m => m.Status) &&
+                           sg.MiddleGoals.SelectMany(m => m.MiniGoals).All(mg => mg.Status);
+            if (allDone)
+            {
+                sg.SubGoalStatus = true;
+            }
+            SelectedMiddleGoals[sg.SubGoalId].Clear();
         }
         catch (Exception ex)
         {
@@ -395,4 +562,16 @@ else
         if (!ExpandedComments.Add(subGoalId))
             ExpandedComments.Remove(subGoalId);
     }
+    
+   
+    private void ToggleMiddleGoalExpand(int subGoalId, string middleGoalName)
+    {
+        var key = $"{subGoalId}_{middleGoalName}";
+        if (!expandedMiddleGoals.Add(key))
+        {
+            expandedMiddleGoals.Remove(key);
+        }
+    }
+
+    private bool IsExpanded(int subGoalId, string middleGoalName) => expandedMiddleGoals.Contains($"{subGoalId}_{middleGoalName}");
 }

@@ -15,9 +15,21 @@ public class NotificationService : INotificationService
     }
     
     // Create
-    public async Task SendNotificationAsync(Notification notification) 
+    public async Task SendMiniGoalNotificationAsync(Notification notification) 
     {
-        var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/send", notification);
+        var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/send-mini-goal", notification);
+        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Fejl i serverresponse: {errorContent}");
+            throw new Exception($"Fejl fra server: {response.StatusCode}");
+        }
+    }
+    
+    public async Task SendMiddleGoalNotificationAsync(Notification notification) 
+    {
+        var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/send-middle-goal", notification);
         response.EnsureSuccessStatusCode();
         if (!response.IsSuccessStatusCode)
         {
@@ -37,14 +49,19 @@ public class NotificationService : INotificationService
 
 
     // Subgoals
-    public async Task ConfirmNotifiedSubGoalAsync(int userId, int notificationId, string miniGoalName)
+    public async Task ConfirmNotifiedMiniGoalAsync(int userId, int notificationId, string miniGoalName)
     {
-        var url = $"{BaseURL}/confirm/{userId}/{notificationId}/{miniGoalName}";
+        var url = $"{BaseURL}/confirm-mini-goal/{userId}/{notificationId}/{miniGoalName}";
         var response = await _httpClient.PostAsync(url, null);
         response.EnsureSuccessStatusCode();
     }
-
-
+    
+    public async Task ConfirmNotifiedMiddleGoalAsync(int userId, int notificationId, string middleGoalName)
+    {
+        var url = $"{BaseURL}/confirm-middle-goal/{userId}/{notificationId}/{middleGoalName}";
+        var response = await _httpClient.PostAsync(url, null);
+        response.EnsureSuccessStatusCode();
+    }
 
 
     
@@ -53,4 +70,30 @@ public class NotificationService : INotificationService
     {
         return await _httpClient.GetFromJsonAsync<int>($"{BaseURL}/maxid");
     }
+    
+    public async Task<bool> NotificationExistsForMiddleGoalAsync(int userId, int senderId, string middleGoalName)
+    {
+        var response = await _httpClient.GetAsync($"{BaseURL}/exists-middle-goal?userId={userId}&senderId={senderId}&middleGoalName={middleGoalName}");
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Fejl ved opslag af middel-mål notifikation: {response.StatusCode}");
+            return false;
+        }
+
+        return await response.Content.ReadFromJsonAsync<bool>();
+    }
+
+    public async Task<bool> NotificationExistsForMiniGoalAsync(int userId, int senderId, string miniGoalName)
+    {
+        var response = await _httpClient.GetAsync($"{BaseURL}/exists-mini-goal?userId={userId}&senderId={senderId}&miniGoalName={miniGoalName}");
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Fejl ved opslag af mini-mål notifikation: {response.StatusCode}");
+            return false;
+        }
+
+        return await response.Content.ReadFromJsonAsync<bool>();
+    }
+
+
 }

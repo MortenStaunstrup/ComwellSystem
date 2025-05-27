@@ -9,7 +9,7 @@
 
 <h3>Dine notifikationer</h3>
 
-@if (_notifications == null) //Der kommer faktisk fejl hvis der ikke er notifikationer. Det skal fikses
+@if (_notifications == null)
 {
     <p>Indlæser...</p>
 }
@@ -19,13 +19,30 @@ else if (!_notifications.Any())
 }
 else
 {
-    @foreach (var notification in _notifications)
+    <h4>Minimål</h4>
+    @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiniGoalName)))
     {
         <div class="notification">
             <p>@notification.NotificationContent</p>
             @if (!notification.IsConfirmed)
             {
-                <button @onclick="() => ConfirmNotificationAsync(notification)">Bekræft</button>
+                <button @onclick="() => ConfirmNotifiedMiniGoalAsync(notification)">Bekræft</button>
+            }
+            else
+            {
+                <span>Bekræftet</span>
+            }
+        </div>
+    }
+
+    <h4>Middelmål</h4>
+    @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiddleGoalName)))
+    {
+        <div class="notification">
+            <p>@notification.NotificationContent</p>
+            @if (!notification.IsConfirmed)
+            {
+                <button @onclick="() => ConfirmNotifiedMiddleGoalAsync(notification)">Bekræft</button>
             }
             else
             {
@@ -37,11 +54,11 @@ else
 
 @code {
     private List<Notification>? _notifications;
-    private int currentUserId; //lederen
+    private int currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
-        var user = await LocalStorage.GetItemAsync<User>("user"); //lederens Id
+        var user = await LocalStorage.GetItemAsync<User>("user");
 
         if (user == null || user.UserId == 0)
         {
@@ -50,35 +67,42 @@ else
         }
 
         currentUserId = user.UserId;
-
         _notifications = await NotificationService.GetNotificationsByUserIdAsync(currentUserId);
     }
 
-    private async Task ConfirmNotificationAsync(Notification notification)
+    private async Task ConfirmNotifiedMiniGoalAsync(Notification notification)
     {
-        if (notification == null)
-            return;
-
-        if (notification.UserId == null || notification.UserId == 0) //Elevens Id
+        if (notification?.UserId == null || notification.UserId == 0 || string.IsNullOrWhiteSpace(notification.MiniGoalName))
         {
-            Console.WriteLine( "Notifikationens UserId mangler");
+            Console.WriteLine("Ugyldig mini goal notifikation");
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(notification.MiniGoalName))
-        {
-            Console.WriteLine("MiniGoalName mangler");
-            return;
-        }
-        
-        await NotificationService.ConfirmNotifiedSubGoalAsync(
-            notification.UserId.Value, //Elevens Id
-            notification.NotificationId, 
+        await NotificationService.ConfirmNotifiedMiniGoalAsync(
+            notification.UserId.Value,
+            notification.NotificationId,
             notification.MiniGoalName
         );
-        
+
         notification.IsConfirmed = true;
         StateHasChanged();
     }
 
+    private async Task ConfirmNotifiedMiddleGoalAsync(Notification notification)
+    {
+        if (notification?.UserId == null || notification.UserId == 0 || string.IsNullOrWhiteSpace(notification.MiddleGoalName))
+        {
+            Console.WriteLine("Ugyldig middle goal notifikation");
+            return;
+        }
+
+        await NotificationService.ConfirmNotifiedMiddleGoalAsync(
+            notification.UserId.Value,
+            notification.NotificationId,
+            notification.MiddleGoalName
+        );
+
+        notification.IsConfirmed = true;
+        StateHasChanged();
+    }
 }
