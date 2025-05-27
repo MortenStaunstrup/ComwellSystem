@@ -2,7 +2,6 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
-
 namespace API.Repositories;
 //repositories generelt skal kun kunne snakke med databasen. Man kan sige: Du snakker kun dansk, men vil virkeligt -
 //tale med en englænder, som også kun snakker sit sprog. Repositories er tolken, som snakker begge sprog. Dog ved repositories -
@@ -106,79 +105,77 @@ public class UserRepository : IUserRepository
         }
         return students;
     }
-
-    public async void InsertAllStandardSubGoalsInStudent(User user)
-    {
-        try
+        public async void InsertAllStandardSubGoalsInStudent(User user)
         {
-            //henter alle subgoals i collection der er standard, og sætter dem ind i elevens plan
-            var filter = Builders<SubGoal>.Filter.Eq(sg => sg.SubGoalType, "Standard");
-            var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
-
-            if (standardSubGoals == null || !standardSubGoals.Any())
+            try
             {
-                Console.WriteLine("Ingen standard SubGoals fundet.");
-                return;
+                //henter alle subgoals i collection der er standard, og sætter dem ind i elevens plan
+                var filter = Builders<SubGoal>.Filter.Eq(sg => sg.SubGoalType, "Standard");
+                var standardSubGoals = await _subGoalCollection.Find(filter).ToListAsync();
+
+                if (standardSubGoals == null || !standardSubGoals.Any())
+                {
+                    Console.WriteLine("Ingen standard SubGoals fundet.");
+                    return;
+                }
+                
+                user.StudentPlan.AddRange(standardSubGoals); //tilføjer til studentplan listen på én gang
+                
+                var userFilter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
+                var update = Builders<User>.Update.Set(u => u.StudentPlan, user.StudentPlan);
+
+                await _collection.UpdateOneAsync(userFilter, update);
+
+                Console.WriteLine($"Standard SubGoals tilføjet til bruger {user.UserId}.");
             }
-            
-            user.StudentPlan.AddRange(standardSubGoals); //tilføjer til studentplan listen på én gang
-            
-            var userFilter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
-            var update = Builders<User>.Update.Set(u => u.StudentPlan, user.StudentPlan);
-
-            await _collection.UpdateOneAsync(userFilter, update);
-
-            Console.WriteLine($"Standard SubGoals tilføjet til bruger {user.UserId}.");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fejl i InsertAllStandardSubGoalsInStudent: {ex.Message}");
+            }
         }
-        catch (Exception ex)
+
+        public async Task<User?> Login(string email, string password)
         {
-            Console.WriteLine($"Fejl i InsertAllStandardSubGoalsInStudent: {ex.Message}");
-        }
-    }
-
-    
-    public async Task<User?> Login(string email, string password)
-    {
-        try
-        {
-            Console.WriteLine($"Login attempt with email: {email}");
-
-            var emailFilter = Builders<User>.Filter.Regex("UserEmail", new BsonRegularExpression(email, "i"));
-            var usersWithEmail = await _collection.Find(emailFilter).ToListAsync();
-            Console.WriteLine($"Found {usersWithEmail.Count} users with matching email.");
-
-            foreach (var u in usersWithEmail)
+            try
             {
-                Console.WriteLine($"User: {u.UserEmail}, Password: {u.UserPassword}, Role: {u.Role}");
+                Console.WriteLine($"Login attempt with email: {email}");
+
+                // Case-insensitive for email
+                var emailFilter = Builders<User>.Filter.Regex("UserEmail", new BsonRegularExpression($"^{Regex.Escape(email)}$", "i"));
+
+                // Case-insensitive for password
+                var passwordFilter = Builders<User>.Filter.Regex("UserPassword", new BsonRegularExpression($"^{Regex.Escape(password)}$", "i"));
+
+                // Kombinerer begge filtre med AND  - hvad endda det er???? 
+                var combinedFilter = Builders<User>.Filter.And(emailFilter, passwordFilter);
+
+                var user = await _collection.Find(combinedFilter).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    Console.WriteLine("Login failed: No user matched both email and password.");
+                }
+                else
+                {
+                    Console.WriteLine($"Login success: UserId={user.UserId}, Role={user.Role}");
+                }
+
+                return user;
             }
-
-            var passwordFilter = Builders<User>.Filter.Eq("UserPassword", password);
-            var combinedFilter = Builders<User>.Filter.And(emailFilter, passwordFilter);
-
-            var user = await _collection.Find(combinedFilter).FirstOrDefaultAsync();
-
-            if (user == null)
+            catch (Exception ex)
             {
-                Console.WriteLine("Login failed: No user matched both email and password.");
-            }
-            else
-            {
-                Console.WriteLine($"Login success: UserId={user.UserId}, Role={user.Role}");
+                Console.WriteLine($"Exception during login: {ex.Message}");
+                return null;
             }
             if(user.PictureId != null)
                 user.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(user.PictureId));
             return user;
         }
-        catch (Exception ex)
+
+        public async Task<User> GetUserByLoginAsync(int userId)
         {
-            Console.WriteLine($"Exception during login: {ex.Message}");
-            return null;
+            return await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
         }
-    }
-
-
-
-
     public async Task<User> GetUserByLoginAsync(int userId)
     {
         var user = await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
@@ -191,20 +188,30 @@ public class UserRepository : IUserRepository
     
     public async Task<int> GetMaxUserId() 
     {
-        try
-        {
-            var sort = Builders<User>.Sort.Descending(x => x.UserId);
-            var maxUser = await _collection
-                .Find(Builders<User>.Filter.Empty)
-                .Sort(sort)
-                .Limit(1)
-                .FirstOrDefaultAsync();
-            return maxUser?.UserId ?? 0;
+            try
+            {
+                var sort = Builders<User>.Sort.Descending(x => x.UserId);
+                var maxUser = await _collection
+                    .Find(Builders<User>.Filter.Empty)
+                    .Sort(sort)
+                    .Limit(1)
+                    .FirstOrDefaultAsync();
+                return maxUser?.UserId ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fejl i GetMaxUserId(): {ex.Message}");
+                throw;
+            }
         }
-        catch (Exception ex)
+        public async Task UpdateUserAsync(User user)
         {
-            Console.WriteLine($"Fejl i GetMaxUserId(): {ex.Message}");
-            throw;
+            var dbUser = await GetUserByUserId(user.UserId);
+            dbUser.UserPhone = user.UserPhone;
+            dbUser.UserEmail = user.UserEmail;
+            dbUser.UserName = user.UserName;
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
+            await _collection.ReplaceOneAsync(filter, dbUser);
         }
     }
     public async Task UpdateUserAsync(User user)
@@ -240,5 +247,4 @@ public class UserRepository : IUserRepository
 
         await _collection.DeleteOneAsync(filter);
     }
-
 }
