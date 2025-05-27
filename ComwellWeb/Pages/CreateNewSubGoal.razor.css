@@ -10,11 +10,11 @@
     height: auto;
     min-height: 35px;
 }
-
 .btn {
     font-size: 0.8rem;
     padding: 0.35rem 0.8rem;
     min-height: 35px;
+    margin-right: 0.3rem;
 }
 
 h3 {

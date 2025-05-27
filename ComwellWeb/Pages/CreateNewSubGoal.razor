@@ -21,26 +21,31 @@ else
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
+                        @if (!string.IsNullOrEmpty(statusMessage))
+                        {
+                            <div class="alert alert-success mt-3">@statusMessage</div>
+                        }
+
                         <div class="mb-3">
                             <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..." />
                         </div>
                         @foreach (var middleGoal in _model.MiddleGoals)
                         {
                             <div>
-                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."></InputText>
-                                <button type="button" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
+                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..." />
+                                <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
                             </div>
                             @foreach (var miniGoal in middleGoal.MiniGoals)
                             {
                                 <div class="nameButtonMiniCombo">
-                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."></InputText>
-                                    <button type="button" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
+                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..." />
+                                    <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
                                 </div>
                             }
-                            <button type="button" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
+                            <button type="button" class="btn btn-sm btn-success my-1" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                         }
-                        <button type="button" @onclick="AddMiddleGoal">Add Middle Goal</button>
-                        
+                        <button type="button" class="btn btn-sm btn-success my-2" @onclick="AddMiddleGoal">Add Middle Goal</button>
+
                         <div class="mb-3">
                             <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
                         </div>
@@ -79,7 +84,6 @@ else
                     <p style="color: red">@_errorMessage</p>
                 </div>
             </div>
-            
         </div>
     </div>
 }
@@ -88,19 +92,20 @@ else
     User? _currentUser;
     List<User>? _myStudents;
     List<User> _addedStudents = new List<User>();
-    
+
     SubGoal _model;
     EditContext EditContext;
-    
+
     StudentDropdown? dropdown { get; set; }
     string _errorMessage;
+    string statusMessage = "";
     int currentMaxId;
 
     string[] _categories = new[]
     {
         "Kursus", "Køkken kompetence", "Faglig mål"
     };
-    
+
     string[] _types = new[]
     {
         "Standard", "Extra"
@@ -109,20 +114,19 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentUser = await UserService.GetUserLoggedInAsync();
-        
-        //Todo måske HR også skal kunne komme ind???
-        if (_currentUser.Role != "KitchenManager")
+
+        if (_currentUser.Role != "KitchenManager" && _currentUser.Role != "Admin")
         {
             NavMan.NavigateTo("/");
         }
 
-        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
+        _model = new SubGoal { MiddleGoals = new List<MiddleGoal>() };
         EditContext = new EditContext(_model);
         currentMaxId = await SubGoalService.MaxSubGoalId();
         if (_currentUser != null)
             _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId);
     }
-    
+
     private void AddMiddleGoal()
     {
         _model.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
@@ -134,13 +138,12 @@ else
         middleGoal.MiniGoals.Add(new MiniGoal());
         StateHasChanged();
     }
-    
+
     private void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
         if (EditContext.Validate())
         {
-            // Logik til at tjekke om alle subgoals har noget text
             if (_model.MiddleGoals != null)
             {
                 foreach (var middleGoal in _model.MiddleGoals)
@@ -162,12 +165,12 @@ else
                     }
                 }
             }
-            
-            // Hvis type == Standard Så sæt subgoal ind i alle elever
+
             if (_model.SubGoalType == "Standard")
             {
                 SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalAll(_model);
+                statusMessage = "Delmål blev oprettet!";
             }
             else
             {
@@ -177,7 +180,7 @@ else
                     StateHasChanged();
                     return;
                 }
-                // Alle elever som er blevet tilføjet, loop over og find deres id
+
                 var studentIds = new List<int>();
                 foreach (var student in _addedStudents)
                 {
@@ -185,28 +188,30 @@ else
                 }
                 SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalSpecific(_model, studentIds);
+                statusMessage = "Delmål blev oprettet!";
             }
+
             ResetModels();
         }
     }
-    
+
     private async void ResetModels()
     {
-        _model = new SubGoal{MiddleGoals = new List<MiddleGoal>()};
+        _model = new SubGoal { MiddleGoals = new List<MiddleGoal>() };
         EditContext = new EditContext(_model);
         _addedStudents = new List<User>();
         StateHasChanged();
-        Thread.Sleep(2000);
+        await Task.Delay(3000); // Automatisk fjern besked efter 3 sekunder
+        statusMessage = "";
         currentMaxId = await SubGoalService.MaxSubGoalId();
+        StateHasChanged();
     }
 
-    
     private void OnSubGoalTypeChange(ChangeEventArgs e)
     {
         _model.SubGoalType = e.Value.ToString();
         StateHasChanged();
     }
-
 
     private void DeleteMiddleGoal(MiddleGoal middleGoal)
     {
@@ -217,5 +222,4 @@ else
     {
         _model.MiddleGoals.Find(x => x.Name == middleGoal.Name).MiniGoals.Remove(miniGoal);
     }
-
 }

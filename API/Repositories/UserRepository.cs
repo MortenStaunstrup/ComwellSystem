@@ -1,6 +1,8 @@
 ﻿using Core;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using MongoDB.Driver.GridFS;
+
 namespace API.Repositories;
 //repositories generelt skal kun kunne snakke med databasen. Man kan sige: Du snakker kun dansk, men vil virkeligt -
 //tale med en englænder, som også kun snakker sit sprog. Repositories er tolken, som snakker begge sprog. Dog ved repositories -
@@ -12,6 +14,7 @@ public class UserRepository : IUserRepository
     private IMongoDatabase database;
     private IMongoCollection<User> _collection;
     private IMongoCollection<SubGoal> _subGoalCollection;
+    private GridFSBucket _bucket;
 
     public UserRepository()
     {
@@ -19,35 +22,71 @@ public class UserRepository : IUserRepository
         database = _client.GetDatabase("Comwell");
         _collection = database.GetCollection<User>("Users");
         _subGoalCollection = database.GetCollection<SubGoal>("SubGoals");
+        _bucket = new GridFSBucket(database, new GridFSBucketOptions{BucketName = "Profile Pictures"});
     }
 
     public async Task<List<User>> GetAllUsersAsync()
     {
-        return await _collection.Find(new BsonDocument()).ToListAsync();
+        var users = await _collection.Find(new BsonDocument()).ToListAsync();
+        foreach (var user in users)
+        {
+            if (user.PictureId != null)
+            {
+                user.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(user.PictureId));
+            }
+        }
+        return users;
     }
 
     public async Task<List<User>?> GetAllKitchenManagersAsync()
     {
         var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
         var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
-        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
+        var managers = await _collection.Find(filter).Project<User>(projection).ToListAsync();
+        foreach (var manager in managers)
+        {
+            if (manager.PictureId != null)
+            {
+                manager.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(manager.PictureId));
+            }
+        }
+        return managers;
     }
     
     public async Task<List<User>> GetAllStudentsAsync()
     {
-        return await _collection.Find(new BsonDocument()).ToListAsync();
+        var students = await _collection.Find(new BsonDocument()).ToListAsync();
+        foreach (var student in students)
+        {
+            if (student.PictureId != null)
+            {
+                student.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(student.PictureId));
+            }
+        }
+        return students;
     }
 
     public async Task<User?> GetUserByUserId(int? userId)
     {
         Console.WriteLine($"Returning user: {userId}: repo");
         var filter = Builders<User>.Filter.Eq("_id", userId);
-        return await _collection.Find(filter).FirstOrDefaultAsync();
+        var student = await _collection.Find(filter).FirstOrDefaultAsync();
+        if (student != null && student.PictureId != null)
+        {
+            student.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(student.PictureId));
+        }
+        return student;
     }
 
     public async Task AddUserAsync(User user)
     {
         user.UserId = await GetMaxUserId() + 1;
+        if (user.Picture != null)
+        {
+            var picId = await _bucket.UploadFromBytesAsync(user.UserName,Convert.FromBase64String(user.Picture));
+            user.PictureId = picId;
+            user.Picture = null;
+        }
         await _collection.InsertOneAsync(user);
         if (user.Role == "Student")
             InsertAllStandardSubGoalsInStudent(user);
@@ -57,7 +96,15 @@ public class UserRepository : IUserRepository
     {
         var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
         var projection = Builders<User>.Projection.Exclude("Notifications").Exclude("Messages").Exclude("UserPassword");
-        return await _collection.Find(filter).Project<User>(projection).ToListAsync();
+        var students = await _collection.Find(filter).Project<User>(projection).ToListAsync();
+        foreach (var student in students)
+        {
+            if (student.PictureId != null)
+            {
+                student.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(student.PictureId));
+            }
+        }
+        return students;
     }
 
     public async void InsertAllStandardSubGoalsInStudent(User user)
@@ -118,7 +165,8 @@ public class UserRepository : IUserRepository
             {
                 Console.WriteLine($"Login success: UserId={user.UserId}, Role={user.Role}");
             }
-
+            if(user.PictureId != null)
+                user.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(user.PictureId));
             return user;
         }
         catch (Exception ex)
@@ -133,7 +181,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User> GetUserByLoginAsync(int userId)
     {
-        return await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
+        var user = await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
+        if(user != null && user.PictureId != null)
+        {
+            user.Picture = Convert.ToBase64String(await _bucket.DownloadAsBytesAsync(user.PictureId));
+        }
+        return user;
     }
     
     public async Task<int> GetMaxUserId() 
@@ -160,7 +213,32 @@ public class UserRepository : IUserRepository
         dbUser.UserPhone = user.UserPhone;
         dbUser.UserEmail = user.UserEmail;
         dbUser.UserName = user.UserName;
+        if (user.Picture == null)
+        {
+            dbUser.Picture = null;
+            if(dbUser.PictureId != null)
+                await _bucket.DeleteAsync(dbUser.PictureId);
+            dbUser.PictureId = null;
+        }
+        else
+        {
+            dbUser.PictureId = await _bucket.UploadFromBytesAsync(user.UserName,Convert.FromBase64String(user.Picture));
+            dbUser.Picture = null;
+        }
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
+    public async Task DeleteUserAsync(int userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+    
+        var user = await _collection.Find(filter).FirstOrDefaultAsync();
+        if (user?.PictureId != null)
+        {
+            await _bucket.DeleteAsync(user.PictureId);
+        }
+
+        await _collection.DeleteOneAsync(filter);
+    }
+
 }

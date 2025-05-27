@@ -8,8 +8,10 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    position: relative;
+    top: -56px;
+    height: 82vh;
 }
-
 .student-list-container {
     overflow-y: auto;
     max-height: 65vh;

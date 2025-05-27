@@ -1,0 +1,121 @@
+﻿@page "/accountoverview"
+@using ComwellWeb.Services.Interfaces
+@using Core
+@inject IUserService _userService
+@inject NavigationManager nav
+@inject HttpClient Http
+@using ComwellWeb.Komponents.Modal
+
+@if (!loaded)
+{
+    <p>Indlæser...</p>
+}
+else
+{
+    <div class="account-wrapper">
+        <h2 class="account-title">Brugeroverblik</h2>
+
+        <div class="filter-container">
+            <select @bind="selectedRole">
+                <option value="">Alle roller</option>
+                @foreach (var role in roles)
+                {
+                    <option value="@role">@role</option>
+                }
+            </select>
+        </div>
+
+        <div class="account-list-container">
+            @if (_filteredUsers?.Any() == true)
+            {
+                foreach (var user in _filteredUsers)
+                {
+                    <div class="account-row">
+                        <img class="account-image" src="@user.Picture" alt="Brugerbillede" />
+                        <span class="account-cell">@user.UserName</span>
+                        <span class="account-cell">@user.UserEmail</span>
+                        <span class="account-cell">@user.UserPhone</span>
+                        <span class="account-cell">@user.Role</span>
+                        <button class="btn btn-danger" @onclick="() => OpenDeleteModal(user)">Slet bruger</button>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>Ingen brugere fundet.</p>
+            }
+        </div>
+    </div>
+}
+
+<DeleteUser 
+    Visible="@visible" 
+    UserToDelete="@selectedUser" 
+    OnCloseRequested="@(() => visible = false)" 
+    OnUserDeleted="HandleUserDeleted" />
+
+
+@code {
+    private List<User>? _allUsers;
+    private List<User>? _filteredUsers;
+    private bool loaded = false;
+private string _selectedRole = "";
+    private User? selectedUser;
+    private bool visible = false;
+
+    List<string> roles = new() { "Student", "KitchenManager", "Admin", "HR" };
+    private void HandleUserDeleted(int deletedUserId)
+    {
+        _allUsers?.RemoveAll(u => u.UserId == deletedUserId);
+        _filteredUsers?.RemoveAll(u => u.UserId == deletedUserId);
+        StateHasChanged();
+    }
+
+
+    
+
+    private string selectedRole
+    {
+        get => _selectedRole;
+        set
+        {
+            if (_selectedRole != value)
+            {
+                _selectedRole = value;
+                ApplyFilters();
+            }
+        }
+    }
+
+    private void OpenDeleteModal(User user)
+    {
+        selectedUser = user;
+        visible = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await _userService.GetUserLoggedInAsync();
+        if (currentUser == null || currentUser.Role != "Admin")
+        {
+            nav.NavigateTo("/login");
+            return;
+        }
+
+        _allUsers = await _userService.GetAllUsersAsync();
+        _filteredUsers = _allUsers;
+        loaded = true;
+    }
+
+    private void ApplyFilters()
+    {
+        if (_allUsers == null)
+            return;
+
+        _filteredUsers = _allUsers.Where(user =>
+            string.IsNullOrWhiteSpace(selectedRole) || user.Role == selectedRole
+        ).ToList();
+
+        StateHasChanged();
+    }
+}

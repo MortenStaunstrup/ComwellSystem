@@ -25,13 +25,17 @@ else
                 {
                     <KitchenManagerNavBar />
                 }
+                else if (CurrentUser?.Role == "Admin")
+                {
+                    <AdminNavBar />
+                }
                 else
                 {
                     <StdNavBar />
                 }
             </div>
 
-            @if (CurrentUser?.Role == "HR" || CurrentUser?.Role == "Student" || CurrentUser?.Role == "KitchenManager")
+            @if (CurrentUser != null)
             {
                 <div class="Noti" @onclick="ToggleNotification">
                     <span class="notification-icon">🔔</span>

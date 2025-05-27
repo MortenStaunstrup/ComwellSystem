@@ -1,3 +1,12 @@
+.profile-picture {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+
 .card.p-4 {
     padding: 1rem !important;
     margin-bottom: 0 !important;
