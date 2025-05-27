@@ -1,0 +1,74 @@
+﻿.account-wrapper {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    max-width: 1100px;
+    margin: 40px auto;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.account-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 30px;
+}
+
+.filter-container select {
+    padding: 10px 16px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    min-width: 200px;
+}
+
+.account-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.account-row {
+    display: flex;
+    align-items: center;
+    background-color: #fefefe;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: background-color 0.2s ease;
+    gap: 20px;
+}
+
+.account-row:hover {
+    background-color: #f7f7f7;
+}
+
+.account-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+.account-cell {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #333;
+    min-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

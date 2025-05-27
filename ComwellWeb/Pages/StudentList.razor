@@ -17,7 +17,6 @@ else
     <div class="studentlist-wrapper">
 
         <div class="filter-container">
-            <!-- Lokation / Hoteller -->
             <select id="hotelFilter">
                 <option value="">Alle hoteller</option>
                 @foreach (var hotel in hotelList)
@@ -37,7 +36,6 @@ else
                 </div>
             </div>
 
-          
             <select id="educationFilter">
                 <option value="">Alle uddannelser</option>
                 @foreach (var edu in educationList)
@@ -46,7 +44,6 @@ else
                 }
             </select>
 
-            <!-- Ture -->
             <select id="tripFilter">
                 <option value="">Alle ture</option>
                 @foreach (var Trip in TripList)
@@ -81,28 +78,38 @@ else
             }
             else
             {
-                @foreach (var student in _sortedStudents)
+                var displayedStudents = OwnStudentsBool 
+                    ? _sortedStudents.Where(s => s.UserIdResponsible == CurrentUser.UserId).ToList() // ændret
+                    : _sortedStudents;
+
+                if (displayedStudents.Any()) // ændret
                 {
-                    <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
-                        <span class="student-name">@student.UserName</span>
-                        <span>@(student.StartDate?.ToString("dd-MM-yyyy") ?? "N/A")</span>
-                        <span>@_pctCompleted[student.UserId]%</span>
-                        <div class="progress-container @(_pctCompleted[student.UserId] == 100 ? "full" : "")">
-                            <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
-                        </div>
-                    </div>
-                    @if (_currentShownStudent == student.UserId)
+                    foreach (var student in displayedStudents) // ændret
                     {
-                        <div class="mt-3">
-                            <a class="btn btn-sm btn-primary" href="@($"/mygoals/{student.UserId}")">Gå til mål</a>
+                        <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
+                            <span class="student-name">@student.UserName</span>
+                            <span>@(student.StartDate?.ToString("dd-MM-yyyy") ?? "N/A")</span>
+                            <span>@_pctCompleted[student.UserId]%</span>
+                            <div class="progress-container @(_pctCompleted[student.UserId] == 100 ? "full" : "")">
+                                <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
+                            </div>
                         </div>
+                        @if (_currentShownStudent == student.UserId)
+                        {
+                            <div class="mt-3">
+                                <a class="btn btn-sm btn-primary" href="@($"/mygoals/{student.UserId}")">Gå til mål</a>
+                            </div>
+                        }
                     }
+                }
+                else
+                {
+                    <p>Du har ingen elever.</p> <!-- tilføjet -->
                 }
             }
         </div> 
     </div>
 }
-
 @code {
     User? CurrentUser;
     List<User>? _allStudents;
@@ -149,12 +156,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await _userservice.GetUserLoggedInAsync();
-        if (CurrentUser == null)
-        {
-            nav.NavigateTo("/login", true);
-            return;
-        }
-        else if (CurrentUser.Role != "HR" && CurrentUser.Role != "KitchenManager")
+        if (CurrentUser?.Role == "Student" || CurrentUser == null)
         {
             nav.NavigateTo("/login");
             return;
