@@ -97,7 +97,7 @@
                     IsConfirmed = false
                 };
 
-                await NotificationService.SendNotificationAsync(notification);
+                await NotificationService.SendMiniGoalNotificationAsync(notification);
                 errorMessage = "✅ Ansøgning sendt!";
             }
         }
