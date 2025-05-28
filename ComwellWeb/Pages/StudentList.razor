@@ -90,7 +90,7 @@ else
                             <span class="student-name">@student.UserName</span>
                             <span>@(student.StartDate?.ToString("dd-MM-yyyy") ?? "N/A")</span>
                             <span>@_pctCompleted[student.UserId]%</span>
-                            <div class="progress-container @(_pctCompleted[student.UserId] == 100 ? "full" : "")">
+                            <div class="progress-container">
                                 <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
                             </div>
                         </div>
