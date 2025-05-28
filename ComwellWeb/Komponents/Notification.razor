@@ -1,24 +1,24 @@
+
 @using Core
 @using Notification = Core.Notification
 <div id="AltNotiIndhold">
     @if (LastestNotiData?.Notifications30.Any() == true)
     {
-        @foreach (var noti in LastestNotiData.Notifications30)
-        {
-            <div class="Notification">
-                <p class="notiTxt">#@noti.NotificationId - @noti.NotificationContent</p>
-                <small>@noti.TimeStamp.ToShortDateString()</small>
-            </div>
-        }
+    @foreach (var noti in LastestNotiData.Notifications30)
+    {
+    <div class="Notification">
+        <p class="notiTxt">#@noti.NotificationId - @noti.NotificationContent</p>
+        <small>@noti.TimeStamp.ToShortDateString()</small>
+    </div>
+    }
     }
     else
     {
-        <div class="Notification">
-            <p class="notiTxt">Ingen notifikationer under 30 dage gamle</p>
-        </div>
+    <div class="Notification">
+        <p class="notiTxt">Ingen notifikationer under 30 dage gamle</p>
+    </div>
     }
 </div>
-
 @code {
     private List<Core.Notification> Notifications;
     private LastestNoti LastestNotiData;
