@@ -291,42 +291,42 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     {
         for (int i = 0; i < user.StudentPlan.Count; i++)
         {
-            if (user.StudentPlan[i].SubGoalId == subGoal.SubGoalId)
+            if (user.StudentPlan[i].SubGoalId == subGoal.SubGoalId) // Find subgoal man updaterer i user
             {
                 // Opdater overordnet info
                 user.StudentPlan[i].SubGoalName = subGoal.SubGoalName;
                 user.StudentPlan[i].SubGoalDescription = subGoal.SubGoalDescription;
                 user.StudentPlan[i].SubGoalType = subGoal.SubGoalType;
 
-                var updatedMiddleGoals = new List<MiddleGoal>();
+                var updatedMiddleGoals = new List<MiddleGoal>(); // initiering af nye middle goals
 
-                foreach (var newMiddle in subGoal.MiddleGoals)
+                foreach (var newMiddle in subGoal.MiddleGoals) // gå igennem alle middlegoals i nye subgoal
                 {
                     var existingMiddle = user.StudentPlan[i].MiddleGoals
-                        ?.FirstOrDefault(m => m.Name == newMiddle.Name);
+                        ?.FirstOrDefault(m => m.Name == newMiddle.Name);  // check om den eksisterer allerede i tidligere subgoal, hvis ikke sæt til null
 
-                    var updatedMiniGoals = new List<MiniGoal>();
+                    var updatedMiniGoals = new List<MiniGoal>(); // initiering af nye minigoals
 
-                    foreach (var newMini in newMiddle.MiniGoals)
+                    foreach (var newMini in newMiddle.MiniGoals) // gå igennem alle minigoals i nye subgoal
                     {
                         var existingMini = existingMiddle?.MiniGoals
-                            ?.FirstOrDefault(m => m.Name == newMini.Name);
+                            ?.FirstOrDefault(m => m.Name == newMini.Name); // check om den eksisterer allerede i tidligere subgoal, hvis ikke sæt til null
                         
-                        updatedMiniGoals.Add(new MiniGoal
+                        updatedMiniGoals.Add(new MiniGoal // tilføj nye minigoals til initierede liste (linje 308)
                         {
                             Name = newMini.Name,
-                            Status = newMini.Status || existingMini?.Status == true,
+                            Status = newMini.Status || existingMini?.Status == true,  // hvis eksisterende status på minigoal EKSISTERER og er true, behold true status. Ellers false
                         });
                     }
 
-                    updatedMiddleGoals.Add(new MiddleGoal
+                    updatedMiddleGoals.Add(new MiddleGoal // tilføj nye middlegoals til initierede liste (linje 301)
                     {
                         Name = newMiddle.Name,
-                        MiniGoals = updatedMiniGoals
+                        MiniGoals = updatedMiniGoals // minigoals bliver til listen af updaterede minigoals
                     });
                 }
 
-                user.StudentPlan[i].MiddleGoals = updatedMiddleGoals;
+                user.StudentPlan[i].MiddleGoals = updatedMiddleGoals; // middlegoals bliver den updaterede liste af middlegoals
             }
         }
 
