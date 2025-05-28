@@ -77,30 +77,81 @@ namespace API.Repositories
             
         }
         // Subgoals
-        public async Task<UpdateResult> UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId)
+      public async Task<UpdateResult> UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId)
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
 
             var update = Builders<User>.Update
-                .Set("StudentPlan.$[].MiddleGoals.$[].MiniGoals.$[mini].Status", true)
+                .Set("StudentPlan.$[plan].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true)
                 .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
 
             var arrayFilters = new List<ArrayFilterDefinition>
             {
-                new JsonArrayFilterDefinition<BsonDocument>("{ 'mini.Name': '" + miniGoalName + "' }")
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(
+                    new BsonDocument("mini.Name", miniGoalName)
+                ),
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(
+                    new BsonDocument("middle.MiniGoals",
+                        new BsonDocument("$elemMatch", new BsonDocument("Name", miniGoalName)))
+                ),
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(
+                    new BsonDocument("plan.MiddleGoals",
+                        new BsonDocument("$elemMatch",
+                            new BsonDocument("MiniGoals",
+                                new BsonDocument("$elemMatch", new BsonDocument("Name", miniGoalName)))))
+                )
             };
 
             var options = new UpdateOptions { ArrayFilters = arrayFilters };
-            
-            Console.WriteLine("MongoDB update command:");
-            Console.WriteLine($"UserId: {userId}");
-            Console.WriteLine($"MiniGoalName: {miniGoalName}");
-            Console.WriteLine($"NotificationId: {notificationId}");
 
-            
-            
-            return await _userCollection.UpdateOneAsync(filter, update, options);
+            // Debug: Udskriv miniGoalName
+            Console.WriteLine($"miniGoalName fra notifikation: '{miniGoalName}'");
+
+            // Hent bruger for at verificere mini goal findes
+            var user = await _userCollection.Find(filter).FirstOrDefaultAsync();
+
+            if (user != null && user.StudentPlan != null)
+            {
+                bool miniGoalExists = false;
+                foreach (var plan in user.StudentPlan)
+                {
+                    Console.WriteLine($"➡️ SubGoal: {plan.SubGoalName}");
+                    if (plan.MiddleGoals != null)
+                    {
+                        foreach (var middle in plan.MiddleGoals)
+                        {
+                            Console.WriteLine($"  ↪️ MiddleGoal: {middle.Name}");
+                            if (middle.MiniGoals != null)
+                            {
+                                foreach (var mini in middle.MiniGoals)
+                                {
+                                    Console.WriteLine($"    • MiniGoal: '{mini.Name}', Status: {mini.Status}");
+                                    if (string.Equals(mini.Name?.Trim(), miniGoalName?.Trim(), StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        miniGoalExists = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Console.WriteLine(miniGoalExists
+                    ? $"✅ MiniGoal '{miniGoalName}' findes og forsøges opdateret."
+                    : $"❌ MiniGoal '{miniGoalName}' blev ikke fundet i brugerens struktur.");
+            }
+            else
+            {
+                Console.WriteLine("❌ Bruger ikke fundet eller StudentPlan er tom.");
+            }
+
+            var result = await _userCollection.UpdateOneAsync(filter, update, options);
+
+            Console.WriteLine($"📊 MongoDB ModifiedCount: {result.ModifiedCount}");
+
+            return result;
         }
+
         
         public async Task<UpdateResult> UpdateMiddleGoalAndRemoveNotificationAsync(int userId, string middleGoalName, int notificationId)
         {

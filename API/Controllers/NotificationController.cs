@@ -92,19 +92,27 @@ namespace API.Controllers
             if (leader == null) return NotFound("Leader not found");
 
             var notification = leader.Notifications
-                .FirstOrDefault(n => n.NotificationId == notificationId && n.MiniGoalName == miniGoalName);
+                .FirstOrDefault(n =>
+                    n.NotificationId == notificationId &&
+                    n.MiniGoalName?.Trim().Equals(miniGoalName.Trim(), StringComparison.OrdinalIgnoreCase) == true);
 
             if (notification == null)
                 return NotFound("Notification not found or mismatched MiniGoalName");
-            
+
+            var studentId = notification.SenderId ?? 0;
+            if (studentId == 0)
+                return BadRequest("Missing sender/student ID");
+
             var updateResult = await _notificationRepository.UpdateMiniGoalAndRemoveNotificationAsync(
-                userId, miniGoalName, notificationId);
+                studentId, miniGoalName, notificationId);
 
             if (updateResult.ModifiedCount == 0)
                 return BadRequest("MiniGoal not found or notification could not be removed");
 
             return Ok("Notification confirmed and mini goal updated");
         }
+
+
 
         
         [HttpPost("confirm-middle-goal/{userId}/{notificationId}/{middleGoalName}")]
@@ -114,7 +122,9 @@ namespace API.Controllers
             if (leader == null) return NotFound("Leader not found");
 
             var notification = leader.Notifications
-                .FirstOrDefault(n => n.NotificationId == notificationId && n.MiddleGoalName == middleGoalName);
+                .FirstOrDefault(n =>
+                    n.NotificationId == notificationId &&
+                    n.MiddleGoalName?.Trim().Equals(middleGoalName.Trim(), StringComparison.OrdinalIgnoreCase) == true);
 
             if (notification == null)
                 return NotFound("Notification not found or mismatched MiddleGoalName");
@@ -122,9 +132,9 @@ namespace API.Controllers
             var studentId = notification.SenderId ?? 0;
             if (studentId == 0)
                 return BadRequest("Missing sender/student ID");
-    
+
             var updateResult = await _notificationRepository.UpdateMiddleGoalAndRemoveNotificationAsync(
-                userId, middleGoalName, notificationId);
+                studentId, middleGoalName, notificationId);
 
             if (updateResult.ModifiedCount == 0)
                 return BadRequest("MiddleGoal not found or notification could not be removed");
