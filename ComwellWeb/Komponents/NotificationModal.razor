@@ -1,52 +1,55 @@
 @using Core
 @inject IUserService UserService
 @inject INotificationService NotificationService
-<h3>Dine notifikationer</h3>
-@if (_currentUser != null)
-{
-    @if (_notifications == null)
-    {
-        <p>Indlæser...</p>
-    }
-    else if (!_notifications.Any())
-    {
-        <p>Ingen notifikationer.</p>
-    }
-    else
-    {
-        <h4>Minimål</h4>
-        @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiniGoalName)))
-        {
-            <div class="notification">
-                <p>@notification.NotificationContent</p>
-                @if (!notification.IsConfirmed)
-                {
-                    <button @onclick="() => ConfirmNotifiedMiniGoalAsync(notification)">Bekræft</button>
-                }
-                else
-                {
-                    <span>Bekræftet</span>
-                }
-            </div>
-        }
 
-        <h4>Middelmål</h4>
-        @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiddleGoalName)))
+<div id="AltNotiIndhold" class="dropdown-notification-container">
+    @if (_currentUser != null)
+    {
+        @if (_notifications == null)
         {
-            <div class="notification">
-                <p>@notification.NotificationContent</p>
-                @if (!notification.IsConfirmed)
-                {
-                    <button @onclick="() => ConfirmNotifiedMiddleGoalAsync(notification)">Bekræft</button>
-                }
-                else
-                {
-                    <span>Bekræftet</span>
-                }
-            </div>
+            <p class="loading-text">Indlæser...</p>
+        }
+        else if (!_notifications.Any())
+        {
+            <p class="no-notifications">Ingen notifikationer.</p>
+        }
+        else
+        {
+            <h4 class="section-header">Minimål</h4>
+            @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiniGoalName)))
+            {
+                <div class="notification notification-item">
+                    <p class="notiTxt">@notification.NotificationContent</p>
+                    @if (!notification.IsConfirmed)
+                    {
+                        <button class="confirm-button" @onclick="() => ConfirmNotifiedMiniGoalAsync(notification)">Bekræft</button>
+                    }
+                    else
+                    {
+                        <span class="confirmed-text">Bekræftet</span>
+                    }
+                </div>
+            }
+
+            <h4 class="section-header">Middelmål</h4>
+            @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiddleGoalName)))
+            {
+                <div class="notification notification-item">
+                    <p class="notiTxt">@notification.NotificationContent</p>
+                    @if (!notification.IsConfirmed)
+                    {
+                        <button class="confirm-button" @onclick="() => ConfirmNotifiedMiddleGoalAsync(notification)">Bekræft</button>
+                    }
+                    else
+                    {
+                        <span class="confirmed-text">Bekræftet</span>
+                    }
+                </div>
+            }
         }
     }
-}
+</div>
+
 
 @code {
     private List<Notification> _notifications;

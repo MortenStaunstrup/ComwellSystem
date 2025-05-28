@@ -86,3 +86,8 @@ main {
     top: -50px;
     left: 183vh;
 }
+.notification-dropdown {
+    position: relative;
+    right: 260px;
+    bottom: 40px;
+}
