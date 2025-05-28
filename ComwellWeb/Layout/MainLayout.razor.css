@@ -84,5 +84,10 @@ main {
     cursor: pointer;
     position: relative;
     top: -50px;
-    left: 183vh;
+    left: 96%;
+}
+.notification-dropdown {
+    position: relative;
+    right: 260px;
+    bottom: 40px;
 }

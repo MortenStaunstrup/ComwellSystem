@@ -250,7 +250,7 @@ else
     [Parameter] public int? studentId { get; set; }
     
     private User? user;
-    private User CurrentUser = null!;
+    private User? CurrentUser;
     private User UserModel;
     private bool IsReadOnlyViewer = true;
     private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
@@ -258,6 +258,7 @@ else
     private int ViewerUserId;
     private string PageTitle;
     private bool _sending = false;
+    private string selectedFilter = "all";
     
     @* hash-sets *@
     @* laver to obejkter som er i samlinger. Sikrer, at der ikke er dubletter. *@
@@ -336,7 +337,6 @@ else
         };
     }
 
-    private string selectedFilter = "all";
 
     private void OnFilterChanged(ChangeEventArgs e)
     {

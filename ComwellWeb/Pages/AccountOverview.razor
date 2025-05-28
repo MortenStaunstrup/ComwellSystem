@@ -66,9 +66,9 @@ private string _selectedRole = "";
     List<string> roles = new() { "Student", "KitchenManager", "Admin", "HR" };
     private void HandleUserDeleted(int deletedUserId)
     {
-        _allUsers?.RemoveAll(u => u.UserId == deletedUserId);
-        _filteredUsers?.RemoveAll(u => u.UserId == deletedUserId);
-        StateHasChanged();
+        _allUsers?.RemoveAll(u => u.UserId == deletedUserId); //Slet alle brugere der har det userid.
+        _filteredUsers?.RemoveAll(u => u.UserId == deletedUserId); //Fjerne brugeren fra listen
+        StateHasChanged(); //For at opdatere listen
     }
 
 
@@ -95,8 +95,8 @@ private string _selectedRole = "";
 
     protected override async Task OnInitializedAsync()
     {
-        var currentUser = await _userService.GetUserLoggedInAsync();
-        if (currentUser == null || currentUser.Role != "Admin")
+        var currentUser = await _userService.GetUserLoggedInAsync(); //Hente brugeren som er logget ind, fra userservice,s func der hedder getuserloggedinasync
+        if (currentUser == null || currentUser.Role != "Admin") //Hvis brugeren ikke er admin 
         {
             nav.NavigateTo("/login");
             return;

@@ -1,0 +1,100 @@
+@using Core
+@inject IUserService UserService
+@inject INotificationService NotificationService
+
+<div id="AltNotiIndhold" class="dropdown-notification-container">
+    @if (_currentUser != null)
+    {
+        @if (_notifications == null)
+        {
+            <p class="loading-text">Indlæser...</p>
+        }
+        else if (!_notifications.Any())
+        {
+            <p class="no-notifications">Ingen notifikationer.</p>
+        }
+        else
+        {
+            <h4 class="section-header">Minimål</h4>
+            @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiniGoalName)))
+            {
+                <div class="notification notification-item">
+                    <p class="notiTxt">@notification.NotificationContent</p>
+                    @if (!notification.IsConfirmed)
+                    {
+                        <button class="confirm-button" @onclick="() => ConfirmNotifiedMiniGoalAsync(notification)">Bekræft</button>
+                    }
+                    else
+                    {
+                        <span class="confirmed-text">Bekræftet</span>
+                    }
+                </div>
+            }
+
+            <h4 class="section-header">Middelmål</h4>
+            @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiddleGoalName)))
+            {
+                <div class="notification notification-item">
+                    <p class="notiTxt">@notification.NotificationContent</p>
+                    @if (!notification.IsConfirmed)
+                    {
+                        <button class="confirm-button" @onclick="() => ConfirmNotifiedMiddleGoalAsync(notification)">Bekræft</button>
+                    }
+                    else
+                    {
+                        <span class="confirmed-text">Bekræftet</span>
+                    }
+                </div>
+            }
+        }
+    }
+</div>
+
+
+@code {
+    private List<Notification> _notifications;
+    private User? _currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser =  await UserService.GetUserLoggedInAsync();
+        _notifications = await NotificationService.GetNotificationsByUserIdAsync(_currentUser.UserId);
+    }
+    
+    private async Task ConfirmNotifiedMiniGoalAsync(Notification notificationModal)
+    {
+        if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiniGoalName))
+        {
+            Console.WriteLine("Ugyldig mini goal notifikation");
+            return;
+        }
+
+        await NotificationService.ConfirmNotifiedMiniGoalAsync(
+            notificationModal.UserId.Value,
+            notificationModal.NotificationId,
+            notificationModal.MiniGoalName
+        );
+
+        notificationModal.IsConfirmed = true;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmNotifiedMiddleGoalAsync(Notification notificationModal)
+    {
+        if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiddleGoalName))
+        {
+            Console.WriteLine("Ugyldig middle goal notifikation");
+            return;
+        }
+
+        await NotificationService.ConfirmNotifiedMiddleGoalAsync(
+            notificationModal.UserId.Value,
+            notificationModal.NotificationId,
+            notificationModal.MiddleGoalName
+        );
+
+        notificationModal.IsConfirmed = true;
+        StateHasChanged();
+    }
+
+}
