@@ -80,7 +80,10 @@ namespace API.Controllers
 
             var notifications = user.Notifications;
             if (notifications == null || !notifications.Any())
-                return NotFound("Ingen notifikationer fundet for denne bruger.");
+            {
+                Console.WriteLine("No notifications found");
+                return Ok(new List<Notification>());
+            }
 
             return Ok(notifications);
         }
