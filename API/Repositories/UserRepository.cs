@@ -141,17 +141,7 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            Console.WriteLine($"Login attempt with email: {email}");
-
             var emailFilter = Builders<User>.Filter.Regex("UserEmail", new BsonRegularExpression(email, "i"));
-            var usersWithEmail = await _collection.Find(emailFilter).ToListAsync();
-            Console.WriteLine($"Found {usersWithEmail.Count} users with matching email.");
-
-            foreach (var u in usersWithEmail)
-            {
-                Console.WriteLine($"User: {u.UserEmail}, Password: {u.UserPassword}, Role: {u.Role}");
-            }
-
             var passwordFilter = Builders<User>.Filter.Eq("UserPassword", password);
             var combinedFilter = Builders<User>.Filter.And(emailFilter, passwordFilter);
 
