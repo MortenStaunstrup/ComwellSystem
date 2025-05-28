@@ -441,6 +441,23 @@ else
                 };
                 await NotificationService.SendMiniGoalNotificationAsync(noti);
                 mm.Status = true;
+                
+                var aboveMiddleGoal = sg.MiddleGoals.FirstOrDefault(m =>
+                    m.MiniGoals.Any(x => x.Name == mm.Name));
+
+                if (aboveMiddleGoal != null && aboveMiddleGoal.MiniGoals.All(mg => mg.Status))
+                {
+                    aboveMiddleGoal.Status = true;
+                }
+                
+                bool allDone = sg.MiddleGoals.All(m => m.Status) &&
+                               sg.MiddleGoals.SelectMany(m => m.MiniGoals).All(mg => mg.Status);
+                if (allDone)
+                {
+                    sg.SubGoalStatus = true;
+                    await UserService.UpdateUser(UserModel);
+                }
+
             }
         }
         catch (Exception ex)
@@ -504,6 +521,8 @@ else
             if (allDone)
             {
                 sg.SubGoalStatus = true;
+                await UserService.UpdateUser(UserModel);
+
             }
             SelectedMiddleGoals[sg.SubGoalId].Clear();
         }

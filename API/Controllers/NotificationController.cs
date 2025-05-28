@@ -18,7 +18,7 @@ namespace API.Controllers
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
         }
-        
+
         // Opretter notification ved at opdatere user dokument (embedde notification)
         [HttpPost("send-mini-goal")]
         public async Task<IActionResult> SendMiniGoalNotificationAsync([FromBody] Notification notification)
@@ -41,9 +41,9 @@ namespace API.Controllers
                 Console.WriteLine($"Exception caught in controller: {ex.Message}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-            
+
         }
-        
+
         [HttpPost]
         [Route("send-middle-goal")]
         public async Task<IActionResult> SendMiddleGoalNotificationAsync([FromBody] Notification notification)
@@ -66,7 +66,7 @@ namespace API.Controllers
                 Console.WriteLine($"Exception caught in controller: {ex.Message}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-            
+
         }
 
 
@@ -106,28 +106,26 @@ namespace API.Controllers
             if (studentId == 0)
                 return BadRequest("Missing sender/student ID");
 
-            var updateResult = await _notificationRepository.UpdateMiniGoalAndRemoveNotificationAsync(
-                studentId, miniGoalName, notificationId);
+            var statusUpdated = await _notificationRepository.UpdateMiniGoalStatusAsync(studentId, miniGoalName);
+            var notificationRemoved = await _notificationRepository.RemoveNotificationMiniGoalFromManagerAsync(userId, notificationId);
 
-            if (updateResult.ModifiedCount == 0)
-                return BadRequest("MiniGoal not found or notification could not be removed");
+            if (!statusUpdated || !notificationRemoved)
+                return BadRequest("Failed to update mini goal or remove notification");
 
             return Ok("Notification confirmed and mini goal updated");
         }
 
 
-
         
-        [HttpPost("confirm-middle-goal/{userId}/{notificationId}/{middleGoalName}")]
-        public async Task<IActionResult> ConfirmMiddleGoalNotificationAsync(int userId, int notificationId, string middleGoalName)
+        [HttpPost("confirm-middle-goal/{leaderId}/{notificationId}/{middleGoalName}")]
+        public async Task<IActionResult> ConfirmMiddleGoalNotificationAsync(int leaderId, int notificationId, string middleGoalName)
         {
-            var leader = await _userRepository.GetUserByUserId(userId);
+            var leader = await _userRepository.GetUserByUserId(leaderId);
             if (leader == null) return NotFound("Leader not found");
 
-            var notification = leader.Notifications
-                .FirstOrDefault(n =>
-                    n.NotificationId == notificationId &&
-                    n.MiddleGoalName?.Trim().Equals(middleGoalName.Trim(), StringComparison.OrdinalIgnoreCase) == true);
+            var notification = leader.Notifications.FirstOrDefault(n =>
+                n.NotificationId == notificationId &&
+                n.MiddleGoalName?.Trim().Equals(middleGoalName.Trim(), StringComparison.OrdinalIgnoreCase) == true);
 
             if (notification == null)
                 return NotFound("Notification not found or mismatched MiddleGoalName");
@@ -136,29 +134,25 @@ namespace API.Controllers
             if (studentId == 0)
                 return BadRequest("Missing sender/student ID");
 
-            var updateResult = await _notificationRepository.UpdateMiddleGoalAndRemoveNotificationAsync(
-                studentId, middleGoalName, notificationId);
+            var goalUpdated = await _notificationRepository.UpdateMiddleGoalStatusAsync(studentId, middleGoalName);
+            var notificationRemoved = await _notificationRepository.RemoveNotificationMiddleGoalFromManagerAsync(leaderId, notificationId);
 
-            if (updateResult.ModifiedCount == 0)
-                return BadRequest("MiddleGoal not found or notification could not be removed");
+            if (!goalUpdated || !notificationRemoved)
+                return BadRequest("Goal update or notification removal failed");
 
-            return Ok("Notification confirmed and middle goal updated");
-        }
-
-
-        [HttpGet("maxid")]
-        public async Task<ActionResult<int>> GetMaxNotificationIdAsync()
-        {
-            int maxId = await _notificationRepository.GetMaxNotificationIdAsync();
-            return Ok(maxId);
+            return Ok("Middle goal confirmed and notification removed");
         }
         
-        [HttpGet("exists-mini-goal")]
-        public async Task<ActionResult<bool>> NotificationExistsForMiniGoal(
-            [FromQuery] int userId,
-            [FromQuery] int senderId,
-            [FromQuery] string miniGoalName)
-        {
+    [HttpGet("maxid")]
+    public async Task<ActionResult<int>> GetMaxNotificationIdAsync()
+{
+    int maxId = await _notificationRepository.GetMaxNotificationIdAsync();
+    return Ok(maxId);
+}
+
+    [HttpGet("exists-mini-goal")]
+    public async Task<ActionResult<bool>> NotificationExistsForMiniGoal([FromQuery] int userId, [FromQuery] int senderId, [FromQuery] string miniGoalName) 
+    { 
             try
             {
                 var exists = await _notificationRepository.NotificationExistsForMiniGoalAsync(userId, senderId, miniGoalName);

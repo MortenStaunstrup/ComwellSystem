@@ -77,107 +77,65 @@ namespace API.Repositories
             
         }
         // Subgoals
-      public async Task<UpdateResult> UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId)
+        public async Task<bool> UpdateMiniGoalStatusAsync(int studentId, string miniGoalName)
         {
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId);
 
             var update = Builders<User>.Update
-                .Set("StudentPlan.$[plan].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true)
-                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+                .Set("StudentPlan.$[plan].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true);
 
             var arrayFilters = new List<ArrayFilterDefinition>
             {
-                new BsonDocumentArrayFilterDefinition<BsonDocument>(
-                    new BsonDocument("mini.Name", miniGoalName)
-                ),
-                new BsonDocumentArrayFilterDefinition<BsonDocument>(
-                    new BsonDocument("middle.MiniGoals",
-                        new BsonDocument("$elemMatch", new BsonDocument("Name", miniGoalName)))
-                ),
-                new BsonDocumentArrayFilterDefinition<BsonDocument>(
-                    new BsonDocument("plan.MiddleGoals",
-                        new BsonDocument("$elemMatch",
-                            new BsonDocument("MiniGoals",
-                                new BsonDocument("$elemMatch", new BsonDocument("Name", miniGoalName)))))
-                )
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("mini.Name", miniGoalName)),
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("middle.MiniGoals.Name", miniGoalName)),
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("plan.MiddleGoals.MiniGoals.Name", miniGoalName))
             };
 
             var options = new UpdateOptions { ArrayFilters = arrayFilters };
 
-            // Debug: Udskriv miniGoalName
-            Console.WriteLine($"miniGoalName fra notifikation: '{miniGoalName}'");
-
-            // Hent bruger for at verificere mini goal findes
-            var user = await _userCollection.Find(filter).FirstOrDefaultAsync();
-
-            if (user != null && user.StudentPlan != null)
-            {
-                bool miniGoalExists = false;
-                foreach (var plan in user.StudentPlan)
-                {
-                    Console.WriteLine($"➡️ SubGoal: {plan.SubGoalName}");
-                    if (plan.MiddleGoals != null)
-                    {
-                        foreach (var middle in plan.MiddleGoals)
-                        {
-                            Console.WriteLine($"  ↪️ MiddleGoal: {middle.Name}");
-                            if (middle.MiniGoals != null)
-                            {
-                                foreach (var mini in middle.MiniGoals)
-                                {
-                                    Console.WriteLine($"    • MiniGoal: '{mini.Name}', Status: {mini.Status}");
-                                    if (string.Equals(mini.Name?.Trim(), miniGoalName?.Trim(), StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        miniGoalExists = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Console.WriteLine(miniGoalExists
-                    ? $"✅ MiniGoal '{miniGoalName}' findes og forsøges opdateret."
-                    : $"❌ MiniGoal '{miniGoalName}' blev ikke fundet i brugerens struktur.");
-            }
-            else
-            {
-                Console.WriteLine("❌ Bruger ikke fundet eller StudentPlan er tom.");
-            }
-
             var result = await _userCollection.UpdateOneAsync(filter, update, options);
-
-            Console.WriteLine($"📊 MongoDB ModifiedCount: {result.ModifiedCount}");
-
-            return result;
+            return result.ModifiedCount > 0;
         }
 
-        
-        public async Task<UpdateResult> UpdateMiddleGoalAndRemoveNotificationAsync(int userId, string middleGoalName, int notificationId)
+        public async Task<bool> RemoveNotificationMiniGoalFromManagerAsync(int leaderId, int notificationId)
         {
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId);
 
             var update = Builders<User>.Update
-                .Set("StudentPlan.$[sub].MiddleGoals.$[middle].Status", true)
                 .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+
+            var result = await _userCollection.UpdateOneAsync(filter, update);
+            return result.ModifiedCount > 0;
+        }
+
+
+        public async Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId);
+
+            var update = Builders<User>.Update
+                .Set("StudentPlan.$[].MiddleGoals.$[middle].Status", true);
 
             var arrayFilters = new List<ArrayFilterDefinition>
             {
-                new JsonArrayFilterDefinition<BsonDocument>("{ 'sub.MiddleGoals': { $exists: true } }"),
                 new JsonArrayFilterDefinition<BsonDocument>("{ 'middle.Name': '" + middleGoalName + "' }")
             };
 
             var options = new UpdateOptions { ArrayFilters = arrayFilters };
-            
-            Console.WriteLine("MongoDB update command:");
-            Console.WriteLine($"UserId: {userId}");
-            Console.WriteLine($"MiddleGoalName: {middleGoalName}");
-            Console.WriteLine($"NotificationId: {notificationId}");
-
-            
-            
-            return await _userCollection.UpdateOneAsync(filter, update, options);
+            var result = await _userCollection.UpdateOneAsync(filter, update, options);
+            return result.ModifiedCount > 0;
         }
+
+        public async Task<bool> RemoveNotificationMiddleGoalFromManagerAsync(int leaderId, int notificationId)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId);
+            var update = Builders<User>.Update.PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+
+            var result = await _userCollection.UpdateOneAsync(filter, update);
+            return result.ModifiedCount > 0;
+        }
+
+
 
 
 

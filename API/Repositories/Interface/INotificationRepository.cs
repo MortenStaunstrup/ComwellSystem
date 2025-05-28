@@ -16,9 +16,13 @@ public interface INotificationRepository
     
     
     // Subgoals
-    Task <UpdateResult>UpdateMiniGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId);
+    Task<bool> UpdateMiniGoalStatusAsync(int studentId, string miniGoalName);
+    Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName);
+    Task<bool> RemoveNotificationMiniGoalFromManagerAsync(int leaderId, int notificationId);
     
-    Task <UpdateResult>UpdateMiddleGoalAndRemoveNotificationAsync(int userId, string miniGoalName, int notificationId);
+    Task<bool> RemoveNotificationMiddleGoalFromManagerAsync(int leaderId, int notificationId);
+
+
     
     
     // Id
