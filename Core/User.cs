@@ -27,9 +27,9 @@ namespace Core
         public string UserPassword { get; set; }
         [Required(ErrorMessage = "En bruger skal have en email")]
         public string UserEmail { get; set; }
-        [Required(ErrorMessage = "En bruger skal have et telefonnummer")]
-        [StringLength(8, MinimumLength = 8, ErrorMessage = "Telefonnummeret skal være præcis 8 cifre")]
-        [RegularExpression(@"^\d{8}$", ErrorMessage = "Telefonnummeret skal kun indeholde 8 cifre")]
+        [Required(ErrorMessage = "Telefonnummer er påkrævet")]
+        [RegularExpression(@"^\d{8}$", ErrorMessage = "Telefonnummeret skal indeholde præcis 8 cifre")]
+
         public string UserPhone { get; set; }
         public DateOnly? StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
         public int? UserIdResponsible { get; set; }
