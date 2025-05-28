@@ -20,7 +20,7 @@ public class SubGoal
     public string SubGoalType { get; set; }
 
     [Required] public bool SubGoalStatus { get; set; }
-    
-    public List<MiddleGoal>? MiddleGoals { get; set; }
+
+    public List<MiddleGoal> MiddleGoals { get; set; } = new List<MiddleGoal>();
 
 }
