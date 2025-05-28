@@ -197,8 +197,8 @@
                                             </button>
                                         }
 
-                                        @if (IsKitchenManager)
-                                        {
+                                        @if (IsKitchenManager && CurrentUser.UserId == UserModel.UserIdResponsible)
+                                    {
                                             <input class="comment-input"
                                                    placeholder="Lærer-kommentar"
                                                    value="@KitchenmanagerNewComment[sg.SubGoalId]"
@@ -208,6 +208,8 @@
                                                     @onclick="() => SendKitchenManagerComment(sg.SubGoalId)">
                                                 Tilføj lærer-kommentar
                                             </button>
+                                        }
+
                                         }
                                     </div>
                                 </div>
