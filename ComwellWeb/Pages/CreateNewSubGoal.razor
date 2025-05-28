@@ -142,6 +142,13 @@ else
     private void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
+        if (_model.MiddleGoals.Count == 0)
+        {
+            _errorMessage = "SubGoal skal have mindst ét middlegoal";
+            StateHasChanged();
+            return;
+        }
+        
         if (EditContext.Validate())
         {
             if (_model.MiddleGoals != null)
