@@ -280,15 +280,6 @@ else
     
         @* @* viewId bliver studentId, medmindre den er null – så bruges CurrentUser.UserId (lederen) *@
         var viewId = studentId ?? CurrentUser.UserId;
-
-        
-        if (CurrentUser.Role == "Student" && viewId != CurrentUser.UserId)
-        {
-            NavigationManager.NavigateTo("/noaccess");
-            return;
-        }
-
-        
         
         UserModel = await UserService.GetUserByUserId(viewId);
       //  HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
