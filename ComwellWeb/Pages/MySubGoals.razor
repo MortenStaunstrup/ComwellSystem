@@ -250,7 +250,6 @@ else
     private User? user;
     private User CurrentUser = null!;
     private User UserModel;
-    private bool IsReadOnlyViewer = true;
     private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
     private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
     private int ViewerUserId;
@@ -281,9 +280,7 @@ else
     
         @* @* viewId bliver studentId, medmindre den er null – så bruges CurrentUser.UserId (lederen) *@
         var viewId = studentId ?? CurrentUser.UserId;
-        
-        @* IsReadOnlyViewer er hvis en elev ser på andens elevplan. Ved ikke om den skal være her.*@
-        IsReadOnlyViewer = viewId != CurrentUser.UserId;
+
         
         if (CurrentUser.Role == "Student" && viewId != CurrentUser.UserId)
         {
