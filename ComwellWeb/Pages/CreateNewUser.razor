@@ -68,8 +68,8 @@ else
                         <div class="mb-3">
                             @if (_kitchenManagers != null)
                             {
-                                @if (_model.Role == "Student")
-                                {
+                                @if (_model.Role == "Student") // Hvis ny elev laves, indsæt 'KitchenManagerDropdown' så en 'responsible' kan assignes til eleven
+                                {                              // '_kitchenManagers' er tilgængelige køkkenansvarlige, '_kitchenManager' er den køkkenansvarlig man forventer fra Dropdown
                                     <KitchenManagerDropdown @ref="dropdown" _kitchenManagers="_kitchenManagers" _kitchenManager="assignedKitchenManager" KitchenManagerChanged="@(user => assignedKitchenManager = user)"></KitchenManagerDropdown>
                                 }
                             }
@@ -96,7 +96,7 @@ else
     private EditContext EditContext;
     private string statusMessage = "";
     private List<User>? _kitchenManagers;
-    private User? assignedKitchenManager = new User();
+    private User? assignedKitchenManager = new User(); // Anvendes kun til at få valgt 'KitchenManager' fra Dropdown modal
     KitchenManagerDropdown? dropdown { get; set; }
 
     byte[] pictureBytes;
@@ -112,25 +112,25 @@ else
             NavigationManager.NavigateTo("/login");
         int maxId = await _userService.GetMaxUserId();
         _model.UserId = maxId + 1;
-        _kitchenManagers = await _userService.GetAllKitchenManagersAsync();
+        _kitchenManagers = await _userService.GetAllKitchenManagersAsync(); // Hent alle 'KitchenManagers' hvis man nu skulle lave en ny elev
     }
 
     private async Task HandleSubmit()
     {
         
-        if (_model.Role == "Student" && assignedKitchenManager.UserId == 0)
+        if (_model.Role == "Student" && assignedKitchenManager.UserId == 0) // Checker om UserId er default værdi (betyder at der ikke er nogen kitchenmanager assigned)
         {
             statusMessage = "En elev skal have en køkken chef tildelt";
             return;
         }
 
-        if (_model.Role == "Student")
+        if (_model.Role == "Student") // Sæt elevens 'responsibleId' til at være 'assignedKitchenManager' id
             _model.UserIdResponsible = assignedKitchenManager.UserId;
         if (EditContext.Validate())
         {
             var result = await _userService.AddUserAsync(_model);
 
-            if (result == null)
+            if (result == null) // Hvis Service returnerer null på 'AddUserAsync' metoden, vil det sige at der allerede existerer en bruger med email og password combinationen
             {
                 statusMessage = "Brugeren findes allerede.";
             }
@@ -167,6 +167,7 @@ else
         StateHasChanged();
     }
     
+    // Bliver kaldt, så når man ændrer rollen til eller fra elev, så bliver 'StateHasChanged' kaldt så 'KitchenManagerDropdown' bliver vist
     private void OnRoleChange(ChangeEventArgs e)
     {
         _model.Role = e.Value.ToString();

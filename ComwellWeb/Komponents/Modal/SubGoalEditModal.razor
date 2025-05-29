@@ -87,9 +87,11 @@ else
     bool statusFailed = false;
     bool status = false;
     
+    // Når disse funktioner bliver kaldet, bliver funktionen ('CloseModal()') kaldet i 'EditSubGoals' page pga. EventCallback
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
+    // Lidt ligesom OnInitializedAsync, men bliver kaldet når Modalen har fået alle sine parametre
     protected override async Task OnParametersSetAsync()
     {
         EditContext = new EditContext(_Goal);

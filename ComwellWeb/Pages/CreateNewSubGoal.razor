@@ -67,10 +67,10 @@ else
                             </InputSelect>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3"> <!-- Hvis KitchenManagers elevliste ikke er null og SubGoal typen er 'Extra' vis 'StudentDropdownModal' -->
                             @if (_myStudents != null)
                             {
-                                @if (_model.SubGoalType == "Extra")
+                                @if (_model.SubGoalType == "Extra") // Brug '_myStudents' og '_addedStudents' som parametre til modalet, de bliver ændret i modalet og resultatet kommer ind på 'CreateNewSubGoal' page
                                 {
                                     <StudentDropdown _students="_myStudents" _addedStudents="_addedStudents" @ref="dropdown"></StudentDropdown>
                                 }
@@ -81,7 +81,6 @@ else
                             <button type="submit" class="btn btn-success">Tildel Delmål</button>
                         </div>
                     </EditForm>
-                    <p style="color: red">@_errorMessage</p>
                 </div>
             </div>
         </div>
@@ -97,14 +96,8 @@ else
     EditContext EditContext;
 
     StudentDropdown? dropdown { get; set; }
-    string _errorMessage;
     string statusMessage = "";
     int currentMaxId;
-
-    string[] _categories = new[]
-    {
-        "Kursus", "Køkken kompetence", "Faglig mål"
-    };
 
     string[] _types = new[]
     {
@@ -115,6 +108,7 @@ else
     {
         _currentUser = await UserService.GetUserLoggedInAsync();
 
+        // Checker om bruger er 'KitchenManager' eller 'Admin', hvis ikke bliver navigeret til login page
         if (_currentUser.Role != "KitchenManager" && _currentUser.Role != "Admin")
         {
             NavMan.NavigateTo("/");
@@ -124,7 +118,7 @@ else
         EditContext = new EditContext(_model);
         currentMaxId = await SubGoalService.MaxSubGoalId();
         if (_currentUser != null)
-            _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId);
+            _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId); // Finder students for pågældende 'KitchenManager' (ergo kan Admin ikke tilføje 'Extra' delmål til specifikke elever
     }
 
     private void AddMiddleGoal()
@@ -142,9 +136,9 @@ else
     private void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
-        if (_model.MiddleGoals.Count == 0)
+        if (_model.MiddleGoals.Count == 0) // Sørger for at der mindst er 1 eller flere 'MiddleGoals' i et SubGoal
         {
-            _errorMessage = "SubGoal skal have mindst ét middlegoal";
+            statusMessage = "SubGoal skal have mindst ét middlegoal";
             StateHasChanged();
             return;
         }
@@ -153,11 +147,11 @@ else
         {
             if (_model.MiddleGoals != null)
             {
-                foreach (var middleGoal in _model.MiddleGoals)
+                foreach (var middleGoal in _model.MiddleGoals) // Checker om nogle af 'MiddleGoals' eller 'MiniGoals' er tomme textstrenge
                 {
                     if (string.IsNullOrWhiteSpace(middleGoal.Name))
                     {
-                        _errorMessage = "Ét eller flere mellemdelmål har ikke noget navn";
+                        statusMessage = "Ét eller flere mellemdelmål har ikke noget navn";
                         StateHasChanged();
                         return;
                     }
@@ -165,7 +159,7 @@ else
                     {
                         if (string.IsNullOrWhiteSpace(minigoal.Name))
                         {
-                            _errorMessage = "Ét eller flere minidelmål har ikke noget navn";
+                            statusMessage = "Ét eller flere minidelmål har ikke noget navn";
                             StateHasChanged();
                             return;
                         }
@@ -173,7 +167,7 @@ else
                 }
             }
 
-            if (_model.SubGoalType == "Standard")
+            if (_model.SubGoalType == "Standard") // Kald funktioner til 'Standard' subgoals
             {
                 SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalAll(_model);
@@ -181,9 +175,9 @@ else
             }
             else
             {
-                if (_addedStudents.Count == 0)
+                if (_addedStudents.Count == 0) // Check om der er blevet tilføjet nogle elever til Extra delmål
                 {
-                    _errorMessage = "Du skal angive mindst én elev til en ekstra opgave";
+                    statusMessage = "Du skal angive mindst én elev til en ekstra opgave";
                     StateHasChanged();
                     return;
                 }
@@ -193,6 +187,7 @@ else
                 {
                     studentIds.Add(student.UserId);
                 }
+                // Kalder funktioner til at indsætte 'Extra' delmål
                 SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalSpecific(_model, studentIds);
                 statusMessage = "Delmål blev oprettet!";
@@ -214,6 +209,7 @@ else
         StateHasChanged();
     }
 
+    // Funktion til at køre 'StateHasChanged' når 'type' på subgoal bliver ændret
     private void OnSubGoalTypeChange(ChangeEventArgs e)
     {
         _model.SubGoalType = e.Value.ToString();
