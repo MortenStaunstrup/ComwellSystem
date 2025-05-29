@@ -3,7 +3,6 @@
 @using ComwellWeb.Services.Interfaces
 @using Core
 
-@inject IUserService _userservice
 @inject NavigationManager NavigationManager
 
 @inject IUserService UserService
@@ -279,19 +278,10 @@ else
     @* Køre når siden er klar til at starte *@
     protected override async Task OnInitializedAsync()
     {
-        CurrentUser = await _userservice.GetUserLoggedInAsync();
+        CurrentUser = await UserService.GetUserLoggedInAsync();
     
         @* @* viewId bliver studentId, medmindre den er null – så bruges CurrentUser.UserId (lederen) *@
         var viewId = studentId ?? CurrentUser.UserId;
-
-        
-        if (CurrentUser.Role == "Student" && viewId != CurrentUser.UserId)
-        {
-            NavigationManager.NavigateTo("/noaccess");
-            return;
-        }
-
-        
         
         UserModel = await UserService.GetUserByUserId(viewId);
       //  HasAccess = CurrentUser.Role == "KitchenManager" || viewId == CurrentUser.UserId;
