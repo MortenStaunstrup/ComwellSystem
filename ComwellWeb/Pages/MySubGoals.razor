@@ -3,7 +3,7 @@
 @using ComwellWeb.Services.Interfaces
 @using Core
 
-@inject IJSRuntime JS
+@inject IUserService _userservice
 @inject NavigationManager NavigationManager
 
 @inject IUserService UserService
@@ -280,9 +280,7 @@ else
     @* Køre når siden er klar til at starte *@
     protected override async Task OnInitializedAsync()
     {
-        @** henter logged in user fra localstorage med JS for at give currentuser en værdi. **@
-        var userJson = await JS.InvokeAsync<string>("localStorage.getItem", "user");
-        CurrentUser = JsonSerializer.Deserialize<User>(userJson!);
+        CurrentUser = await _userservice.GetUserLoggedInAsync();
     
         @* @* viewId bliver studentId, medmindre den er null – så bruges CurrentUser.UserId (lederen) *@
         var viewId = studentId ?? CurrentUser.UserId;
