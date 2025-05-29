@@ -7,20 +7,15 @@ namespace API.Repositories
 {
     public class NotificationRepository : INotificationRepository
     {   
-        private readonly IUserRepository _userRepository;
-        private readonly INotificationRepository _notificationlRepository;
-        private readonly ISubGoalRepository _subgoalRepository;
         private readonly string _connectionString;
         
         private readonly MongoClient _client;
         private readonly IMongoCollection<User> _userCollection;
         
-        public NotificationRepository(ISubGoalRepository subgoalRepository, IUserRepository userRepository)
+        public NotificationRepository()
         {
-            _userRepository = userRepository;
-            _subgoalRepository = subgoalRepository;
 
-            // Connection til database. Kunne også skrive den i launchSettings.json?
+            // Connection til database. Kunne også skrive den i launchSettings.json? Repository fungere bare ligesom vores mongodb compass. Vi skal bruge en connectionstring med username og password. 
             _connectionString = "mongodb+srv://mortenstnielsen:hlEgCKJrN89edDQt@clusterfree.a2y2b.mongodb.net/";
             if (string.IsNullOrEmpty(_connectionString))
             {
@@ -33,29 +28,32 @@ namespace API.Repositories
         }
 
         // Create
+        
+        
+        //tilføjer en notifikation til en bruger, når et miniGoal markeres som færdigt af en student.
         public async Task SendMiniGoalNotificationAsync(Notification notification)
         {
-            notification.NotificationId = await GetMaxNotificationIdAsync() + 1;
-            notification.TimeStamp = DateTime.UtcNow;
+            notification.NotificationId = await GetMaxNotificationIdAsync() + 1; // genererer et nyt ID som er +1 for hver notifikation
+            notification.TimeStamp = DateTime.UtcNow; // hvornår noti bliver sendt
 
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, notification.UserId);
-            var update = Builders<User>.Update.Push(u => u.Notifications, notification);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, notification.UserId); // mongoDB filter til at finde en specefik user. 
+            var update = Builders<User>.Update.Push(u => u.Notifications, notification); // når brugeren er fundet skubber vi notifikationen ind i user-objektet (embedding)
 
-            var result = await _userCollection.UpdateOneAsync(filter, update);
+            var result = await _userCollection.UpdateOneAsync(filter, update); // opdaterer userobjektet
 
-            if (result.MatchedCount == 0)
+            if (result.MatchedCount == 0) // debugging: matchedcount fortæller os om vi kan finde useren i databasen.
             {
                 throw new Exception($"Ingen bruger med UserId {notification.UserId} fundet");
             }
 
-            if (result.ModifiedCount == 0)
+            if (result.ModifiedCount == 0) // debugging: modifiedcount fortæller os, om vi har ændret noget i databasen.
             {
                 throw new Exception($"Notification blev ikke tilføjet til bruger {notification.UserId}");
             }
             
         }
         
-        public async Task SendMiddleGoalNotificationAsync(Notification notification)
+        public async Task SendMiddleGoalNotificationAsync(Notification notification) // samme som for minigoal overstående
         {
             notification.NotificationId = await GetMaxNotificationIdAsync() + 1;
             notification.TimeStamp = DateTime.UtcNow;
@@ -77,39 +75,46 @@ namespace API.Repositories
             
         }
         // Subgoals
-        public async Task<bool> UpdateMiniGoalStatusAsync(int studentId, string miniGoalName)
+        
+        // opdaterer status for et specifikt MiniGoal til true, når det bliver bekræftet af en kitchenmanager
+        public async Task<bool> UpdateMiniGoalStatusAsync(int studentId, string miniGoalName) // modtager en eleves userId som er studentId, og bruger primærnøglen name i minigoals til at opdatere det.
         {
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId); // find først brugeren med det tilsvarende userId i databasen
 
             var update = Builders<User>.Update
-                .Set("StudentPlan.$[plan].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true);
+                .Set("StudentPlan.$[plan].MiddleGoals.$[middle].MiniGoals.$[mini].Status", true); // update-statement, som sætter status på det rigtige MiniGoal til true. den går ind i studentplan - middlegoals - minigoals - status for minigoal
 
-            var arrayFilters = new List<ArrayFilterDefinition>
-            {
-                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("mini.Name", miniGoalName)),
+            var arrayFilters = new List<ArrayFilterDefinition> // så databasen kan finde det rigtige minigoal.
+            {   
+                //pakker bsondokumenterne ind i objekter.
+                new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("mini.Name", miniGoalName)), // sammenligner minigoal name med vores parameter hele vejen igennem embeddingen, for at være sikker. Update skal kun gælde for det rigtige minigoal.
                 new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("middle.MiniGoals.Name", miniGoalName)),
                 new BsonDocumentArrayFilterDefinition<BsonDocument>(new BsonDocument("plan.MiddleGoals.MiniGoals.Name", miniGoalName))
             };
 
             var options = new UpdateOptions { ArrayFilters = arrayFilters };
 
-            var result = await _userCollection.UpdateOneAsync(filter, update, options);
+            var result = await _userCollection.UpdateOneAsync(filter, update, options); //updater med de variable vi har sat
             return result.ModifiedCount > 0;
         }
 
+        // Fjerner en minigoal-notifikation fra en leder (kitchenmanager), når notifikationen er blevet bekræftet.
+        
+        //leaderId: userId for kitchenmanager. leader her, men det er det samme som kitchenmanager. Lidt inkonsistent
+        // notificationId: ID på den notifikation, der skal fjernes.
         public async Task<bool> RemoveNotificationMiniGoalFromManagerAsync(int leaderId, int notificationId)
         {
-            var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId);
+            var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId); // finder kitchenmanagers user-objekt gennem deres userId.
 
             var update = Builders<User>.Update
-                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId);
+                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId); // fjerner (pull) notifikation fra listen, hvor notificationId matcher.
 
             var result = await _userCollection.UpdateOneAsync(filter, update);
             return result.ModifiedCount > 0;
         }
 
 
-        public async Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName)
+        public async Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName) //samme som minigoal nogenlunde
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId);
 

@@ -5,6 +5,9 @@ namespace Core;
 
 public class Message
 {
+    
+    // bruges ikke længere.
+    
     [BsonElement("_id")]
     public int MessageId { get; set; }
     public ObjectId? FileId { get; set; }
