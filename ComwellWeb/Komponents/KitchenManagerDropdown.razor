@@ -8,8 +8,8 @@
     {
         <div>
             <ul>
-            @if (_kitchenManagers != null && _kitchenManager.UserId == 0)
-            {
+            @if (_kitchenManagers != null && _kitchenManager.UserId == 0) // Checker om værdien på den valgte KitchenManager er 0
+            {                                                             // Hvis den er, så er der ikke valgt en KitchenManager endnu, og alle KitchenManagers skal vises
                 foreach (var manager in _kitchenManagers)
                 {
                     <li>
@@ -41,9 +41,10 @@
     [Parameter]
     public List<User>? _kitchenManagers { get; set; } = new List<User>();
     [Parameter] 
-    public User? _kitchenManager { get; set; } = new User();
+    public User _kitchenManager { get; set; } = new User();
     private bool _isOpen = false;
     private void ToggleDropdown() => _isOpen = !_isOpen;
+    // EventCallback fortæller 'parent' pagen (CreateNewUser page) at _kitchenManager er ændret.
     [Parameter]
     public EventCallback<User> KitchenManagerChanged { get; set; }
 
