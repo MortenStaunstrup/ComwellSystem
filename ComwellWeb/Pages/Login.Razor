@@ -21,23 +21,29 @@
     string email;
     string password;
     string message;
+    //iværksættes når man trykker på login knappen
     private async Task HandleSubmit()
     {
+        //Skal køre funktionen herunder
         await TryLogin();
     }
 
     // Kører når brugeren klikker login
     private async Task TryLogin()
     {
-        var user = await userService.Login(email, password);  // Prøv at logge ind via service
+        //Sætter vedkommende der logger ind som user
+        //bruger userservice,s login funktione til at logge ind
+        //Bruger email og password som de parametre den kontrollere login med
+        var user = await userService.Login(email, password);
  
         if (user != null)
         {
-            // Login gik godt = naviger til deres respektive forsider forsiden
+            //hvis Login gik godt = naviger til deres respektive forsider forsiden
             if (user.Role == "Student")
             {
                 nav.NavigateTo("/StudentHome", forceLoad: true);
             }
+            //Vidersender de rigtige roller til deres respektive steder.
             else if (user.Role == "HR" || user.Role == "KitchenManager" || user.Role == "Admin")
             {
                 nav.NavigateTo("/studentlist", forceLoad: true);
@@ -45,11 +51,14 @@
         }
         else
         {
-            message = "Wrong Username or Password";  // Fejlbesked hvis login fejler
+            //Besked der kommer frem hvis parametrende fra email og password ikke matchede med noget fra db, som sker i login funktionen
+            message = "Wrong Username or Password";
         }
     }
     protected override async Task OnInitializedAsync()
     {
+        //Checker om vedkommende allerede er logget ind, da man selv skal logud igennem
+        //myprofil siden hvis man ønsker at logge ud
         var user = await userService.GetUserLoggedInAsync();
         if (user != null)
         {

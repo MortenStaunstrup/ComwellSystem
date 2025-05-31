@@ -35,6 +35,9 @@
         </div>
     }
 </div>
+<!--følgnede paramtre er nødvendige for at være der for at modalvinduet kan bruge indholdet på dens side.
+Dette er da det et komponent som sidder i en helt anden mappe. Så for at den kan få adgang til de indsanster.
+Så skal man vedhæfte dem som paramtre som følgende: --->
 <SubGoalDescriptionModal Goal="SelectedSubGoal" Visible="ShowModal" OnCloseRequested="CloseModal" VejenDerTil="VejenDerTil" CurrentUser="_currentUser"/>
 @code {
     private List<SubGoal>? _offeredSubGoals;
@@ -46,28 +49,42 @@
 
     protected override async Task OnInitializedAsync()
     {
+        //Henter hvem der er logget ind igennem UserService,s GetUserLoggedInAsync funktionen
         _currentUser = await UserService.GetUserLoggedInAsync();
+        //henter funktionen GetofferedSubGoalsAsync fra SubgoalService og sætter funktionen til at være _offeredSubGoals
         _offeredSubGoals = await SubGoalService.GetOfferedSubGoalsAsync();
-
+// Henter en liste over delmål, som den nuværende bruger (eleven) allerede er blevet tilbudt
         var _ownOfferedSubGoals = await SubGoalService.GetOfferedSubGoalsByStudentIdAsync(_currentUser.UserId);
+        // Hvis listen ikke er null (altså, der findes delmål, brugeren har modtaget før)
         if (_ownOfferedSubGoals != null)
         {
+            // Gennemgår hver af de tidligere tilbudte delmål
             foreach (var owngoal in _ownOfferedSubGoals)
             {
+                // Tilføjer SubGoalId til ownGoalsDict med en værdi på 0
+                // Dette dictionary bruges som et "filter" senere i UI’et, så allerede tilbudte mål ikke vises igen
                 ownGoalsDict[owngoal.SubGoalId] = 0;
             }
         }
     }
 
+// Metode, der aktiveres når brugeren klikker på et delmål i UI’et (onclick på <li> elementet)
     private void OpenModal(SubGoal goal)
     {
+        // Gemmer det valgte delmål, så det kan vises i modal-vinduet
         SelectedSubGoal = goal;
+
+        // Sætter ShowModal til true, hvilket får modal-komponenten til at blive vist
         ShowModal = true;
+
+        // VejenDerTil er en bool, der sendes som parameter til modal-komponenten — bruges formentlig til logik i modalens visning
         VejenDerTil = true;
     }
 
+
     private void CloseModal()
     {
+        //Lukker modalvinduet
         ShowModal = false;
     }
 }

@@ -66,56 +66,72 @@ private string _selectedRole = "";
     List<string> roles = new() { "Student", "KitchenManager", "Admin", "HR" };
     private void HandleUserDeleted(int deletedUserId)
     {
-        _allUsers?.RemoveAll(u => u.UserId == deletedUserId); //Slet alle brugere der har det userid.
-        _filteredUsers?.RemoveAll(u => u.UserId == deletedUserId); //Fjerne brugeren fra listen
-        StateHasChanged(); //For at opdatere listen
+        //Sletter alle brugere der har det userid.
+        _allUsers?.RemoveAll(u => u.UserId == deletedUserId);
+        //Fjerner brugeren fra listen
+        _filteredUsers?.RemoveAll(u => u.UserId == deletedUserId);
+        //For at opdatere listen
+        StateHasChanged();
     }
 
 
     
-
+ //Bruges til at gemme den valgte rolle i inputtet
     private string selectedRole
     {
+        //Henter den valgte rolle
         get => _selectedRole;
+        //Set opdatere den valgte rolle ved ændring
         set
         {
+            //for at undgå unødvendige opdateringer
             if (_selectedRole != value)
             {
+                //Gemmer den nuværende value som _selectedRole
                 _selectedRole = value;
+                //kører funktionen applyfilters
                 ApplyFilters();
             }
         }
     }
-
+//bruger user som parametre
     private void OpenDeleteModal(User user)
     {
+        //SelectedUser er den valgte brugere
         selectedUser = user;
+        //Visible bool er om modal skal vises eller ej, sættes derfor til true ved "OpenDeleteModal"
         visible = true;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        var currentUser = await _userService.GetUserLoggedInAsync(); //Hente brugeren som er logget ind, fra userservice,s func der hedder getuserloggedinasync
-        if (currentUser == null || currentUser.Role != "Admin") //Hvis brugeren ikke er admin 
+        //Finder hvem der er logget ind, sætter vedkommende som currentUser
+        var currentUser = await _userService.GetUserLoggedInAsync();
+        if (currentUser == null || currentUser.Role != "Admin")
         {
             nav.NavigateTo("/login");
             return;
         }
-
+        //Henter alle users
         _allUsers = await _userService.GetAllUsersAsync();
+        //Sætter alle users til at være _filteredUsers. filteringen bliver brugt i foreach loopets løkke
         _filteredUsers = _allUsers;
+        //Viser siden som det sidste i OnInitializedAsync
         loaded = true;
     }
 
+    //Filterer siden. Bliver kun brugt igennem SelectedRole, som bliver brugt i html,en ved role inputtet.
     private void ApplyFilters()
     {
+        //Abryd hvis der ingen brugere er hentet
         if (_allUsers == null)
             return;
 
+        //Sæt _filteredUsers til users hvor alle users user.Role har en string der er ligemed selectedRole
         _filteredUsers = _allUsers.Where(user =>
             string.IsNullOrWhiteSpace(selectedRole) || user.Role == selectedRole
         ).ToList();
-
+        //For at opdatere listen.
         StateHasChanged();
     }
 }
