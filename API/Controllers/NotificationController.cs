@@ -44,6 +44,11 @@ namespace API.Controllers
 
         }
 
+        /// <summary>
+        /// opretter og sender en middlegoal-notifikation til en bruger
+        /// </summary>
+        /// <param name="notification">notifikation der skal sendes</param>
+        /// <returns>http 200 ved succes, ellers relevant fejlbesked</returns>
         [HttpPost]
         [Route("send-middle-goal")]
         public async Task<IActionResult> SendMiddleGoalNotificationAsync([FromBody] Notification notification)
@@ -70,7 +75,11 @@ namespace API.Controllers
         }
 
 
-
+        /// <summary>
+        /// henter alle notifikationer for en given bruger
+        /// </summary>
+        /// <param name="userId">userid for brugeren</param>
+        /// <returns>liste af notifikationer</returns>
         [HttpGet("notifications/user/{userId}")]
         public async Task<IActionResult> GetNotificationsByUserIdAsync(int userId)
         {
@@ -88,6 +97,13 @@ namespace API.Controllers
             return Ok(notifications);
         }
 
+        /// <summary>
+        /// bekræfter en minigoalnotifikation og opdaterer status på målet
+        /// </summary>
+        /// <param name="userId">userid for lederen</param>
+        /// <param name="notificationId">id på den notifikation der bekræftes</param>
+        /// <param name="miniGoalName">navn på det tilhørende minigoal</param>
+        /// <returns>http 200 ved succes, ellers fejl</returns>
         [HttpPost("confirm-mini-goal/{userId}/{notificationId}/{miniGoalName}")]
         public async Task<IActionResult> ConfirmMiniGoalNotificationAsync(int userId, int notificationId, string miniGoalName)
         {
@@ -116,7 +132,13 @@ namespace API.Controllers
         }
 
 
-        
+        /// <summary>
+        /// bekræfter en middlegoal notifikation og opdaterer status på målet. Ligesom minigoal overstående
+        /// </summary>
+        /// <param name="leaderId">userid for lederen/kitchenmanager</param>
+        /// <param name="notificationId">id på notifikationen</param>
+        /// <param name="middleGoalName">navn på målet</param>
+        /// <returns>http 200 ved succes, ellers fejl</returns>
         [HttpPost("confirm-middle-goal/{leaderId}/{notificationId}/{middleGoalName}")]
         public async Task<IActionResult> ConfirmMiddleGoalNotificationAsync(int leaderId, int notificationId, string middleGoalName)
         {
@@ -143,6 +165,10 @@ namespace API.Controllers
             return Ok("Middle goal confirmed and notification removed");
         }
         
+        /// <summary>
+        /// returnerer det højeste notificationid i systemet
+        /// </summary>
+        /// <returns>heltal som repræsenterer det største eksisterende id</returns>
     [HttpGet("maxid")]
     public async Task<ActionResult<int>> GetMaxNotificationIdAsync()
 {
@@ -150,6 +176,13 @@ namespace API.Controllers
     return Ok(maxId);
 }
 
+        /// <summary>
+        /// tjekker om en notifikation for et specifikt minigoal allerede findes
+        /// </summary>
+        /// <param name="userId">userid for modtageren</param>
+        /// <param name="senderId">userid for afsenderen</param>
+        /// <param name="miniGoalName">navn på minigoalet</param>
+        /// <returns>true hvis den findes, ellers false</returns>
     [HttpGet("exists-mini-goal")]
     public async Task<ActionResult<bool>> NotificationExistsForMiniGoal([FromQuery] int userId, [FromQuery] int senderId, [FromQuery] string miniGoalName) 
     { 
@@ -164,6 +197,13 @@ namespace API.Controllers
             }
         }
         
+        /// <summary>
+        /// tjekker om en notifikation for et specifikt middlegoal allerede findes
+        /// </summary>
+        /// <param name="userId">userid for modtageren</param>
+        /// <param name="senderId">userid for afsenderen</param>
+        /// <param name="middleGoalName">navn på middlegoalet</param>
+        /// <returns>true hvis den findes, ellers false</returns>
         [HttpGet("exists-middle-goal")]
         public async Task<ActionResult<bool>> NotificationExistsForMiddleGoal(
             [FromQuery] int userId,

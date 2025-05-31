@@ -16,19 +16,26 @@ namespace ComwellWeb.Services
             _httpClient = httpClient;
             _localStorage = localStorage;
         }
-
+        
+        // henter alle brugere fra databasen
+        // return: liste med alle brugere
         public async Task<List<User>> GetAllUsersAsync()
         {
             var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
             return users ?? new List<User>();
         }
 
+        // henter alle brugere med rollen Student
+        // return: liste med studerende
         public async Task<List<User>> GetAllStudentsAsync()
         {
             var users = await _httpClient.GetFromJsonAsync<List<User>>(BaseURL);
             return users?.Where(u => u.Role == "Student").ToList() ?? new List<User>();
         }
 
+        
+        // forsøger at logge en bruger ind med e-mail og password
+        // return: userobjekt hvis login er succesfuldt, ellers null
         public async Task<User?> Login(string email, string password)
         {
             var response = await _httpClient.GetAsync($"{BaseURL}/login/{email}/{password}");
@@ -44,13 +51,16 @@ namespace ComwellWeb.Services
 
             return null;
         }
-
+        
+        // henter den aktuelt loggede bruger fra local storage
+        // return: userobjekt hvis en bruger er logget ind, ellers null
         public async Task<User?> GetUserLoggedInAsync()
         {
             return await _localStorage.GetItemAsync<User>("user");
         }
 
-        
+        // opretter en ny bruger i databasen
+        // return: det oprettede userobjekt eller null hvis oprettelsen fejler
         public async Task<User?> AddUserAsync(User user)
         {
             var response = await _httpClient.PostAsJsonAsync($"{BaseURL}/opret", user);
@@ -61,37 +71,52 @@ namespace ComwellWeb.Services
             return createdUser;
         }
 
+        // opdaterer en eksisterende bruger i databasen
+        // param: user, brugerens data som opdateres
         public async Task UpdateUser(User user)
         {
             user.UserPassword = "placeholder";
             await _httpClient.PutAsJsonAsync($"{BaseURL}/update", user);
         }
 
+        // logger brugeren ud ved at fjerne brugerdata fra local storage
         public async Task Logout()
         {
             await _localStorage.RemoveItemAsync("user");
         }
-
+        
+        // henter det højeste bruger-id fra databasen
+        // return: største id som int
         public async Task<int> GetMaxUserId()
         {
             return await _httpClient.GetFromJsonAsync<int>($"{BaseURL}/maxid");
         }
 
+        // henter en specifik bruger baseret på id
+        // return: userobjekt hvis fundet, ellers null
         public async Task<User?> GetUserByUserId(int userId)
         {
             Console.WriteLine($"Returning user: {userId}: service");
             return await _httpClient.GetFromJsonAsync<User>($"{BaseURL}/user/{userId}");
         }
 
+        // henter alle studerende der er knyttet til en bestemt ansvarlig
+        // return: liste med studerende eller null
         public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responisbleId)
         {
             return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/students/{responisbleId}");
         }
 
+        
+        // henter alle brugere med rollen kitchenmmanager
+        // return: liste med køkkenansvarlige eller null
         public async Task<List<User>?> GetAllKitchenManagersAsync()
         {
             return await _httpClient.GetFromJsonAsync<List<User>?>($"{BaseURL}/kitchenmanagers");
         }
+        
+        // sletter en bruger fra databasen
+        // param: userId - id på brugeren der skal slettes
         public async Task DeleteUserAsync(int userId)
         {
             await _httpClient.DeleteAsync($"{BaseURL}/{userId}");

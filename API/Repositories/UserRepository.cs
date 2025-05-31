@@ -15,7 +15,10 @@ public class UserRepository : IUserRepository
     private IMongoCollection<User> _collection;
     private IMongoCollection<SubGoal> _subGoalCollection;
     private GridFSBucket _bucket;
-
+    
+    /// <summary>
+    /// Konstruktør. Opretter forbindelse til MongoDB og initialiserer collections og GridFS.
+    /// </summary>
     public UserRepository()
     {
         _client = new MongoClient(connectionString);
@@ -25,6 +28,10 @@ public class UserRepository : IUserRepository
         _bucket = new GridFSBucket(database, new GridFSBucketOptions{BucketName = "Profile Pictures"});
     }
 
+    /// <summary>
+    /// Henter alle brugere fra databasen, inklusive deres profilbilleder.
+    /// </summary>
+    /// <returns>En liste af alle brugere.</returns>
     public async Task<List<User>> GetAllUsersAsync()
     {
         var users = await _collection.Find(new BsonDocument()).ToListAsync();
@@ -37,7 +44,11 @@ public class UserRepository : IUserRepository
         }
         return users;
     }
-
+    
+    /// <summary>
+    /// Henter alle brugere med rollen "KitchenManager" (køkkenleder), uden deres notifikationer, beskeder og adgangskode.
+    /// </summary>
+    /// <returns>En liste af køkkenledere eller null, hvis ingen findes.</returns>
     public async Task<List<User>?> GetAllKitchenManagersAsync()
     {
         var filter = Builders<User>.Filter.Eq(x => x.Role, "KitchenManager");
@@ -53,6 +64,10 @@ public class UserRepository : IUserRepository
         return managers;
     }
     
+    /// <summary>
+    /// Henter alle brugere, der er studerende.
+    /// </summary>
+    /// <returns>En liste af studerende.</returns>
     public async Task<List<User>> GetAllStudentsAsync()
     {
         var students = await _collection.Find(new BsonDocument()).ToListAsync();
@@ -66,6 +81,11 @@ public class UserRepository : IUserRepository
         return students;
     }
 
+    /// <summary>
+    /// Henter en bruger baseret på deres bruger-ID.
+    /// </summary>
+    /// <param name="userId">Brugerens ID.</param>
+    /// <returns>Et User-objekt eller null, hvis ingen bruger findes.</returns>
     public async Task<User?> GetUserByUserId(int? userId)
     {
         Console.WriteLine($"Returning user: {userId}: repo");
@@ -78,6 +98,11 @@ public class UserRepository : IUserRepository
         return student;
     }
 
+    /// <summary>
+    /// Tilføjer en ny bruger til databasen og uploader eventuelt profilbillede.
+    /// Hvis brugeren er studerende, tilføjes standard-subgoals.
+    /// </summary>
+    /// <param name="user">Brugeren der skal tilføjes.</param>
     public async Task AddUserAsync(User user)
     {
         user.UserId = await GetMaxUserId() + 1;
@@ -92,6 +117,12 @@ public class UserRepository : IUserRepository
             InsertAllStandardSubGoalsInStudent(user);
     }
 
+    
+    /// <summary>
+    /// Henter alle studerende, som har en specifik ansvarlig (userId).
+    /// </summary>
+    /// <param name="responsibleId">userId for ansvarlig person.</param>
+    /// <returns>En liste af studerende med given ansvarlig.</returns>
     public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
     {
         var filter = Builders<User>.Filter.Eq(x => x.UserIdResponsible, responsibleId);
@@ -107,6 +138,11 @@ public class UserRepository : IUserRepository
         return students;
     }
 
+    
+    /// <summary>
+    /// Tilføjer alle standard-subgoals til en given studerendes læringsplan.
+    /// </summary>
+    /// <param name="user">Studerende som skal have subgoals tilføjet.</param>
     public async void InsertAllStandardSubGoalsInStudent(User user)
     {
         try
@@ -121,7 +157,8 @@ public class UserRepository : IUserRepository
                 return;
             }
             
-            user.StudentPlan.AddRange(standardSubGoals); //tilføjer til studentplan listen på én gang
+            //tilføjer til studentplan listen på én gang
+            user.StudentPlan.AddRange(standardSubGoals);
             
             var userFilter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
             var update = Builders<User>.Update.Set(u => u.StudentPlan, user.StudentPlan);
@@ -137,6 +174,12 @@ public class UserRepository : IUserRepository
     }
 
     
+    /// <summary>
+    /// Logger en bruger ind ved at matche email og adgangskode.
+    /// </summary>
+    /// <param name="email">Brugerens email.</param>
+    /// <param name="password">Brugerens adgangskode.</param>
+    /// <returns>Brugeren hvis login lykkedes; ellers null.</returns>
     public async Task<User?> Login(string email, string password)
     {
         try
@@ -168,7 +211,11 @@ public class UserRepository : IUserRepository
 
 
 
-
+    /// <summary>
+    /// Henter en bruger ved login baseret på deres brugerID.
+    /// </summary>
+    /// <param name="userId">Brugerens ID.</param>
+    /// <returns>Bruger med angivet ID.</returns>
     public async Task<User> GetUserByLoginAsync(int userId)
     {
         var user = await _collection.Find(new BsonDocument("_id", userId)).FirstOrDefaultAsync();
@@ -179,6 +226,10 @@ public class UserRepository : IUserRepository
         return user;
     }
     
+    /// <summary>
+    /// Finder det højeste bruger-ID i databasen.
+    /// </summary>
+    /// <returns>Det højeste UserId (som er et heltal), eller 0 hvis ingen findes.</returns>
     public async Task<int> GetMaxUserId() 
     {
         try
@@ -197,6 +248,11 @@ public class UserRepository : IUserRepository
             throw;
         }
     }
+    
+    /// <summary>
+    /// Opdaterer en bruger i databasen, inklusive profilbillede.
+    /// </summary>
+    /// <param name="user">Brugeren der skal opdateres.</param>
     public async Task UpdateUserAsync(User user)
     {
         var dbUser = await GetUserByUserId(user.UserId);
@@ -218,6 +274,12 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.UserId, user.UserId);
         await _collection.ReplaceOneAsync(filter, dbUser);
     }
+    
+    
+    /// <summary>
+    /// Sletter en bruger fra databasen samt deres profilbillede, hvis det findes.
+    /// </summary>
+    /// <param name="userId">Brugerens ID.</param>
     public async Task DeleteUserAsync(int userId)
     {
         var filter = Builders<User>.Filter.Eq(u => u.UserId, userId);

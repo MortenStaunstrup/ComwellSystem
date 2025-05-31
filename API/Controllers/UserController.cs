@@ -16,6 +16,10 @@ public class UsersController : ControllerBase
         _repo = repository;  // Repository sendes ind og gemmes i en variabel
     }
 
+    // login endpointv: returnerer bruger hvis email og password matcher, ellers unauthorized
+    // param email: brugerens email
+    // password: brugerens adgangskode
+    // return: brugerobjekt uden adgangskode hvis godkendt, ellers 401
     [HttpGet("login/{email}/{password}")]  // Endpoint til login med e-mail og password
     public async Task<IActionResult> Login(string email, string password)
     {
@@ -31,6 +35,9 @@ public class UsersController : ControllerBase
         }
     }
 
+    // opretter en ny bruger hvis bruger-id ikke findes i forvejen
+    // param user: det brugerobjekt der skal oprettes
+    // return: den oprettede bruger eller null hvis bruger allerede findes
     [HttpPost("Opret")]  // Endpoint til at oprette ny bruger
     public async Task<User?> AddUserAsync(User user)
     {
@@ -50,7 +57,7 @@ public class UsersController : ControllerBase
         return await _repo.GetAllUsersAsync();
     }
     
-    [HttpGet("student")]  // Henter alle brugere fra databasen
+    [HttpGet("student")]  // Henter alle brugere fra databasen med rollen student
     public async Task<List<User>> GetAllStudentsAsync()
     {
         return await _repo.GetAllStudentsAsync();
@@ -69,18 +76,27 @@ public class UsersController : ControllerBase
         return await _repo.GetMaxUserId();
     }
     
+    // henter alle elever som en bestemt leder har ansvar for
+    // param responsibleId: bruger-id på den ansvarlige leder
+    // return: liste over tilknyttede elever (elever som har lederens userId som userIdResponsible)
     [HttpGet("students/{responsibleId:int}")]
     public async Task<List<User>?> GetAllStudentsByResponsibleIdAsync(int responsibleId)
     {
         return await _repo.GetAllStudentsByResponsibleIdAsync(responsibleId);
     }
-
+    
+    // henter alle brugere med rollen kitchenmanager
+    // return: liste over køkkenansvarlige
     [HttpGet("kitchenmanagers")]
     public async Task<List<User>?> GetAllKitchenManagersAsync()
     {
         return await _repo.GetAllKitchenManagersAsync();
     }
     
+    
+    // opdaterer en bruger i databasen
+    // param updatedUser: det opdaterede brugerobjekt
+    // return: 400 hvis objektet er null, ellers 200
     [HttpPut("update")]
     public async Task<IActionResult> UpdateUser([FromBody] User updatedUser)
     {
@@ -91,8 +107,12 @@ public class UsersController : ControllerBase
         await _repo.UpdateUserAsync(updatedUser);
         return Ok();
     }
+    
+    // sletter en bruger fra databasen
+    // param userId: id på bruger der skal slettes
+    // return: 404 hvis bruger ikke findes, ellers 204
     [HttpDelete("{userId:int}")]
-    public async Task<IActionResult> DeleteUser(int userId)
+    public async Task<IActionResult> DeleteUser(int userId) //IActionResult så vi har flere returtyper
     {
         var existingUser = await _repo.GetUserByUserId(userId);
         if (existingUser == null)
