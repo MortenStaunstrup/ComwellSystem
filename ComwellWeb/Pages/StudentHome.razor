@@ -5,30 +5,41 @@
 @using ComwellWeb.Services.Interfaces
 @using Core
 
-@if (_currentUser == null)
+
+
+@if (_currentUser == null) 
 {
+    // hvis der ikke er nogen bruger endnu vises "authenticating"
     <p>Authenticating...</p>
+    // hvis den indloggede bruger ikke har rollen "student", 
 } else if (_currentUser.Role != "Student")
 {
+    // så vises beskeden nedenfor (man har ikke adgang) 
     <p>Kun elever har en StudentHome</p>
 }
+// hvis brugeren er en elev - så vises dashboardet
 else
 {
     <div class="dashboard-container">
         <div class="left-section">
-            <h2>Velkommen, @_currentUser?.UserName</h2> 
+        @* viser en velkomst besked med brugerens navn *@ 
+        <h2>Velkommen, @_currentUser?.UserName</h2>
             <div class="progress-and-name">
                 <h3>Din Procces</h3>
+                @* viser en progressbar, som viser hvor mange % af mål er gennemført *@
                 <div class="progress-container">
                     <div class="progress-bar" style="width: @(_pctCompleted ?? 0)%;"></div>
                 </div>
             </div>
 
+            @* container over ikke fuldførte mål *@
             <h2>Kommende opgaver inden skolestart</h2>
             <div class="assignments-container">
-                @if(_unfinishedGoals != null)
-                @foreach (var goal in _unfinishedGoals)
+                @* loop igennem liste af ikke-gennemføre mål *@
+                @if (_unfinishedGoals != null)
+                    @foreach (var goal in _unfinishedGoals)
                 {
+                    @* viser dem som kort med titel og beskrivelse *@
                     <div class="assignment-card">
                         <h4 class="assignment-title">@goal.SubGoalName</h4>
                         <p class="assignment-description">@goal.SubGoalDescription</p>
@@ -37,8 +48,11 @@ else
             </div>
         </div>
 
+
+        @* quiz sektion *@        
         <div class="right-section">
             <h2>Quiz dig selv</h2>
+            @* klikkebar men fører til tomside *@ 
             <div class="quiz-box clickable" @onclick="NavigateToQuiz">
                 <p>Vi kunne lave en lille quiz/test her</p>
             </div>
@@ -48,22 +62,29 @@ else
 
 
 @code {
+    // gemmer brugeren som er logget ind - kan være null 
     User? _currentUser;
+    // en liste med subgoals, som brugeren endnu ikke har gennemført
     List<SubGoal>? _unfinishedGoals;
+    // procentdel af mål der er gennemført (til progressbar) 
     private double? _pctCompleted;
 
     protected override async Task OnInitializedAsync()
     {
+        //henter aktuelle bruger, som er logget ind fra vores userservice
         _currentUser = await _userservice.GetUserLoggedInAsync();
         if (_currentUser != null)
         {
+            //henter alle ikke fuldførte subgoals for brugeren
             _unfinishedGoals = await SubGoalService.GetNotCompletedSubGoalsByStudentIdAsync(_currentUser.UserId);
+            //henter procentdel af færdigegjorte mål for brugeren. 
             _pctCompleted = Double.Truncate(await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(_currentUser.UserId));
         }
     }
-
+    
     private void NavigateToQuiz()
     {
+        //modal for quiz 
         Navigation.NavigateTo("/quizmodal");
     }
 }

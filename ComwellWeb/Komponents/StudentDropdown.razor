@@ -4,27 +4,34 @@
     <div class="imagedropdown-header" @onclick="ToggleDropdown">
         <span class="imagedropdown-arrow">▼ Tildel elever</span>
     </div>
+    
+    
+    @*hvis dropdown er åben, vises indholdet nedenfor*@
     @if (_isOpen)
     {
         <div>
             <ul>
-            @if (_students != null)
-            {
-                foreach (var student in _students)
+                @if (_students != null)
                 {
-                    <li>
-                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(student.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{student.Picture}")"/>
-                    <span>@student.UserName</span>
-                    <button type="button" @onclick="() => AssignStudent(student)">Assign</button>
-                    </li>
+                    //gennemgår hver elev 
+                    foreach (var student in _students)
+                    {
+                        <li>
+                            <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(student.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{student.Picture}")"/>
+                            <span>@student.UserName</span>
+                            <button type="button" @onclick="() => AssignStudent(student)">Assign</button>
+                        </li>
+                    }
                 }
-            }
             </ul>
         </div>
         <div>
-            <ul>
-            @if (_addedStudents != null)
+            <ul> @*Lister over elever, der allerede er tildelt 
+t                   tjek om listen ikke er null*@
+                
+                @if (_addedStudents != null) 
             {
+                //gennemgår tildelte elever
                 foreach (var addedStudent in _addedStudents)
                 {
                     <li>
@@ -39,20 +46,27 @@
     }
 </div>
 @code {
-    // Parametrer der bliver init. på 'CreateSubGoal' page
+    // Parametrer ´: liste over elever der ikke er tildelt 
     [Parameter]
     public List<User>? _students { get; set; } = new List<User>();
+    //parameter: liste over elever som er blevet tildelt 
     [Parameter] 
     public List<User>? _addedStudents { get; set; } = new List<User>();
+    //bool der holder styr på om dropdown er åben
     private bool _isOpen = false;
+    //funktion til åbne/luk af dropdown
     private void ToggleDropdown() => _isOpen = !_isOpen;
 
+    //funktion til at tildele en elev
     public void AssignStudent(User student)
     {
+        //fjerner elev fra listen over ledige elever
         _students.Remove(student);
+        //tilføjer elev til liste over tildelte
         _addedStudents.Add(student);
     }
 
+    //funktion til at fjerne tildeling af en elev
     public void UnassignStudent(User student)
     {
         _addedStudents.Remove(student);

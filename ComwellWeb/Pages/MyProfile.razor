@@ -53,8 +53,11 @@ else
     private string defaultPicture = "/Pictures/NoProfilePicture.png";
 string message;
 private bool showSuccess = false;
+
+//holder raw bytes fra uoloaded villede
 byte[] pictureBytes;
 
+//kører når komponenten intialiseres (bruges til at hente brugere og sætte billede)
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await userService.GetUserLoggedInAsync();
@@ -66,22 +69,26 @@ byte[] pictureBytes;
             return;
         }
 
+        //sætte billede til brugere, eller default billede hvis null
         profilePicture = CurrentUser.Picture != null ? $"data:image/gif;base64,{CurrentUser.Picture}" : defaultPicture;
     }
 
+    //håndter billede-upload fra input
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
         if (file != null)
         {
+            //læs billedet som byte-array
             using var memoryStream = new MemoryStream();
             await file.OpenReadStream().CopyToAsync(memoryStream);
             pictureBytes = memoryStream.ToArray();
+            //gemmer billede som Base64 i currentuser og viser det
             CurrentUser.Picture = Convert.ToBase64String(pictureBytes);
             profilePicture = $"data:image/gif;base64,{CurrentUser.Picture}";
         }
     }
-
+    //fjern pb og vis default
     private void RemoveProfilePicture()
     {
         CurrentUser.Picture = null;
@@ -89,12 +96,12 @@ byte[] pictureBytes;
         StateHasChanged();
     }
 
-
+        //gemmer ændringer og viser succes-besked
     private async Task SaveChanges()
     {
             await userService.UpdateUser(CurrentUser);
 
-
+        //logger brugeren ud og opdaterer localstorage
                 await userService.Logout();
                 localStorage.SetItemAsync("user", CurrentUser);
                 // Vis besked
