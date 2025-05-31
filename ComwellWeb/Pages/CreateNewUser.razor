@@ -99,78 +99,110 @@ else
     private User? assignedKitchenManager = new User(); // Anvendes kun til at få valgt 'KitchenManager' fra Dropdown modal
     KitchenManagerDropdown? dropdown { get; set; }
 
+    // Rå bytes af det uploadede billede (til konvertering til base64 og visning/gemning)
     byte[] pictureBytes;
+    // Profilbilledets URL som vises i UI’et — viser standard hvis intet er valgt
     private string profilePicture = "/Pictures/NoProfilePicture.png";
 
     
     protected override async Task OnInitializedAsync()
     {
+        //opretter en ny user
         _model = new User();
+        // Initier EditContext med den nye bruger
         EditContext = new EditContext(_model);
+        //Henter hvem der er logget ind igennem UserService,s GetUserLoggedInAsync funktionen
         _currentUser = await _userService.GetUserLoggedInAsync();
         if(_currentUser == null)
             NavigationManager.NavigateTo("/login");
+        // Få det højeste bruger-ID fra databasen og sæt et nyt ID til den nye bruger
         int maxId = await _userService.GetMaxUserId();
+        // plusser det id med én, så hvis maks er 30 bliver den nye 31
         _model.UserId = maxId + 1;
-        _kitchenManagers = await _userService.GetAllKitchenManagersAsync(); // Hent alle 'KitchenManagers' hvis man nu skulle lave en ny elev
+        //Henter alle køkkenmanagers ind igennem UserService,s GetAllKitchenManagersAsync() funktionen
+        _kitchenManagers = await _userService.GetAllKitchenManagersAsync();
     }
-
+    // Metode der kaldes, når formularen bliver indsendt
     private async Task HandleSubmit()
     {
-        
-        if (_model.Role == "Student" && assignedKitchenManager.UserId == 0) // Checker om UserId er default værdi (betyder at der ikke er nogen kitchenmanager assigned)
+        // Hvis der vælges "Elev", skal en køkkenchef være valgt. Hvis ikke, vis fejlbesked og stop.
+        if (_model.Role == "Student" && assignedKitchenManager.UserId == 0)
         {
             statusMessage = "En elev skal have en køkken chef tildelt";
             return;
         }
 
-        if (_model.Role == "Student") // Sæt elevens 'responsibleId' til at være 'assignedKitchenManager' id
+        // Hvis rollen er elev, sæt ansvarlig ID
+        if (_model.Role == "Student")
             _model.UserIdResponsible = assignedKitchenManager.UserId;
+
+        // Tjek om alle felter i formularen er gyldige
         if (EditContext.Validate())
         {
+            // Forsøg at tilføje brugeren til databasen via UserService
             var result = await _userService.AddUserAsync(_model);
 
-            if (result == null) // Hvis Service returnerer null på 'AddUserAsync' metoden, vil det sige at der allerede existerer en bruger med email og password combinationen
+            // Hvis resultatet er null, findes brugeren allerede (samme email og adgangskode)
+            if (result == null)
             {
                 statusMessage = "Brugeren findes allerede.";
             }
             else
             {
+                // Vis succesbesked og nulstil formularfelter
                 statusMessage = $"Bruger oprettet: {result.UserName} ({result.Role})";
+                // Nulstil model
                 _model = new();
+
+                // Få næste tilgængelige ID og tildel
                 int nextId = await _userService.GetMaxUserId();
                 _model.UserId = nextId + 1;
+
+                // Nulstil profilbillede
                 profilePicture = "/Pictures/NoProfilePicture.png";
                 pictureBytes = null;
             }
         }
     }
     
+    // Håndtering af billed-upload fra InputFile
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
         if (file != null)
         {
             using var memoryStream = new MemoryStream();
+            
+            // Læs hele billedet ind i en byte-array
             await file.OpenReadStream().CopyToAsync(memoryStream);
             pictureBytes = memoryStream.ToArray();
+
+            // Gem billede som base64-string i modellen
             _model.Picture = Convert.ToBase64String(pictureBytes);
+
+            // Opdater UI med det valgte billede
             profilePicture = $"data:image/gif;base64,{_model.Picture}";
+
+            // Tving UI til at re-render
             StateHasChanged();
         }
     }
 
+
+    // Fjern det valgte profilbillede og sæt til standard
     private void RemoveProfilePicture()
     {
         _model.Picture = null;
         profilePicture = "/Pictures/NoProfilePicture.png";
+        //for at opdatere front-end
         StateHasChanged();
     }
-    
-    // Bliver kaldt, så når man ændrer rollen til eller fra elev, så bliver 'StateHasChanged' kaldt så 'KitchenManagerDropdown' bliver vist
+
+    // Kaldes når rollen ændres — f.eks. fra Admin til Student
     private void OnRoleChange(ChangeEventArgs e)
     {
         _model.Role = e.Value.ToString();
+        // Bruger StateHasChanged() for at vise eller skjule kitchen-manager-dropdown dynamisk
         StateHasChanged();
     }
 }

@@ -249,7 +249,6 @@ else
     [Parameter] public int? studentId { get; set; }
     
     // instansvariabler
-    private User? user;// bruges ikke lige nu
     private User? CurrentUser; // den bruger, som er logget ind
     private User UserModel;  // brugeren der vises (enten eleven selv eller elev valgt af køkkenleder), fordi man kan tilgå siden fra flere roller.
     private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager"; // om brugeren er køkkenleder

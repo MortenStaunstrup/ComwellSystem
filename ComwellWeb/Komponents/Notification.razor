@@ -62,7 +62,7 @@
 
 @code {
     //liste ad notis der skal vises
-    private List<Notification> _notifications;
+    private List<Core.Notification> _notifications;
     private User? _currentUser;
 
     //kører når komponent loades
@@ -75,7 +75,7 @@
     }
     
     //bekræfter en mini-mål notis 
-    private async Task ConfirmNotifiedMiniGoalAsync(Notification notificationModal)
+    private async Task ConfirmNotifiedMiniGoalAsync(Core.Notification notificationModal)
     {
         //sikrer at data er gyldig, før der kaldes noget i backend 
         if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiniGoalName))
@@ -96,7 +96,7 @@
     }
 
     //det samme som ovenfor bare med middle goals
-    private async Task ConfirmNotifiedMiddleGoalAsync(Notification notificationModal)
+    private async Task ConfirmNotifiedMiddleGoalAsync(Core.Notification notificationModal)
     {
         if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiddleGoalName))
         {

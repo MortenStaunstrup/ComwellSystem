@@ -59,8 +59,14 @@ else
             <button @onclick="() => DeleteSubGoal(goal)">Slet (Slettes for alle, kan ikke fortrydes)</button>
         </div>
     }
+    //Hvis der er trykkes på rediger btn med @onclick="() => EditSubGoal(goal)"
+    //Så bliver goalToEdit til det subgoal man har trykket på, dermed er den ikke længere null
+    //Næste ln i goalToEdit er at lave ShowModal til true som er det der viser modal vinduet
     @if (goalToEdit != null)
-    {
+    {   
+        //følgnede paramtre er nødvendige for at være der for at modalvinduet kan bruge indholdet på dens side.
+        //dette er da det et komponent som sidder i en helt anden mappe. Så for at den kan få adgang til de indsanster.
+        //Så skal man vedhæfte dem som paramtre som følgende:
         <SubGoalEditModal @ref="_modal" _currentUser="_currentUser" _Goal="goalToEdit" Visible="ShowModal" OnCloseRequested="CloseModal"></SubGoalEditModal>
     }
 }
@@ -76,61 +82,81 @@ else
     
     protected override async Task OnInitializedAsync()
     {
+        //Henter hvem der er logget ind igennem UserService,s GetUserLoggedInAsync funktionen
         _currentUser = await UserService.GetUserLoggedInAsync();
+        //Hvis man ikke er logget ind, eller har en rolle der er Student/HR. Så skal man blive ført til /login (login vil videre føre en til hvor man skal hen)
         if(_currentUser == null || _currentUser.Role == "Student" || _currentUser.Role == "HR")
             NavMan.NavigateTo("/login");
+        //Henter alle SubGoals fra vores subGoalService med GetAllSubGoals() funktionen
         _allSubGoals = await SubGoalService.GetAllSubGoals();
     }
-
+    //Iværksættes ved tryk på "redigere" btn
     private void EditSubGoal(SubGoal goal)
     {
         goalToEdit = goal;
         ShowModal = true;
     }
-
+//iværksættes ved slet knappen
     private void DeleteSubGoal(SubGoal goal)
     {
         try
         {
+            //Bruger SubGoalService,s DeleteSubGoalBySubGoalId funktionen med parametren goal.SubGoalId
+            //Det er den parametre funktionen skal have for at vide hvilket subgoal der skal fjernes
             SubGoalService.DeleteSubGoalBySubGoalId(goal.SubGoalId);
+            //Her bliver det samme subgoal fjernet fra listen på frontend
             _allSubGoals.Remove(goal);
+            //Iværksætter ShowSuccesMessage funktionen som er længere nede
             ShowSuccessMessage();
         }
+        //fanger fejl og kalder dem for "e"
         catch (Exception e)
-        {
+        { //printer fejlen i konsol
             Console.WriteLine(e);
+            //Kører showerrormessage funktionen
             ShowErrorMessage();
+            //Throw gør at fejlen kan bruges et andet sted
             throw;
         }
+        //For at opdatere listen
         StateHasChanged();
     }
 
     private void ShowErrorMessage()
     {
+        //viser error message ved ln 25
         statusFailed = true;
+        //For at opdatere ui
         StateHasChanged();
     }
 
     private void CloseError()
     {
+        //For at luk error beskeden igen ved ln 25
         statusFailed = false;
+        //For at opdatere ui
         StateHasChanged();
     }
 
     private void ShowSuccessMessage()
     {
+        //viser succes message ved ln 19
         status = true;
+        //For at opdatere ui
         StateHasChanged();
     }
 
     private void CloseSuccess()
     {
+        //Lukker succes message ved ln 19
         status = false;
+        //For at opdatere ui
         StateHasChanged();
     }
 
     private void CloseModal()
     {
+        //Sætter showmodel til false som lukker modalet
         ShowModal = false;
     }
 

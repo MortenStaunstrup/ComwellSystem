@@ -15,15 +15,15 @@ else
             <div class="top-row px-4 NavBarPlace">
                 @if (CurrentUser?.Role == "HR")
                 {
-                    <HRNavBar />
+                    <HRNavBar /> //Alle navnbar bliver stylet fælles i app.css
                 }
                 else if (CurrentUser?.Role == "Student")
                 {
-                    <StudentNavBar StudentId="@CurrentUser.UserId" />
+                    <StudentNavBar StudentId="@CurrentUser.UserId" /> //student navbar får students id med som parametre 
                 }
                 else if (CurrentUser?.Role == "KitchenManager")
                 {
-                    <KitchenManagerNavBar />
+                    <KitchenManagerNavBar /> //Opstilling af alle navbar er ens med samme class navne
                 }
                 else if (CurrentUser?.Role == "Admin")
                 {
@@ -43,7 +43,7 @@ else
                     @if (ShowNotification)
                     {
                         <div class="notification-dropdown">
-                            <NotificationModal />
+                            <Notification />
                         </div>
                     }
                 </div>
@@ -69,19 +69,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await userService.GetUserLoggedInAsync();
-
-        if (CurrentUser != null && nav.Uri == nav.BaseUri)
-        {
-            if (CurrentUser.Role?.ToLower() == "student")
-            {
-                nav.NavigateTo("/StudentHome", true);
-            }
-            else
-            {
-                nav.NavigateTo("/MyProfile", true);
-            }
-        }
-
+        //Viser siden som det sidste i OnInitializedAsync
         loaded = true;
     }
 }

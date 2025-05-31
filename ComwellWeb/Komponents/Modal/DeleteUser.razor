@@ -1,6 +1,5 @@
 ﻿@using Core
 @inject IUserService UserService
-@inject IUserService _userService
 @if (Visible && UserToDelete != null)
 {
     <div class="modal-backdrop" @onclick="CloseOnBackdropClick">
@@ -21,20 +20,33 @@
 }
 
 @code {
+    //parameterne herunder er alle i komponentet tagget som "attribut" i account overview.
+    //Dette er da det er følgende herunder som modalet skal arve fra hovedvinduet som er account overview.
+    //Det er også derfor at paramterne kun er kaldt. 
     [Parameter] public bool Visible { get; set; }
     [Parameter] public User? UserToDelete { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public EventCallback<int> OnUserDeleted { get; set; }
 
-
+//laver callback til parameteren, ved close btn.
+//For netop at lave den funktion som close har i accountoverview
+//OnCloseRequested="@(() => visible = false)" 
+//det gør visible til false som er det der lukker siden
     private Task Close() => OnCloseRequested.InvokeAsync();
+    //laver callback til samme funktion "OnCloseRequested" til hvis man trykker på diven
+    //Som er det mørke i modalet. Gør den samme som Close()
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
     private async void Slet()
     {
         if (UserToDelete != null)
         {
-            await _userService.DeleteUserAsync(UserToDelete.UserId);
+            //Kører DeleteUserAsync funktionen fra vores Userservice med parametren UserToDelete.UserId
+            //Det er personen man har trykket på som modalet er om
+            await UserService.DeleteUserAsync(UserToDelete.UserId);
+            //callback til OnUserDeleted funktionen fra account overview
+            //Som søger for at personen man nu har slettet også bliver slettet fra listen
             await OnUserDeleted.InvokeAsync(UserToDelete.UserId); // sender ID videre
+            //Kører OnCloseRequest, som beskrevet ln 31-34
             await OnCloseRequested.InvokeAsync();
         }
     }
