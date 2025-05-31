@@ -17,39 +17,50 @@ else
             <div class="col-md-6 FormOverordnet">
                 <div class="card shadow p-4 mb-4">
                     <h3 class="text-center mb-4">Opret Delmål</h3>
+                    
                     <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
+                        @*validering via attributter i modelklasse *@
+                        <DataAnnotationsValidator/>
+                        @*Viser valideringsfejæ *@
+                        <ValidationSummary/>
 
+                        @*Viser statusbesked hvis en findes *@
                         @if (!string.IsNullOrEmpty(statusMessage))
                         {
                             <div class="alert alert-success mt-3">@statusMessage</div>
                         }
-
+                        
                         <div class="mb-3">
-                            <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..." />
+                            <InputText @bind-Value="_model.SubGoalName" class="form-control form-control-lg" placeholder="HovedGoal..."/>
                         </div>
+                        @*Går igennem alle middlegoals og laver inputfelt til dem *@
                         @foreach (var middleGoal in _model.MiddleGoals)
                         {
                             <div>
-                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..." />
+                                <InputText @bind-Value="middleGoal.Name" placeholder="Middle Goal..."/>
                                 <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
                             </div>
+                            
+                            @* Går igennem alle middlegoals og viser tilhørende minigoals*@
                             @foreach (var miniGoal in middleGoal.MiniGoals)
                             {
                                 <div class="nameButtonMiniCombo">
-                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..." />
+                                    <InputText @bind-Value="miniGoal.Name" placeholder="Mini Goal Name..."/>
+                                    @*Knap til fjernelse af minigoal fra et specifikt middlegoal *@
                                     <button type="button" class="btn btn-sm btn-danger my-1" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
                                 </div>
                             }
+                            //tilføjer minigoal til det aktuelle middlegoal
                             <button type="button" class="btn btn-sm btn-success my-1" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                         }
+                        @*nyt tomt middlegoal *@
                         <button type="button" class="btn btn-sm btn-success my-2" @onclick="AddMiddleGoal">Add Middle Goal</button>
 
                         <div class="mb-3">
-                            <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.." />
+                            <InputTextArea @bind-Value="_model.SubGoalDescription" class="form-control" placeholder="Beskrivelse.."/>
                         </div>
 
+                        @*valg af type for subgoal (standard eller ekstra) *@
                         <div class="mb-3">
                             <InputSelect @bind-Value="_model.SubGoalType" @onchange="OnSubGoalTypeChange" class="form-control">
                                 <option value="">Vælg type</option>
@@ -77,6 +88,7 @@ else
                             }
                         </div>
 
+                        @* submit knap til oprettelse/tildeling*@
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-success">Tildel Delmål</button>
                         </div>
@@ -95,15 +107,19 @@ else
     SubGoal _model;
     EditContext EditContext;
 
+    //referencce til drowndown komponent for elver 
     StudentDropdown? dropdown { get; set; }
+    //statusbesked eefter oprettelse 
     string statusMessage = "";
+    //bruges til at sætte nyt unikt ID for subgoal
     int currentMaxId;
 
+    //de typer vores subgoals har 
     string[] _types = new[]
     {
         "Standard", "Extra"
     };
-
+ //henter bruger og elever
     protected override async Task OnInitializedAsync()
     {
         _currentUser = await UserService.GetUserLoggedInAsync();
@@ -114,25 +130,30 @@ else
             NavMan.NavigateTo("/");
         }
 
+        //opretter en tom subgoal-model
         _model = new SubGoal { MiddleGoals = new List<MiddleGoal>() };
         EditContext = new EditContext(_model);
+        //henter nuværende højeste ID for at incrementere
         currentMaxId = await SubGoalService.MaxSubGoalId();
+        //hvis bruger er en kitchenmanger, hentes deres elever
         if (_currentUser != null)
             _myStudents = await UserService.GetAllStudentsByResponsibleIdAsync(_currentUser.UserId); // Finder students for pågældende 'KitchenManager' (ergo kan Admin ikke tilføje 'Extra' delmål til specifikke elever
     }
 
+    //tilføj ny middlegoal til model
     private void AddMiddleGoal()
     {
         _model.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
         StateHasChanged();
     }
-
+    
+    //tilføj nyt minigoal til det angivne middlegoal
     private void AddMiniGoal(MiddleGoal middleGoal)
     {
         middleGoal.MiniGoals.Add(new MiniGoal());
         StateHasChanged();
     }
-
+    
     private void HandleSubmit()
     {
         _model.SubGoalId = currentMaxId + 1;
@@ -166,7 +187,8 @@ else
                     }
                 }
             }
-
+            
+            //hvis subgoal type er standard - indsættes det til alle elever 
             if (_model.SubGoalType == "Standard") // Kald funktioner til 'Standard' subgoals
             {
                 SubGoalService.CreateSubGoal(_model);
@@ -175,28 +197,32 @@ else
             }
             else
             {
-                if (_addedStudents.Count == 0) // Check om der er blevet tilføjet nogle elever til Extra delmål
+                //der skal være valgt mindst én elev til ekstra opgave
+                if (_addedStudents.Count == 0) 
                 {
                     statusMessage = "Du skal angive mindst én elev til en ekstra opgave";
                     StateHasChanged();
                     return;
                 }
 
+                //trækker id´er ud af de valgte elever
                 var studentIds = new List<int>();
                 foreach (var student in _addedStudents)
                 {
                     studentIds.Add(student.UserId);
                 }
+                
                 // Kalder funktioner til at indsætte 'Extra' delmål
                 SubGoalService.CreateSubGoal(_model);
                 SubGoalService.InsertSubgoalSpecific(_model, studentIds);
                 statusMessage = "Delmål blev oprettet!";
             }
 
+            //nulstriller formen efter oprettelse
             ResetModels();
         }
     }
-
+    
     private async void ResetModels()
     {
         _model = new SubGoal { MiddleGoals = new List<MiddleGoal>() };
@@ -216,11 +242,12 @@ else
         StateHasChanged();
     }
 
+    //slet et middlegoal 
     private void DeleteMiddleGoal(MiddleGoal middleGoal)
     {
         _model.MiddleGoals.Remove(middleGoal);
     }
-
+    //finder det rigtige middlegoal og fjerner minigoal fra det
     private void DeleteMiniGoal(MiddleGoal middleGoal, MiniGoal miniGoal)
     {
         _model.MiddleGoals.Find(x => x.Name == middleGoal.Name).MiniGoals.Remove(miniGoal);
