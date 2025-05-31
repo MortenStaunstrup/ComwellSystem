@@ -1,6 +1,7 @@
 @using Core
 <div class="imagedropdown-container">
     
+    <!-- ToggleDropdown bruges til at flippe _isOpen boolen -->
     <div class="imagedropdown-header" @onclick="ToggleDropdown">
         <span class="imagedropdown-arrow">▼ Tildel Køkkenansvarlige</span>
     </div>
@@ -13,9 +14,10 @@
                 foreach (var manager in _kitchenManagers)
                 {
                     <li>
-                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(manager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{manager.Picture}")"/>
-                    <span>@manager.UserName</span>
-                    <button type="button" @onclick="() => AssignKitchenManager(manager)">Assign</button>
+                        <!-- vælger defaultpicture eller profilbillede hvis eksisterer -->
+                        <img alt="KitchenManager Profile Picture" src="@(string.IsNullOrWhiteSpace(manager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{manager.Picture}")"/>
+                        <span>@manager.UserName</span>
+                        <button type="button" @onclick="() => AssignKitchenManager(manager)">Assign</button>
                     </li>
                 }
             }
@@ -23,16 +25,18 @@
         </div>
         <div>
             <ul>
-            @if (_kitchenManager.UserId != 0)
-            {
-                
-                <li>
-                    <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(_kitchenManager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_kitchenManager.Picture}")"/>
-                    <span>@_kitchenManager.UserName</span>
-                    <button type="button" @onclick="() => UnassignKitchenManager(_kitchenManager)">Unassign</button>
-                </li>
-                
-            }
+                <!-- Der er ingen i system der kan have id 0, og int default værdi er 0. 
+                     Derfor hvis UserId ikke er 0, så er der en kitchenmanager valgt og man skal kun vise valgte kitchenmanager --> 
+                @if (_kitchenManager.UserId != 0)
+                {
+
+                    <li>
+                        <img alt="Student Profile Picture" src="@(string.IsNullOrWhiteSpace(_kitchenManager.Picture) ? "sample-data/No_image_available.svg.png" : $"data:image/gif;base64,{_kitchenManager.Picture}")"/>
+                        <span>@_kitchenManager.UserName</span>
+                        <button type="button" @onclick="() => UnassignKitchenManager(_kitchenManager)">Unassign</button>
+                    </li>
+
+                }
             </ul>
         </div>
     }
@@ -52,6 +56,7 @@
     {
         _kitchenManagers.Remove(manager);
         _kitchenManager = manager;
+        // InvokeAsync sender nye manager som parameter til parent page, og fortæller at den skal opdatere '_kitchenManager'
         await KitchenManagerChanged.InvokeAsync(manager);
     }
 

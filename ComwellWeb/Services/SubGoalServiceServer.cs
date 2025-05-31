@@ -47,6 +47,7 @@ public class SubGoalServiceServer : ISubGoalService
         return result;
     }
 
+    // Returnerer en elevs 'Extra' SubGoals
     public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
     {
         Console.WriteLine($"Getting student {studentId} offered subgoals: service");
@@ -60,6 +61,7 @@ public class SubGoalServiceServer : ISubGoalService
         return result;
     }
 
+    // Returnerer procentdel Completed subgoals ud fra total mængde af subgoals en elev har
     public async Task<double> GetPctCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var result = await _client.GetFromJsonAsync<double>($"subgoals/getpct/{studentId}");
@@ -67,6 +69,7 @@ public class SubGoalServiceServer : ISubGoalService
     }
     
 
+    // Finder alle 'extra' subgoals i systemet
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         Console.WriteLine("Getting offered subgoals: service");
@@ -92,12 +95,14 @@ public class SubGoalServiceServer : ISubGoalService
         return await _client.GetFromJsonAsync<int>($"subgoals/getmaxid");
     }
 
+    // Indsætter subgoal ind i alle elever (kun for 'standard' type subgoals
     public async void InsertSubgoalAll(SubGoal subgoal)
     {
         Console.WriteLine("Inserting subgoal ALL: service");
         await _client.PostAsJsonAsync($"subgoals/insertall", subgoal);
     }
 
+    // Laver en 'DTO' så vi kan sende 2 objecter i ét object
     public async void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds)
     {
         var request = new SubGoalRequest()
@@ -110,12 +115,13 @@ public class SubGoalServiceServer : ISubGoalService
     }
     
 
-    public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal) //har gjort til async for at finde fejlen
+    public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
     {
         Console.WriteLine("Updating subgoal: service");
 
         var response = await _client.PutAsJsonAsync("subgoals/update", subGoal);
 
+        // Hvis statuskoden er 200, returner subgoal, hvis ikke returner null
         if (response.IsSuccessStatusCode)
         {
             var updatedSubGoal = await response.Content.ReadFromJsonAsync<SubGoal>();
@@ -135,10 +141,10 @@ public class SubGoalServiceServer : ISubGoalService
         await _client.PostAsJsonAsync($"subgoals/complete/{studentId}/{subGoalId}", true);
     }
 
-    public void DeleteSubGoalBySubGoalId(int subGoalId)
+    public async void DeleteSubGoalBySubGoalId(int subGoalId)
     {
         Console.WriteLine($"Deleting subgoal {subGoalId}: service"); 
-        _client.DeleteAsync($"subgoals/delete/{subGoalId}");
+        await _client.DeleteAsync($"subgoals/delete/{subGoalId}");
     }
     
 }

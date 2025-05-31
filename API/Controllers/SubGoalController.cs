@@ -21,6 +21,7 @@ public class SubGoalController : ControllerBase
     {
         Console.WriteLine("Getting all subgoals: controller");
         var result = await repository.GetAllSubGoals();
+        // hvis resultatet er null eller en tom liste, returner en tom liste (samme sker i andre funktioner)
         if (result == null || result.Count == 0)
         {
             Console.WriteLine("No subgoals found, returning empty list");
@@ -111,6 +112,8 @@ public class SubGoalController : ControllerBase
         repository.InsertSubgoalAll(subgoal);
     }
 
+    // SubGoalRequest er en 'DTO' da man kun kan sende ét object over http, og vi gerne vil sende SubGoal og en liste af
+    // userId's, laver vi et object til at sende det over http som kun indeholder de 2 ting
     [HttpPost]
     [Route("insertspecific")]
     public void InsertSubgoalSpecific(SubGoalRequest subgoalContainer)
@@ -129,10 +132,13 @@ public class SubGoalController : ControllerBase
     }
     
 
+    
     [HttpPut]
     [Route("update")]
-    public async Task<string> UpdateSubGoalDetails([FromBody] SubGoal subGoal)
+    public async Task<string> UpdateSubGoalDetails(SubGoal subGoal)
     {
+        // try catch prøver at kalde UpdateSubGoalDetails funktion, hvis den fejler fanger den exception og console writer den
+        // derefter returnerer den en string "Update failed/successful" afhængig af resultatet
         try
         {
             Console.WriteLine("Updating subgoal: controller");
