@@ -248,10 +248,11 @@ else
     @* vi bruger studentId fra parent-komponent, som bare bliver parent udfa hvilken variabel vi bruger. *@
     [Parameter] public int? studentId { get; set; }
     
-    private User? user;
-    private User? CurrentUser;
-    private User UserModel;
-    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager";
+    // instansvariabler
+    private User? user;// bruges ikke lige nu
+    private User? CurrentUser; // den bruger, som er logget ind
+    private User UserModel;  // brugeren der vises (enten eleven selv eller elev valgt af køkkenleder), fordi man kan tilgå siden fra flere roller.
+    private bool IsKitchenManager => CurrentUser?.Role == "KitchenManager"; // om brugeren er køkkenleder
     private bool IsStudent => CurrentUser?.UserId == UserModel?.UserId;
     private int ViewerUserId;
     private string PageTitle;
@@ -268,7 +269,7 @@ else
     private List<SubGoal> FilteredPlan = new();
     
     @* Dictionaries *@
-    private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new();
+    private Dictionary<int, List<MiniGoal>> SelectedMiniGoals = new(); 
     private Dictionary<int, List<MiddleGoal>> SelectedMiddleGoals = new();
     private Dictionary<int, List<Comment>> CommentMap = new();
     private Dictionary<int, string> NewComment = new();
@@ -311,7 +312,7 @@ else
         }
     }
 
-
+  
     private void ApplyFilter()
     {
         FilteredPlan = selectedFilter switch
@@ -328,12 +329,14 @@ else
         selectedFilter = e.Value?.ToString()?.ToLower() ?? "all";
         ApplyFilter();
     }
-
+    
+    // så man kan se underkategorier af forskellige mål
     private void ToggleExpand(int id)
     {
         if (!Expanded.Add(id)) Expanded.Remove(id);
     }
 
+    // opdaterer valgt filter og anvender det
     private async Task SendComment(int SubGoalId)
     {
         if (string.IsNullOrWhiteSpace(NewComment[SubGoalId]))
@@ -390,6 +393,13 @@ else
             selected.Add(md);
     }
 
+    /// <summary>
+    /// markerer et eller flere minimål som gennemført og sender notifikation til leder/kitchenmanager
+    /// hvis alle mellem- og minimål under et delmål er gennemført, markeres delmålet også
+    /// </summary>
+    /// <param name="sg">det delmål som indeholder de valgte minimål</param>
+    /// <param name="selectedMiniGoals">liste over valgte minimål som brugeren har gennemført</param>
+    /// <returns>returnerer en task der fuldfører processen med at sende notifikation og opdatere status</returns>
     private async Task CompleteMiniGoal(SubGoal sg, List<MiniGoal> selectedMiniGoals)
     {
         if (_sending) return;
@@ -459,7 +469,13 @@ else
     }
 
 
-
+    /// <summary>
+    /// markerer et eller flere middlegoals som gennemført, og sender notifikation til ansvarlig leder
+    /// hvis alle mellem- og minimål under delmålet er gennemført, markeres delmålet som gennemført
+    /// </summary>
+    /// <param name="sg">det delmål som indeholder de valgte middlegoals</param>
+    /// <param name="selectedMiddleGoals">liste over valgte middlegoals som brugeren har gennemført</param>
+    /// <returns>returnerer en task der fuldføre det med at sende notifikation og sætte status til true</returns>
     
     private async Task CompleteMiddleGoal(SubGoal sg, List<MiddleGoal> selectedMiddleGoals)
     {
@@ -524,6 +540,11 @@ else
         }
     }
 
+    /// <summary>
+    /// beregner procentdelen af delmål som er markeret som gennemført
+    /// </summary>
+    /// <returns>returnerer en streng med procentværdi (uden decimaler), fx "80"</returns>
+
     private string GetPctCompleted()
     {
         if (FullPlan == null || !FullPlan.Any()) return "0";
@@ -531,6 +552,12 @@ else
         return Math.Truncate(pct).ToString("F0");
     }
 
+    /// <summary>
+    /// sender en kommentar skrevet af kitchenmanager/leder til et speceifikt delmål
+    /// kommentaren gemmes og tilføjes til gøre så den bliver vist
+    /// </summary>
+    /// <param name="subGoalId">id på det delmål som kommentaren vedrøre</param>
+    /// <returns>returnerer en task der forsøger at gemme kommentaren og opdatere siden</returns>
     private async Task SendKitchenManagerComment(int subGoalId)
     {
         if (string.IsNullOrWhiteSpace(KitchenmanagerNewComment[subGoalId]))
@@ -561,15 +588,24 @@ else
             Errors[subGoalId] = $"Fejl ved kommentar: {ex.Message}";
         }
     }
+    
     private HashSet<int> ExpandedComments = new();
-
+    
+    /// <summary>
+    /// Viser eller skjuler kommentarhistorikken for en bestemt SubGoal.
+    /// </summary>
+    /// // <param name="subGoalId">id på det delmål, hvis kommentarhistorik skal vises/skjules.</param>
     private void ToggleCommentHistory(int subGoalId)
     {
         if (!ExpandedComments.Add(subGoalId))
             ExpandedComments.Remove(subGoalId);
     }
     
-   
+    // <summary>
+    /// Viser eller skjuler et MiddleGoal under et SubGoal.
+    /// </summary>
+    /// <param name="subGoalId">id på det delmål, som indeholder mellem-målet.</param>
+    /// <param name="middleGoalName">Navnet på det mellem-mål, der skal vises/skjules.</param>
     private void ToggleMiddleGoalExpand(int subGoalId, string middleGoalName)
     {
         var key = $"{subGoalId}_{middleGoalName}";
@@ -579,5 +615,11 @@ else
         }
     }
 
+    /// <summary>
+    /// Tjekker om et bestemt MiddleGoal under et SubGoal er udvidet (synligt).
+    /// </summary>
+    /// <param name="subGoalId">ID for det pågældende SubGoal.</param>
+    /// <param name="middleGoalName">Navnet på det MiddleGoal, der ønskes tjekket.</param>
+    /// <returns>True hvis elementet er udvidet, ellers false.</returns>
     private bool IsExpanded(int subGoalId, string middleGoalName) => expandedMiddleGoals.Contains($"{subGoalId}_{middleGoalName}");
 }

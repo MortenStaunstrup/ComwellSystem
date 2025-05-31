@@ -21,7 +21,6 @@ namespace API.Repositories
             {
                 throw new InvalidOperationException("No connection string configured");
             }
-
             _client = new MongoClient(_connectionString);
             var db = _client.GetDatabase("Comwell");
             _userCollection = db.GetCollection<User>("Users");
@@ -29,8 +28,11 @@ namespace API.Repositories
 
         // Create
         
-        
-        //tilføjer en notifikation til en bruger, når et miniGoal markeres som færdigt af en student.
+        /// <summary>
+        /// tilføjer en ny minigoal-notifikation til en bestemt bruger
+        /// </summary>
+        /// <param name="notification">notifikationen der skal sendes</param>
+        /// <returns>ikke noget. Mener ikke en opdatering kan kaldes for retur, men den opdaterer brugerens notification-liste i databasen</returns>
         public async Task SendMiniGoalNotificationAsync(Notification notification)
         {
             notification.NotificationId = await GetMaxNotificationIdAsync() + 1; // genererer et nyt ID som er +1 for hver notifikation
@@ -53,6 +55,12 @@ namespace API.Repositories
             
         }
         
+       
+        /// <summary>
+        /// sender en middlegoal notifikation til en bestemt bruger
+        /// </summary>
+        /// <param name="notification">notifikationen der skal sendes</param>
+        /// <returns>ingen retur, men opdaterer ligesom med minigoal</returns>
         public async Task SendMiddleGoalNotificationAsync(Notification notification) // samme som for minigoal overstående
         {
             notification.NotificationId = await GetMaxNotificationIdAsync() + 1;
@@ -76,7 +84,12 @@ namespace API.Repositories
         }
         // Subgoals
         
-        // opdaterer status for et specifikt MiniGoal til true, når det bliver bekræftet af en kitchenmanager
+        /// <summary>
+        /// opdaterer status på et minigoal til true for en specifik student
+        /// </summary>
+        /// <param name="studentId">userId for eleven</param>
+        /// <param name="miniGoalName">navnet på det minigoal der skal opdateres</param>
+        /// <returns>true hvis opdatering lykkes, ellers false</returns>
         public async Task<bool> UpdateMiniGoalStatusAsync(int studentId, string miniGoalName) // modtager en eleves userId som er studentId, og bruger primærnøglen name i minigoals til at opdatere det.
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId); // find først brugeren med det tilsvarende userId i databasen
@@ -97,24 +110,31 @@ namespace API.Repositories
             var result = await _userCollection.UpdateOneAsync(filter, update, options); //updater med de variable vi har sat
             return result.ModifiedCount > 0;
         }
-
-        // Fjerner en minigoal-notifikation fra en leder (kitchenmanager), når notifikationen er blevet bekræftet.
         
-        //leaderId: userId for kitchenmanager. leader her, men det er det samme som kitchenmanager. Lidt inkonsistent
-        // notificationId: ID på den notifikation, der skal fjernes.
+        /// <summary>
+        /// fjerner en minigoal-notifikation fra en kitchenmanager
+        /// </summary>
+        /// <param name="leaderId">userId for kitchenmanager</param>
+        /// <param name="notificationId">id for den notifikation der skal fjernes</param>
+        /// <returns>true hvis notifikationen blev fjernet, ellers false</returns>
         public async Task<bool> RemoveNotificationMiniGoalFromManagerAsync(int leaderId, int notificationId)
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId); // finder kitchenmanagers user-objekt gennem deres userId.
 
             var update = Builders<User>.Update
-                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId); // fjerner (pull) notifikation fra listen, hvor notificationId matcher.
+                .PullFilter(u => u.Notifications, n => n.NotificationId == notificationId); // fjerner/puller notifikation fra listen, hvor notificationId matcher.
 
             var result = await _userCollection.UpdateOneAsync(filter, update);
             return result.ModifiedCount > 0;
         }
 
-
-        public async Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName) //samme som minigoal nogenlunde
+        /// <summary>
+        /// opdatere status på et middlegoal til true for en specifik student
+        /// </summary>
+        /// <param name="studentId">userId for eleven</param>
+        /// <param name="middleGoalName">navnet på det middlegoal der skal opdateres</param>
+        /// <returns>true hvis opdatering lykkes, hvis ikke = false</returns>
+        public async Task<bool> UpdateMiddleGoalStatusAsync(int studentId, string middleGoalName) //omtrent det samme som ved minigoal tidligere
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, studentId);
 
@@ -131,6 +151,12 @@ namespace API.Repositories
             return result.ModifiedCount > 0;
         }
 
+        /// <summary>
+        /// fjerner en middlegoal-notifikation fra en kitchenmanager
+        /// </summary>
+        /// <param name="leaderId">userId for kitchenmanager</param>
+        /// <param name="notificationId">id for den notifikation der skal fjernes</param>
+        /// <returns>true hvis notifikationen blev fjernet, ellers false</returns>
         public async Task<bool> RemoveNotificationMiddleGoalFromManagerAsync(int leaderId, int notificationId)
         {
             var filter = Builders<User>.Filter.Eq(u => u.UserId, leaderId);
@@ -144,7 +170,11 @@ namespace API.Repositories
 
 
 
-        // User
+        /// <summary>
+        /// henter alle notifikationer for en specifik brugerr, og sorteret nyeste først
+        /// </summary>
+        /// <param name="userId">userId for brugeren</param>
+        /// <returns>liste med brugerens notifikationer</returns>
         public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
         {
             var user = await _userCollection.Find(u => u.UserId == userId).FirstOrDefaultAsync();
@@ -155,11 +185,26 @@ namespace API.Repositories
 
         
         // Id
+        
+        
+        /// <summary>
+        /// finder det højeste notificationId blandt alle brugere
+        /// </summary>
+        /// <returns>det højeste id som heltal, eller 0 hvis der ikke findes nogen</returns>
         public async Task<int> GetMaxNotificationIdAsync()
         {
             var users = await _userCollection.Find(_ => true).ToListAsync();
             return users.SelectMany(u => u.Notifications).Max(n => (int?)n.NotificationId) ?? 0;
         }
+        
+        
+        /// <summary>
+        /// tjekker om en bestemt minigoal-notifikation allerede eksisterer
+        /// </summary>
+        /// <param name="userId">id for brugeren der skal modtage notifikationen</param>
+        /// <param name="senderId">id for afsenderen (kitchenmanager)</param>
+        /// <param name="miniGoalName">navnet på minigoalet</param>
+        /// <returns>true hvis der allerede findes en notifikation, ellers false</returns>
         public async Task<bool> NotificationExistsForMiniGoalAsync(int userId, int senderId, string miniGoalName)
         {
             var user = await _userCollection.Find(u => u.UserId == userId).FirstOrDefaultAsync();
@@ -173,6 +218,13 @@ namespace API.Repositories
                 n.MiniGoalName == miniGoalName);
         }
         
+        /// <summary>
+        /// tjekker om en bestemt middlegoal-notifikation allerede eksisterer
+        /// </summary>
+        /// <param name="userId">id for brugeren der skal modtage notifikationen</param>
+        /// <param name="senderId">id for afsenderen</param>
+        /// <param name="middleGoalName">navnet på middlegoalet</param>
+        /// <returns>true hvis der allerede findes en notifikation, ellers skal den være false</returns>
         public async Task<bool> NotificationExistsForMiddleGoalAsync(int userId, int senderId, string middleGoalName)
         {
             var user = await _userCollection.Find(u => u.UserId == userId).FirstOrDefaultAsync();
@@ -185,8 +237,6 @@ namespace API.Repositories
                 !n.IsConfirmed &&
                 n.MiddleGoalName == middleGoalName);
         }
-        
-
         
     }
 }
