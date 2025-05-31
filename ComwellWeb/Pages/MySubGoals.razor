@@ -354,7 +354,8 @@ else
             CommentSenderName = CurrentUser.UserName,
             StudentId = studentId ?? CurrentUser.UserId
         };
-
+        
+        
         try
         {
             CommentService.AddComment(newC);
