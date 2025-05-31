@@ -2,68 +2,86 @@
 @using Core
 @inject ISubGoalService SubGoalService
 @inject NavigationManager NavMan
+
+@*Hvis intet mål er valgt eller modal ikke vises, vises intet *@
 @if (_Goal == null || Visible == false)
 {
     
-}
+} 
+// ellers hvis mål/modal er synlig vises modal indholdet 
 else
 {
+    
     <div class="modal-backdrop d-flex align-items-center justify-content-center" @onclick="CloseOnBackdropClick">
+        @*propagation klik for at kunne trykke på felter i modal uden den lykker *@ 
         <div class="modal-content p-4" @onclick:stopPropagation>
             <button class="btn-close position-absolute top-0 end-0 m-3" @onclick="Close" aria-label="Close"></button>
             <h3 class="text-center mb-3">Rediger Delmål</h3>
 
+
+            
             @if (status)
-            {
+            { 
+                //hvis redigeringen lykkedes, vises succes-besked 
                 <div class="alert alert-primary d-flex justify-content-between align-items-center" role="alert">
                     Redigering success <button class="btn btn-sm btn-primary" @onclick="CloseSuccess">Close</button>
                 </div>
             }
             @if (statusFailed)
             {
+                //hvis redigeren fejler, vises en fejl besked:) 
                 <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
                     Redigering fejlede <button class="btn btn-sm btn-primary" @onclick="CloseError">Close</button>
                 </div>
             }
-
+            @*formuler til redigeringen *@
             <EditForm EditContext="EditContext" OnSubmit="HandleSubmit">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+                @*aktiverer validering via DataAnnotationsValidator *@
+                <DataAnnotationsValidator/>
+                @* Viser eventuelle validerings fejl*@
+                <ValidationSummary/>
 
                 <div class="mb-3">
-                    <InputText @bind-Value="_Goal.SubGoalName" class="form-control form-control-sm" placeholder="HovedGoal..." />
+                    <InputText @bind-Value="_Goal.SubGoalName" class="form-control form-control-sm" placeholder="HovedGoal..."/>
                 </div>
 
+                @* Looper gemme alle middle goals under det valgte subgoal*@
                 @foreach (var middleGoal in _Goal.MiddleGoals)
                 {
                     <div class="mb-2">
-                        <InputText @bind-Value="middleGoal.Name" class="form-control form-control-sm mb-1" placeholder="Middle Goal..." />
+                        <InputText @bind-Value="middleGoal.Name" class="form-control form-control-sm mb-1" placeholder="Middle Goal..."/>
                         <button type="button" class="btn btn-sm btn-danger" @onclick="() => DeleteMiddleGoal(middleGoal)">Slet MiddleGoal</button>
                     </div>
+                    
+                    @*Lopper gennem mini goals under hvert middle goal *@
                     @foreach (var miniGoal in middleGoal.MiniGoals)
                     {
                         <div class="nameButtonMiniCombo mb-2">
-                            <InputText @bind-Value="miniGoal.Name" class="form-control form-control-sm mb-1" placeholder="Mini Goal Name..." />
+                            <InputText @bind-Value="miniGoal.Name" class="form-control form-control-sm mb-1" placeholder="Mini Goal Name..."/>
                             <button type="button" class="btn btn-sm btn-danger" @onclick="() => DeleteMiniGoal(middleGoal, miniGoal)">Slet MiniGoal</button>
                         </div>
                     }
+                    // knap til, at man kan tilføje en mini goal under current middel goal
                     <button type="button" class="btn btn-sm btn-primary mb-2" @onclick="() => AddMiniGoal(middleGoal)">Tilføj Mini Goal</button>
                 }
-
+                @* kanp til tilføjelse af et nyt middle goal*@ 
                 <button type="button" class="btn btn-sm btn-primary mb-3" @onclick="AddMiddleGoal">Add Middle Goal</button>
 
+                @* div til at vise type af subgoal*@
                 <div class="mb-3">
                     <p class="form-text">@_Goal.SubGoalType</p>
                 </div>
-
+                @*viser beskrivelse af subgoal *@
                 <div class="mb-3">
-                    <InputTextArea @bind-Value="_Goal.SubGoalDescription" class="form-control form-control-sm" placeholder="Beskrivelse.." />
+                    <InputTextArea @bind-Value="_Goal.SubGoalDescription" class="form-control form-control-sm" placeholder="Beskrivelse.."/>
                 </div>
-
+                
                 <div class="d-flex justify-content-between">
+                    @*knap til submit af ændringer *@
                     <button type="submit" class="btn btn-success">Accepter Ændringer</button>
                 </div>
 
+                @* tekst der advarer om konsekvenser af redigering *@
                 <p class="text-danger mt-2">
                     Elever der har dette delmål og har gennemført ét eller flere punkter får deres fremskridt på delmålet slettet!
                 </p>
@@ -77,24 +95,33 @@ else
 
 
 @code {
-    
+    //den brugere som er logget ind (vises som parameter) 
     [Parameter] public User? _currentUser { get; set; }
+    //subgoal som skal redigeres
     [Parameter] public SubGoal? _Goal { get; set; }
+    //om modal skal vises eller ej
     [Parameter] public bool Visible { get; set; }
+    // event der fortæller at modal skal lukkes
     [Parameter] public EventCallback OnCloseRequested { get; set; }
+    //kontekst til formvalidering
     EditContext EditContext;
+    //fejlbesked ved valideringsfejl
     string _errorMessage;
+    // booleans til visning af succes eller fejlbesked
     bool statusFailed = false;
     bool status = false;
     
+    // Når disse funktioner bliver kaldet, bliver funktionen ('CloseModal()') kaldet i 'EditSubGoals' page pga. EventCallback
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
 
+    // Lidt ligesom OnInitializedAsync, men bliver kaldet når Modalen har fået alle sine parametre
     protected override async Task OnParametersSetAsync()
     {
         EditContext = new EditContext(_Goal);
     }
 
+    //håndterer når man trykker submit
     private void HandleSubmit()
     {
         if (EditContext.Validate())
@@ -124,7 +151,9 @@ else
 
             try
             {
+                //gemmer ændringer
                 SubGoalService.UpdateSubGoalDetails(_Goal);
+                //viser sucess besked
                 ShowSuccessMessage();
             }
             catch (Exception e)
@@ -135,13 +164,14 @@ else
             }
         }
     }
-    
+    //viser fejlbesked
     private void ShowErrorMessage()
     {
         statusFailed = true;
         StateHasChanged();
     }
     
+    //lukker fejlbesked
     private void CloseError()
     {
         statusFailed = false;
@@ -160,23 +190,25 @@ else
         StateHasChanged();
     }
 
+    //tilføjer nyt middel goal til målet
     private void AddMiddleGoal()
     {
         _Goal.MiddleGoals.Add(new MiddleGoal { MiniGoals = new List<MiniGoal>() });
         StateHasChanged();
     }
-
+//tilføjer mini goal til et specifikt middle goal
     private void AddMiniGoal(MiddleGoal middleGoal)
     {
         middleGoal.MiniGoals.Add(new MiniGoal());
         StateHasChanged();
     }
     
+    //sletter et middlegoal
     private void DeleteMiddleGoal(MiddleGoal middleGoal)
     {
         _Goal.MiddleGoals.Remove(middleGoal);
     }
-
+//sletter et minigoal fra et middle goal
     private void DeleteMiniGoal(MiddleGoal middleGoal, MiniGoal miniGoal)
     {
         _Goal.MiddleGoals.Find(x => x.Name == middleGoal.Name).MiniGoals.Remove(miniGoal);

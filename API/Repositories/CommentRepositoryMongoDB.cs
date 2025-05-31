@@ -30,12 +30,16 @@ public class CommentRepositoryMongoDB : ICommentRepository
     
     public async Task<List<Comment>?> GetCommentsBySubGoalId(int subGoalId, int studentId)
     {
+        // finder kommentar tilhørende specifik elev og subgoal combo
+        // hvorfor tager vi den ikke fra studentplan i elev?? idk tbh
         var filter = Builders<Comment>.Filter.Eq(x => x.CommentSubGoalId, subGoalId);
         var userFilter = Builders<Comment>.Filter.Eq(x => x.StudentId, studentId);
         var combinedFilter = Builders<Comment>.Filter.And(filter, userFilter);
         var result = commentCollection.Find(combinedFilter).ToList();
+        // sorterer resultatet efter CommentDate, så nyeste beskeder kommer sidst
         result.Sort((x, y) => x.CommentDate.CompareTo(y.CommentDate));
         
+        // check til debugging
         if (result != null)
         {
             Console.WriteLine("Returning comments: repository");
@@ -47,6 +51,7 @@ public class CommentRepositoryMongoDB : ICommentRepository
 
     public async void AddComment(Comment comment)
     {
+        // tilføjer til comment collection
         comment.CommentId = await MaxCommentId() + 1;
         Console.WriteLine("Adding comment: repository");
         await commentCollection.InsertOneAsync(comment);

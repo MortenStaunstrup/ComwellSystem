@@ -10,6 +10,7 @@ public class Notification
      
      */
     
+    
     public int NotificationId { get; set; } // PK, hvordan identificerer vi notifikationen?
     public int? UserId { get; set; } // FK, hvordan finder modtageren til notifikationen?
     public int? SenderId { get; set; } // hvilken elev har sendt notifikationen?

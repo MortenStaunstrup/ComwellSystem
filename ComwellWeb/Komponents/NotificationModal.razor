@@ -3,27 +3,35 @@
 @inject INotificationService NotificationService
 
 <div id="AltNotiIndhold" class="dropdown-notification-container">
+    
+    
     @if (_currentUser != null)
     {
+        @*Hvis notifikationer endnu ikke er hentet, viser den "indlæser..." *@
         @if (_notifications == null)
         {
             <p class="loading-text">Indlæser...</p>
         }
+        @* Hvis der er hentet notis, men listen er tom viser den "ingen notifikationer*@
         else if (!_notifications.Any())
         {
             <p class="no-notifications">Ingen notifikationer.</p>
         }
         else
         {
+            @* Minigoals sektion*@
             <h4 class="section-header">Minimål</h4>
+            @*Viser kun notis, hvor minigoalname er udfyldt *@
             @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiniGoalName)))
             {
                 <div class="notification notification-item">
                     <p class="notiTxt">@notification.NotificationContent</p>
+                    @* Hvis mål ikke er bekræftet endnu, vises en bekræft knap*@
                     @if (!notification.IsConfirmed)
                     {
                         <button class="confirm-button" @onclick="() => ConfirmNotifiedMiniGoalAsync(notification)">Bekræft</button>
                     }
+                    @* Hvis det allerde er det, vises "bekræftet"*@ 
                     else
                     {
                         <span class="confirmed-text">Bekræftet</span>
@@ -31,6 +39,7 @@
                 </div>
             }
 
+            @* middle goals section med samme indhold som minimål sektion*@
             <h4 class="section-header">Middelmål</h4>
             @foreach (var notification in _notifications.Where(n => !string.IsNullOrWhiteSpace(n.MiddleGoalName)))
             {
@@ -52,33 +61,41 @@
 
 
 @code {
+    //liste ad notis der skal vises
     private List<Notification> _notifications;
     private User? _currentUser;
 
+    //kører når komponent loades
     protected override async Task OnInitializedAsync()
     {
+        //henter brugere der er logget ind via userservice
         _currentUser =  await UserService.GetUserLoggedInAsync();
+        //henter brugerens notis fra notificationservice
         _notifications = await NotificationService.GetNotificationsByUserIdAsync(_currentUser.UserId);
     }
     
+    //bekræfter en mini-mål notis 
     private async Task ConfirmNotifiedMiniGoalAsync(Notification notificationModal)
     {
+        //sikrer at data er gyldig, før der kaldes noget i backend 
         if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiniGoalName))
         {
             Console.WriteLine("Ugyldig mini goal notifikation");
             return;
         }
-
+        // kalder service til at bekræfte mini-målet i backend 
         await NotificationService.ConfirmNotifiedMiniGoalAsync(
             notificationModal.UserId.Value,
             notificationModal.NotificationId,
             notificationModal.MiniGoalName
         );
 
+        //opdaterer local status så der vises "bekræftet" 
         notificationModal.IsConfirmed = true;
         StateHasChanged();
     }
 
+    //det samme som ovenfor bare med middle goals
     private async Task ConfirmNotifiedMiddleGoalAsync(Notification notificationModal)
     {
         if (notificationModal?.UserId == null || notificationModal.UserId == 0 || string.IsNullOrWhiteSpace(notificationModal.MiddleGoalName))

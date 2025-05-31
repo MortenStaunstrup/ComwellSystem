@@ -8,7 +8,7 @@
 @inject NavigationManager nav
 @inject IUserService _userService
 
-@if (!loaded)
+@if (!loaded) 
 {
     <p>Indlæser...</p>
 }
@@ -51,7 +51,8 @@ else
                     <option value="@Trip">@Trip</option>
                 }
             </select>
-
+            
+            @*Filter for kun egne elev som kitchenmanger *@
             @if (CurrentUser?.Role == "KitchenManager")
             {
                 <div id="EgneEleverContainer">
@@ -70,22 +71,26 @@ else
                 </div>
             }
         </div>
-        
+         
+        @* Listen over alle studerene *@
         <div class="student-list-container">
             @if (_allStudents == null)
             {
+                //"indlæser.." hvis listen endnu  ikke er hentet
                 <p>Indlæser...</p>
             }
             else
             {
+                //ellers filtrér efter egne elever, hvis OwnStudentBool er true
                 var displayedStudents = OwnStudentsBool 
                     ? _sortedStudents.Where(s => s.UserIdResponsible == CurrentUser.UserId).ToList() // ændret
                     : _sortedStudents;
 
-                if (displayedStudents.Any()) // ændret
+                if (displayedStudents.Any()) 
                 {
                     foreach (var student in displayedStudents) // ændret
                     {
+                        //klikbar række for elever med informationer
                         <div class="student-row" @onclick="() => ShowStudentPlan(student.UserId)">
                             <span class="student-name">@student.UserName</span>
                             <span>@(student.StartDate?.ToString("dd-MM-yyyy") ?? "N/A")</span>
@@ -94,6 +99,7 @@ else
                                 <div class="progress-bar" style="width: @_pctCompleted[student.UserId]%;"></div>
                             </div>
                         </div>
+                        //viser gå til mål knap 
                         @if (_currentShownStudent == student.UserId)
                         {
                             <div class="mt-3">
@@ -104,7 +110,7 @@ else
                 }
                 else
                 {
-                    <p>Du har ingen elever.</p> <!-- tilføjet -->
+                    <p>Du har ingen elever.</p> 
                 }
             }
         </div> 
@@ -113,20 +119,23 @@ else
 @code {
     User? CurrentUser;
     List<User>? _allStudents;
-    List<User>? _sortedStudents;
-    Dictionary<int, double> _pctCompleted = new();
-    int _currentShownStudent;
+    List<User>? _sortedStudents; //studerende efter filtrering 
+    Dictionary<int, double> _pctCompleted = new(); //%vis gennemførsel pr. elev
+    int _currentShownStudent; //hvilken elev er "åben" 
     bool ShowModal = false;
-    private bool _OwnStudentsBool;
-    private bool loaded = false;
-
+    private bool _OwnStudentsBool; 
+    private bool loaded = false; //er siden færdig med at loade? 
+    
+    //lister over hoteller, uddannelse og ture
     List<string> hotelList = new() { "Comwell Aarhus", "Comwell Kolding", "Comwell H.C. Andersen Odense" };
     List<string> educationList = new() { "Kok", "Tjener", "Receptionist", "Cater" };
     List<string> TripList = new() { "Italiten", "ÅrhusGåGade", "Juleturen" };
 
+    //dato-filtrering
     private DateOnly? _startDate;
     private DateOnly? _endDate;
 
+    //public property med filtrering for startdato
     public DateOnly? startDate
     {
         get => _startDate;
@@ -139,7 +148,7 @@ else
             }
         }
     }
-
+//public property med filtrering for slutdato
     public DateOnly? endDate
     {
         get => _endDate;
@@ -153,34 +162,43 @@ else
         }
     }
 
+    // kaldes når komponent intialiseres 
     protected override async Task OnInitializedAsync()
     {
+        //henter nuværende bruger
         CurrentUser = await _userservice.GetUserLoggedInAsync();
+        //redirecter bruger til login hvis de er uautoristeret
         if (CurrentUser?.Role == "Student" || CurrentUser == null)
         {
             nav.NavigateTo("/login");
             return;
         }
 
+        //henter alle elver
         _allStudents = await _userservice.GetAllStudentsAsync();
         _sortedStudents = _allStudents;
 
+        //henter målopfyldelse procent for hver elev 
         foreach (var student in _allStudents)
         {
             double pct = await SubGoalService.GetPctCompletedSubGoalsByStudentIdAsync(student.UserId);
+            //laver det om til heltal
             _pctCompleted[student.UserId] = Math.Truncate(pct);
         }
 
+        //markér som færdig med at loade 
         loaded = true;
     }
 
+    //viser den valgte elevs mål
     private void ShowStudentPlan(int studentId)
     {
         _currentShownStudent = studentId;
         ShowModal = true;
         StateHasChanged();
     }
-
+ 
+    //lukker modal (bliver ikke brugt??) 
     private void CloseModal()
     {
         ShowModal = false;

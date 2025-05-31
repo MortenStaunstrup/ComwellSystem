@@ -77,7 +77,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentUser = await UserService.GetUserLoggedInAsync();
-        if(_currentUser == null)
+        if(_currentUser == null || _currentUser.Role == "Student" || _currentUser.Role == "HR")
             NavMan.NavigateTo("/login");
         _allSubGoals = await SubGoalService.GetAllSubGoals();
     }

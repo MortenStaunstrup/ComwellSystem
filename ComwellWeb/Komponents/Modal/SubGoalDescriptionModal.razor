@@ -19,10 +19,13 @@
             }
             else
             {
+                
+                //kommentarsektion 
                 <p>Dine kommentar:</p>
                 <div id="comments-container">
                     @if (_comments != null)
                     {
+                        //loop gennem kommentarer
                         @foreach (var comment in _comments)
                         {
                             <div class="comment">
@@ -38,6 +41,7 @@
                 </div>
                 <p style="color: red">@errorMessage</p>
                 <InputText class="input" type="text" placeholder="Skriv din kommentar her.." @bind-Value="writtenComment"/>
+               //knapper til sende kommentar og melde færdiggørelse af delmål
                 <div id="buttons">
                     <button class="btn-primary" @onclick="SendComment">Send kommentar</button>
                     <button class="btn-primary" @onclick="async () => await NotifyResponsibleCook(Goal.SubGoalId)">Jeg er færdig med delmål</button>
@@ -50,19 +54,23 @@
 }
 
 @code {
+    //parameteren for om brugeren er på "vej dertil" så der kan skiftes funktionalitet (ansøg knappen)
     [Parameter] public bool VejenDerTil { get; set; }
     [Parameter] public SubGoal? Goal { get; set; }
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback OnCloseRequested { get; set; }
     [Parameter] public User CurrentUser { get; set; }
 
+    //indholder kommentar der skrives i inputfeltet
     private string writtenComment;
+    //liste over alle kommentar tilknyttet til aktuelle subgoal
     private List<Comment>? _comments;
     private string errorMessage;
-
+    
+    //kaldes når bruger trykker på luk knap eller baggrunden - lukker modal
     private Task Close() => OnCloseRequested.InvokeAsync();
     private Task CloseOnBackdropClick() => OnCloseRequested.InvokeAsync();
-
+    
     protected override async Task OnParametersSetAsync()
     {
         if (!VejenDerTil && Goal != null)
@@ -71,12 +79,14 @@
         }
     }
 
+    // Midlertidig metode til at indikere, at brugeren har færdiggjort et subgoal – ikke implementeret
     private async Task NotifyResponsibleCook(int subGoalId)
     {
         errorMessage = "✅ Færdiggørelse-funktion kaldt, men ikke implementeret endnu.";
         StateHasChanged();
     }
 
+    //sender noti til den ansvarlige bruger om, at elev ansøger om kurus
     private async Task NotifyResponsibleCookApplication(int subGoalId)
     {
         try
@@ -89,18 +99,23 @@
             {
                 var notification = new Notification
                 {
+                    //modtagelse af noti - den ansvarlige
                     UserId = CurrentUser.UserIdResponsible.Value,
+                    //den bruger der ansøger
                     SenderId = CurrentUser.UserId,
+                    //navn på delmålet, der er blevet ansøgt om
                     MiniGoalName = Goal.SubGoalName,
                     NotificationContent = $"Bruger {CurrentUser.UserName} har ansøgt om delmålet '{Goal.SubGoalName}'",
                     TimeStamp = DateTime.Now,
                     IsConfirmed = false
                 };
 
+                //sender noti via NotificationService
                 await NotificationService.SendMiniGoalNotificationAsync(notification);
                 errorMessage = "✅ Ansøgning sendt!";
             }
         }
+        //håndtere fejl under forsøg på at sende noti
         catch
         {
             errorMessage = "❌ Fejl i ansøgning.";
@@ -109,6 +124,7 @@
         StateHasChanged();
     }
 
+    //henter alle kommentarer for det aktuelle delmål fra CommentService
     public async Task InitializeComments()
     {
         if (Goal == null)
@@ -117,17 +133,19 @@
             StateHasChanged();
             return;
         }
-
+        
+        //stop hvis commentservice giver error
         if (CommentService == null)
         {
             errorMessage = "Comment service is not available.";
             StateHasChanged();
             return;
         }
-
+        // henter kommentarer fra database via CommentService 
         try
         {
             _comments = await CommentService.GetCommentsBySubGoalId(Goal.SubGoalId, CurrentUser.UserId);
+            //hvis intet retuneres, initialiser med tom liste for at undgå fejl
             if (_comments == null)
                 _comments = new List<Comment>();
         }
@@ -138,8 +156,10 @@
         }
     }
 
+    //kaldes når brugere trykker "send kommentar"
     private void SendComment()
     {
+        //brugere kan ikke sende tom kommentar
         if (string.IsNullOrWhiteSpace(writtenComment))
         {
             errorMessage = "Kan ikke sende blank kommentar";
@@ -167,7 +187,9 @@
             StateHasChanged();
             return;
         }
-
+        
+        
+        //opret ny kommentar med udfyldte indhold
         var theComment = new Comment()
         {
             CommentDate = DateTime.Now,
@@ -179,7 +201,9 @@
 
         try
         {
+            //tilføj til lokalliste, så det vises i UI med det samme
             _comments.Add(theComment);
+            //send til service for at gemme i db
             CommentService.AddComment(theComment);
         }
         catch (Exception e)

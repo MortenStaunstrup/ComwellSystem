@@ -20,6 +20,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 
     public SubGoalRepositoryMongoDB()
     {
+        // connectionstring initialiseres, kunne være med DotEnv fil
         _connectionString = "mongodb+srv://mortenstnielsen:hlEgCKJrN89edDQt@clusterfree.a2y2b.mongodb.net/";
         if (string.IsNullOrEmpty(_connectionString))
         {
@@ -33,6 +34,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         bucket = new GridFSBucket(database, new GridFSBucketOptions{ BucketName = "Comwell files" });
     }
     
+    //mener at denne funktion ikke bliver brugt længere
     public async Task<List<SubGoal>?> GetNotCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
@@ -57,6 +59,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         return subgoals;
     }
 
+    //mener at denne funktion ikke bliver brugt længere
     public async Task<List<SubGoal>?> GetCompletedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
@@ -94,10 +97,11 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
         var aggregation = await userCollection.Aggregate()
             .Match(studentFilter)
             .Unwind(u => u.StudentPlan)
+            // Gruper dem efter SubGoalStatus og ét 1 tal
             .Group(new BsonDocument
             {
                 { "_id", "$StudentPlan.SubGoalStatus" },
-                { "Count", new BsonDocument("$sum", 1) } // Gruper SubGoalStatus og et 1 tal.
+                { "Count", new BsonDocument("$sum", 1) }
             })
             .ToListAsync();
         
@@ -122,16 +126,20 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             return 0;
         }
 
+        // udregn procenten
         var percentage = (completedCount / (double)totalCount) * 100;
         Console.WriteLine($"The result for student {studentId} is {percentage}");
         return percentage;
     }
 
+    // Finder alle 'Extra' opgaver som en elev har
+    // Bliver brug til at sørge for, at elever ikke kan byde på 'Extra' opgaver de allerede har på 'RegisterSubgoal' pagen
     public async Task<List<SubGoal>?> GetOfferedSubGoalsByStudentIdAsync(int studentId)
     {
         var studentFilter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
         var subGoalFilter = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalType == "Extra");
         var combinedFilter = Builders<User>.Filter.And(studentFilter, subGoalFilter);
+        // projecterer kun StudentPlan feltet fra User modelklassen
         var projection = Builders<User>.Projection.Include("StudentPlan").Exclude("_id");
         
         var user = await userCollection
@@ -143,9 +151,11 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             return null;
         
         Console.WriteLine($"Returning extra subgoals for student {studentId}");
-        return user.StudentPlan.ToList();
+        return user.StudentPlan;
     }
 
+    // Find ALLE extra delmål fra SubGoals collection
+    // Bruges til at vise alle de 'Extra' delmål som en elev kan byde ind på
     public async Task<List<SubGoal>?> GetOfferedSubGoalsAsync()
     {
         var filter = Builders<SubGoal>.Filter.Eq("SubGoalType", "Extra");
@@ -166,12 +176,12 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     public async Task<int> MaxSubGoalId()
     {
         var sort = Builders<SubGoal>.Sort.Descending(x => x.SubGoalId);
-        var maxSubGoalId = await subCollection
+        var subGoal = await subCollection
             .Find(Builders<SubGoal>.Filter.Empty)
             .Sort(sort)
             .Limit(1)
             .FirstOrDefaultAsync();
-        return maxSubGoalId?.SubGoalId ?? 0;
+        return subGoal?.SubGoalId ?? 0;
     }
 
     public async void CreateSubgoal(SubGoal subgoal)
@@ -194,6 +204,7 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     // Indsætter subgoal i specifikke elever
     public async void InsertSubgoalSpecific(SubGoal subgoal, List<int> studentIds)
     {
+        // For hvert studentId, indsæt delmålet
         foreach (var studentId in studentIds)
         {
             var filter = Builders<User>.Filter.Eq(x => x.UserId, studentId);
@@ -202,81 +213,9 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
             await userCollection.UpdateManyAsync(filter, update);
         }
     }
-
-
-    /*public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
-    {
-        // Studentplan update
-        var filter = Builders<User>.Filter.And(
-            Builders<User>.Filter.Eq("Role", "Student"),
-            Builders<User>.Filter.ElemMatch(u => u.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId)
-        );
     
-        var users = await userCollection.Find(filter).ToListAsync();
-
-          foreach (var user in users)
-        {
-            for (var u = 0; u < user.StudentPlan.Count; u++)
-            {
-                if (user.StudentPlan[u].SubGoalId == subGoal.SubGoalId)
-                {
-                    user.StudentPlan[u].SubGoalName = subGoal.SubGoalName;
-                    user.StudentPlan[u].SubGoalDescription = subGoal.SubGoalDescription;
-                    user.StudentPlan[u].SubGoalType = subGoal.SubGoalType;
-
-                    var updatedMiddleGoals = new List<MiddleGoal>();
-
-                    foreach (var newMiddle in subGoal.MiddleGoals)
-                    {
-                        var existingMiddle = user.StudentPlan[u].MiddleGoals
-                            ?.FirstOrDefault(m => m.Name == newMiddle.Name);
-
-                        var updatedMiniGoals = new List<MiniGoal>();
-                        
-                        foreach (var newMini in newMiddle.MiniGoals)
-                        {
-                            // Søger efter eksisterende minigoals navne
-                            var existingMini = existingMiddle?.MiniGoals
-                                ?.FirstOrDefault(m => m.Name == newMini.Name);
-
-                            // Beholder status hvis det allerede eksistere navnet ikke er ændret og 
-                            if (existingMini != null && existingMini.Name == newMini.Name)
-                            {
-                                updatedMiniGoals.Add(new MiniGoal
-                                {
-                                    Name = newMini.Name,
-                                    Status = existingMini.Status
-                                });
-                            }
-                            else
-                            {
-                                //Så alle nye eller ændrede subgoals bliver false
-                                updatedMiniGoals.Add(new MiniGoal
-                                {
-                                    Name = newMini.Name,
-                                    Status = false
-                                });
-                            }
-                        }
-
-                        updatedMiddleGoals.Add(new MiddleGoal
-                        {
-                            Name = newMiddle.Name,
-                            MiniGoals = updatedMiniGoals
-                        });
-                    }
-
-                    user.StudentPlan[u].MiddleGoals = updatedMiddleGoals;
-                }
-            }
-
-            await userCollection.ReplaceOneAsync(u => u.UserId == user.UserId, user);
-        }
-        return subGoal;
-    }*/
-
      public async Task<SubGoal> UpdateSubGoalDetails(SubGoal subGoal)
-{
+    {
     Console.WriteLine("Updating subgoal: repository");
 
     // Find studerende, der har dette subgoal i deres plan
@@ -286,47 +225,60 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
     );
 
     var users = await userCollection.Find(filter).ToListAsync();
-
+    
     foreach (var user in users)
     {
+        // Gå igennem hele studentplan for hver bruger
         for (int i = 0; i < user.StudentPlan.Count; i++)
         {
-            if (user.StudentPlan[i].SubGoalId == subGoal.SubGoalId) // Find subgoal man updaterer i user
+            // Find det specifikke subgoal man prøver at updatere
+            if (user.StudentPlan[i].SubGoalId == subGoal.SubGoalId)
             {
                 // Opdater overordnet info
                 user.StudentPlan[i].SubGoalName = subGoal.SubGoalName;
                 user.StudentPlan[i].SubGoalDescription = subGoal.SubGoalDescription;
                 user.StudentPlan[i].SubGoalType = subGoal.SubGoalType;
 
-                var updatedMiddleGoals = new List<MiddleGoal>(); // initiering af nye middle goals
+                // initiering af nye middle goals
+                var updatedMiddleGoals = new List<MiddleGoal>();
 
-                foreach (var newMiddle in subGoal.MiddleGoals) // gå igennem alle middlegoals i nye subgoal
+                // gå igennem alle middlegoals i updaterede subgoal
+                foreach (var newMiddle in subGoal.MiddleGoals)
                 {
+                    // check om middlegoal med samme navn allerede eksisterer i tidligere subgoal
                     var existingMiddle = user.StudentPlan[i].MiddleGoals
-                        ?.FirstOrDefault(m => m.Name == newMiddle.Name);  // check om den eksisterer allerede i tidligere subgoal, hvis ikke sæt til null
+                        ?.FirstOrDefault(m => m.Name == newMiddle.Name);
 
-                    var updatedMiniGoals = new List<MiniGoal>(); // initiering af nye minigoals
+                    // initiering af nye minigoals
+                    var updatedMiniGoals = new List<MiniGoal>();
 
-                    foreach (var newMini in newMiddle.MiniGoals) // gå igennem alle minigoals i nye subgoal
+                    // gå igennem alle minigoals i nye subgoal
+                    foreach (var newMini in newMiddle.MiniGoals)
                     {
+                        // check om minigoal med samme navn allerede eksisterer i tidligere subgoals middlegoal
                         var existingMini = existingMiddle?.MiniGoals
-                            ?.FirstOrDefault(m => m.Name == newMini.Name); // check om den eksisterer allerede i tidligere subgoal, hvis ikke sæt til null
+                            ?.FirstOrDefault(m => m.Name == newMini.Name);
                         
-                        updatedMiniGoals.Add(new MiniGoal // tilføj nye minigoals til initierede liste (linje 308)
+                        // tilføj nye minigoals til initierede liste (linje 325)
+                        updatedMiniGoals.Add(new MiniGoal
                         {
                             Name = newMini.Name,
-                            Status = newMini.Status || existingMini?.Status == true,  // hvis eksisterende status på minigoal EKSISTERER og er true, behold true status. Ellers false
+                            // hvis minigoal allerede eksisterede og status er true, behold true status. Ellers er det et nyt navn til minigoal og status bliver false
+                            Status = newMini.Status || existingMini?.Status == true
                         });
                     }
 
-                    updatedMiddleGoals.Add(new MiddleGoal // tilføj nye middlegoals til initierede liste (linje 301)
+                    // tilføj nye middlegoals til initierede liste (linje 315)
+                    updatedMiddleGoals.Add(new MiddleGoal
                     {
                         Name = newMiddle.Name,
-                        MiniGoals = updatedMiniGoals // minigoals bliver til listen af updaterede minigoals
+                        // minigoals bliver til listen af updaterede minigoals
+                        MiniGoals = updatedMiniGoals
                     });
                 }
 
-                user.StudentPlan[i].MiddleGoals = updatedMiddleGoals; // middlegoals bliver den updaterede liste af middlegoals
+                // middlegoals bliver den updaterede liste af middlegoals
+                user.StudentPlan[i].MiddleGoals = updatedMiddleGoals;
             }
         }
 
@@ -337,27 +289,6 @@ public class SubGoalRepositoryMongoDB : ISubGoalRepository
 }
     
     
-    /* public async void UpdateSubGoalDetails(SubGoal subGoal)
-    {
-        // updater i subgoals collection
-        var filterSubGoal = Builders<SubGoal>.Filter.Eq(x => x.SubGoalId, subGoal.SubGoalId);
-        subCollection.ReplaceOne(filterSubGoal, subGoal);
-        
-        // updater i users
-        var filterUserSubGoal = Builders<User>.Filter.ElemMatch(x => x.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId);
-        var studentFilter = Builders<User>.Filter.Eq("Role", "Student");
-        var combined = Builders<User>.Filter.And(filterUserSubGoal, studentFilter);
-        var pushUpdate = Builders<User>.Update.Push("StudentPlan", subGoal);
-        var pullUpdate = Builders<User>.Update.PullFilter(u => u.StudentPlan, s => s.SubGoalId == subGoal.SubGoalId);
-        
-        // Først pull den gamle version ud, derefter push den nye
-        await userCollection.UpdateManyAsync(combined, pullUpdate);
-        await userCollection.UpdateManyAsync(studentFilter, pushUpdate);
-        
-        // todo problem: hvis man prøver at updater i users(students), hvordan beholder man deres status på delmålet og kun
-        // ændrer navnet og strukturen?? idk
-        // måske gør i c#??? ville måske virke hvis det var i én elev man updateret delmålet så nej
-    }*/
 
     public async void CompleteSubGoalBySubGoalId(int subGoalId, int studentId)
     {
